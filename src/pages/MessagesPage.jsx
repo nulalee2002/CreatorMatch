@@ -1,0 +1,473 @@
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  MessageSquare, Send, Search, ArrowLeft, MoreVertical,
+  User, Check, CheckCheck, Circle,
+} from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { supabase, supabaseConfigured } from '../lib/supabase.js';
+import { SERVICES } from '../data/rates.js';
+
+// ── localStorage helpers ────────────────────────────────────────
+function loadThreads(userId) {
+  try {
+    const all = JSON.parse(localStorage.getItem('cm-messages') || '[]');
+    // Group messages by thread (threadId = sorted pair of userIds)
+    const map = {};
+    all.forEach(msg => {
+      if (msg.senderId !== userId && msg.recipientId !== userId) return;
+      const tid = msg.threadId || [msg.senderId, msg.recipientId].sort().join('_');
+      if (!map[tid]) map[tid] = { threadId: tid, messages: [], otherUserId: null, otherName: null, otherAvatar: null };
+      map[tid].messages.push(msg);
+      if (msg.senderId === userId) {
+        map[tid].otherUserId   = msg.recipientId;
+        map[tid].otherName     = msg.recipientName || 'Unknown';
+        map[tid].otherAvatar   = msg.recipientAvatar || null;
+        map[tid].otherIsCreator = msg.recipientIsCreator || false;
+      } else {
+        map[tid].otherUserId   = msg.senderId;
+        map[tid].otherName     = msg.senderName || 'Unknown';
+        map[tid].otherAvatar   = msg.senderAvatar || null;
+        map[tid].otherIsCreator = msg.senderIsCreator || false;
+      }
+    });
+    return Object.values(map).map(t => ({
+      ...t,
+      messages: t.messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)),
+      lastMessage: t.messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0],
+    })).sort((a, b) => new Date(b.lastMessage?.createdAt || 0) - new Date(a.lastMessage?.createdAt || 0));
+  } catch { return []; }
+}
+
+function saveMessage(msg) {
+  try {
+    const all = JSON.parse(localStorage.getItem('cm-messages') || '[]');
+    all.push(msg);
+    localStorage.setItem('cm-messages', JSON.stringify(all));
+  } catch {}
+}
+
+function markMessagesRead(threadId, userId) {
+  try {
+    const all = JSON.parse(localStorage.getItem('cm-messages') || '[]');
+    const updated = all.map(m =>
+      m.threadId === threadId && m.recipientId === userId ? { ...m, read: true } : m
+    );
+    localStorage.setItem('cm-messages', JSON.stringify(updated));
+  } catch {}
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// ── Thread list item ─────────────────────────────────────────────
+function ThreadItem({ thread, active, dark, onClick }) {
+  const last   = thread.lastMessage;
+  const unread = thread.messages.filter(m => m.recipientId === thread.myId && !m.read).length;
+  const textSub = dark ? 'text-charcoal-400' : 'text-gray-500';
+
+  return (
+    <button type="button" onClick={onClick}
+      className={`w-full flex items-center gap-3 p-3 text-left transition-all rounded-xl ${
+        active
+          ? dark ? 'bg-gold-500/10 border border-gold-500/30' : 'bg-gold-50 border border-gold-200'
+          : dark ? 'hover:bg-charcoal-700/50 border border-transparent' : 'hover:bg-gray-50 border border-transparent'
+      }`}>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${dark ? 'bg-charcoal-700' : 'bg-gray-200'}`}>
+        {thread.otherAvatar || '👤'}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-1">
+          <p className={`text-sm font-semibold truncate ${dark ? 'text-white' : 'text-gray-900'}`}>{thread.otherName}</p>
+          <span className={`text-[10px] shrink-0 ${textSub}`}>{formatTime(last?.createdAt)}</span>
+        </div>
+        <div className="flex items-center justify-between gap-1 mt-0.5">
+          <p className={`text-xs truncate ${unread ? (dark ? 'text-charcoal-300 font-medium' : 'text-gray-700 font-medium') : textSub}`}>
+            {last?.text || 'No messages yet'}
+          </p>
+          {unread > 0 && (
+            <span className="shrink-0 w-4 h-4 rounded-full bg-gold-500 text-charcoal-900 text-[9px] font-bold flex items-center justify-center">
+              {unread}
+            </span>
+          )}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ── Message bubble ────────────────────────────────────────────────
+function Bubble({ msg, isMine, dark }) {
+  return (
+    <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-2`}>
+      <div className={`max-w-[72%] px-3 py-2 rounded-2xl text-sm ${
+        isMine
+          ? 'bg-gold-500 text-charcoal-900 rounded-br-md'
+          : dark ? 'bg-charcoal-700 text-white rounded-bl-md' : 'bg-gray-100 text-gray-900 rounded-bl-md'
+      }`}>
+        <p className="leading-relaxed break-words">{msg.text}</p>
+        <p className={`text-[10px] mt-0.5 text-right ${isMine ? 'text-charcoal-700/70' : dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+          {formatTime(msg.createdAt)}
+          {isMine && <span className="ml-1">{msg.read ? <CheckCheck size={9} className="inline" /> : <Check size={9} className="inline" />}</span>}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── New conversation modal ────────────────────────────────────────
+function NewConversationModal({ dark, onClose, onStart, myUser, myProfile }) {
+  const [recipientId, setRecipientId]     = useState('');
+  const [recipientName, setRecipientName] = useState('');
+  const [message, setMessage]             = useState('');
+  const [searching, setSearching]         = useState(false);
+  const [results, setResults]             = useState([]);
+
+  const textSub  = dark ? 'text-charcoal-400' : 'text-gray-500';
+  const inputCls = `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
+    dark ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
+         : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
+  }`;
+
+  function searchCreators(query) {
+    setSearching(true);
+    try {
+      const all = JSON.parse(localStorage.getItem('creator-directory') || '[]');
+      const q = query.toLowerCase();
+      setResults(all.filter(c =>
+        c.id !== myUser?.id &&
+        (c.businessName?.toLowerCase().includes(q) || c.name?.toLowerCase().includes(q))
+      ).slice(0, 5));
+    } catch {}
+    setSearching(false);
+  }
+
+  function selectCreator(c) {
+    setRecipientId(c.id);
+    setRecipientName(c.businessName || c.name);
+    setResults([]);
+  }
+
+  function handleStart() {
+    if (!recipientId || !message.trim()) return;
+    onStart({
+      recipientId,
+      recipientName,
+      text: message.trim(),
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative w-full max-w-md rounded-2xl border shadow-2xl p-6 ${dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+        <h3 className={`font-display font-bold text-base mb-4 ${dark ? 'text-white' : 'text-gray-900'}`}>
+          New Conversation
+        </h3>
+
+        {/* Recipient search */}
+        <div className="mb-4 relative">
+          <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Search Creator</p>
+          <input
+            type="text"
+            value={recipientName}
+            onChange={e => { setRecipientName(e.target.value); setRecipientId(''); searchCreators(e.target.value); }}
+            placeholder="Search by name..."
+            className={inputCls}
+          />
+          {results.length > 0 && (
+            <div className={`absolute z-10 top-full mt-1 w-full rounded-xl border shadow-lg overflow-hidden ${dark ? 'bg-charcoal-800 border-charcoal-600' : 'bg-white border-gray-200'}`}>
+              {results.map(c => (
+                <button key={c.id} type="button" onClick={() => selectCreator(c)}
+                  className={`w-full flex items-center gap-2 p-3 text-left hover:bg-gold-500/10 transition-colors`}>
+                  <span className="text-base">{c.avatar || '🎬'}</span>
+                  <span className={`text-sm ${dark ? 'text-white' : 'text-gray-900'}`}>{c.businessName || c.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Message */}
+        <div className="mb-4">
+          <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Message</p>
+          <textarea
+            rows={3}
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            placeholder="Introduce yourself and describe your project..."
+            className={`${inputCls} resize-none`}
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <button type="button" onClick={onClose}
+            className={`flex-1 py-2 rounded-xl border text-sm font-semibold transition-all ${dark ? 'border-charcoal-600 text-charcoal-300 hover:text-white' : 'border-gray-200 text-gray-600 hover:text-gray-900'}`}>
+            Cancel
+          </button>
+          <button type="button" onClick={handleStart}
+            disabled={!recipientId || !message.trim()}
+            className="flex-1 py-2 rounded-xl bg-gold-500 hover:bg-gold-600 disabled:opacity-40 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2">
+            <Send size={13} /> Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main MessagesPage ─────────────────────────────────────────────
+export function MessagesPage({ dark }) {
+  const { user, profile: authProfile } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const [threads, setThreads]         = useState([]);
+  const [activeThread, setActiveThread] = useState(null);
+  const [text, setText]               = useState('');
+  const [search, setSearch]           = useState('');
+  const [showNew, setShowNew]         = useState(false);
+  const [mobileView, setMobileView]   = useState('list'); // 'list' | 'thread'
+  const bottomRef = useRef(null);
+
+  const textSub  = dark ? 'text-charcoal-400' : 'text-gray-500';
+  const cardCls  = `rounded-2xl border ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`;
+
+  const myName   = authProfile?.full_name || user?.email?.split('@')[0] || 'Me';
+  const myAvatar = authProfile?.avatar_url || null;
+
+  useEffect(() => {
+    if (!user) return;
+    const loaded = loadThreads(user.id).map(t => ({ ...t, myId: user.id }));
+    setThreads(loaded);
+
+    // Check if coming from a specific creator
+    const with_ = searchParams.get('with');
+    if (with_) {
+      const existing = loaded.find(t => t.otherUserId === with_);
+      if (existing) { setActiveThread(existing); setMobileView('thread'); }
+      else { setShowNew(true); }
+    }
+  }, [user]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [activeThread?.messages]);
+
+  function openThread(thread) {
+    setActiveThread({ ...thread, myId: user.id });
+    setMobileView('thread');
+    markMessagesRead(thread.threadId, user.id);
+    setThreads(prev => prev.map(t =>
+      t.threadId === thread.threadId
+        ? { ...t, messages: t.messages.map(m => m.recipientId === user.id ? { ...m, read: true } : m) }
+        : t
+    ));
+  }
+
+  function sendMessage() {
+    if (!text.trim() || !activeThread) return;
+    const msg = {
+      id:             Date.now().toString() + Math.random(),
+      threadId:       activeThread.threadId,
+      senderId:       user.id,
+      senderName:     myName,
+      senderAvatar:   myAvatar,
+      recipientId:    activeThread.otherUserId,
+      recipientName:  activeThread.otherName,
+      recipientAvatar:activeThread.otherAvatar,
+      text:           text.trim(),
+      read:           false,
+      createdAt:      new Date().toISOString(),
+    };
+    saveMessage(msg);
+    const updated = { ...activeThread, messages: [...activeThread.messages, msg], lastMessage: msg };
+    setActiveThread(updated);
+    setThreads(prev => {
+      const existing = prev.find(t => t.threadId === activeThread.threadId);
+      if (existing) return prev.map(t => t.threadId === activeThread.threadId ? updated : t);
+      return [updated, ...prev];
+    });
+    setText('');
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+  }
+
+  function startNewConversation({ recipientId, recipientName, text: initText }) {
+    const threadId = [user.id, recipientId].sort().join('_');
+    const msg = {
+      id:            Date.now().toString() + Math.random(),
+      threadId,
+      senderId:      user.id,
+      senderName:    myName,
+      senderAvatar:  myAvatar,
+      recipientId,
+      recipientName,
+      text:          initText,
+      read:          false,
+      createdAt:     new Date().toISOString(),
+    };
+    saveMessage(msg);
+    const newThread = {
+      threadId, myId: user.id,
+      otherUserId: recipientId, otherName: recipientName, otherAvatar: null,
+      messages: [msg], lastMessage: msg,
+    };
+    setThreads(prev => [newThread, ...prev]);
+    setActiveThread(newThread);
+    setMobileView('thread');
+    setShowNew(false);
+  }
+
+  if (!user) {
+    return (
+      <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${dark ? 'bg-charcoal-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <MessageSquare size={40} className="text-gold-400" />
+        <h2 className="font-display text-xl font-bold">Sign in to view messages</h2>
+        <button type="button" onClick={() => navigate('/')}
+          className="px-5 py-2.5 rounded-xl bg-gold-500 text-charcoal-900 font-bold text-sm">Go Home</button>
+      </div>
+    );
+  }
+
+  const filteredThreads = threads.filter(t =>
+    !search || t.otherName?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className={`min-h-screen ${dark ? 'bg-charcoal-950' : 'bg-gray-50'}`}>
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className={`${cardCls} overflow-hidden`} style={{ height: 'calc(100vh - 140px)', minHeight: 480 }}>
+          <div className="flex h-full">
+
+            {/* ── Thread list ── */}
+            <div className={`flex flex-col w-full sm:w-72 lg:w-80 shrink-0 border-r ${dark ? 'border-charcoal-700' : 'border-gray-200'} ${mobileView === 'thread' ? 'hidden sm:flex' : 'flex'}`}>
+
+              {/* Header */}
+              <div className={`p-4 border-b ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className={`font-display font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>Messages</h2>
+                  <button type="button" onClick={() => setShowNew(true)}
+                    className="p-1.5 rounded-lg bg-gold-500 hover:bg-gold-600 text-charcoal-900 transition-all">
+                    <MessageSquare size={13} />
+                  </button>
+                </div>
+                <div className="relative">
+                  <Search size={12} className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${textSub}`} />
+                  <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+                    placeholder="Search conversations..."
+                    className={`w-full pl-8 pr-3 py-2 text-xs rounded-xl border outline-none transition-all ${
+                      dark ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
+                           : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
+                    }`} />
+                </div>
+              </div>
+
+              {/* Thread list */}
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                {filteredThreads.length === 0 ? (
+                  <div className={`text-center py-12 ${textSub}`}>
+                    <MessageSquare size={28} className="mx-auto mb-2 opacity-30" />
+                    <p className="text-xs">No conversations yet</p>
+                    <button type="button" onClick={() => setShowNew(true)}
+                      className="mt-3 text-xs text-gold-400 hover:text-gold-300 transition-colors">
+                      Start one
+                    </button>
+                  </div>
+                ) : (
+                  filteredThreads.map(t => (
+                    <ThreadItem
+                      key={t.threadId}
+                      thread={{ ...t, myId: user.id }}
+                      active={activeThread?.threadId === t.threadId}
+                      dark={dark}
+                      onClick={() => openThread(t)}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* ── Message pane ── */}
+            <div className={`flex flex-col flex-1 min-w-0 ${mobileView === 'list' ? 'hidden sm:flex' : 'flex'}`}>
+              {!activeThread ? (
+                <div className={`flex-1 flex flex-col items-center justify-center ${textSub}`}>
+                  <MessageSquare size={40} className="mb-3 opacity-20" />
+                  <p className="text-sm font-medium">Select a conversation</p>
+                  <p className="text-xs mt-1 opacity-70">or start a new one</p>
+                  <button type="button" onClick={() => setShowNew(true)}
+                    className="mt-4 px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all">
+                    New Message
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Thread header */}
+                  <div className={`flex items-center gap-3 px-4 py-3 border-b ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
+                    <button type="button" onClick={() => setMobileView('list')}
+                      className={`sm:hidden p-1.5 rounded-lg ${dark ? 'text-charcoal-400 hover:text-white' : 'text-gray-400 hover:text-gray-900'}`}>
+                      <ArrowLeft size={16} />
+                    </button>
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm ${dark ? 'bg-charcoal-700' : 'bg-gray-200'}`}>
+                      {activeThread.otherAvatar || '👤'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-bold truncate ${dark ? 'text-white' : 'text-gray-900'}`}>{activeThread.otherName}</p>
+                      <p className={`text-[10px] ${textSub}`}>Active recently</p>
+                    </div>
+                  </div>
+
+                  {/* Messages */}
+                  <div className="flex-1 overflow-y-auto px-4 py-4">
+                    {activeThread.messages.map(msg => (
+                      <Bubble key={msg.id} msg={msg} isMine={msg.senderId === user.id} dark={dark} />
+                    ))}
+                    <div ref={bottomRef} />
+                  </div>
+
+                  {/* Input */}
+                  <div className={`p-3 border-t ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={text}
+                        onChange={e => setText(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
+                        placeholder="Type a message..."
+                        className={`flex-1 px-4 py-2.5 text-sm rounded-xl border outline-none transition-all ${
+                          dark ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
+                               : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
+                        }`}
+                      />
+                      <button type="button" onClick={sendMessage} disabled={!text.trim()}
+                        className="p-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 disabled:opacity-40 text-charcoal-900 transition-all">
+                        <Send size={15} />
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showNew && (
+        <NewConversationModal
+          dark={dark}
+          onClose={() => setShowNew(false)}
+          onStart={startNewConversation}
+          myUser={user}
+          myProfile={authProfile}
+        />
+      )}
+    </div>
+  );
+}
