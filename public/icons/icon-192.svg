@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Maskable safe zone: content within 40px inset (80% of 240 = inner 144px centered) -->
+  <rect width="192" height="192" rx="40" fill="#0d0d18"/>
+  <!-- Gold accent bar at bottom -->
+  <rect x="0" y="176" width="192" height="16" rx="0" fill="#d4a941" opacity="0.7"/>
+  <!-- "CM" monogram -->
+  <text
+    x="96"
+    y="118"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="88"
+    font-weight="700"
+    fill="#d4a941"
+    text-anchor="middle"
+    dominant-baseline="auto"
+    letter-spacing="-4"
+  >CM</text>
+  <!-- Small tagline dot -->
+  <circle cx="96" cy="148" r="5" fill="#d4a941" opacity="0.6"/>
+</svg>
