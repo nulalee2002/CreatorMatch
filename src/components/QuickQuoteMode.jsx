@@ -49,7 +49,7 @@ export function QuickQuoteMode({ dark = true, onFullMode }) {
           <span className={`font-display font-bold text-sm ${textMain}`}>Quick Quote</span>
         </div>
         <button type="button" onClick={onFullMode} className={`text-xs ${textSub} hover:text-gold-400 transition-colors`}>
-          Full Calculator →
+          Full Rate Calculator →
         </button>
       </div>
 
@@ -170,12 +170,12 @@ export function QuickQuoteMode({ dark = true, onFullMode }) {
                 ))}
               </ul>
 
-              <p className={`text-xs ${textSub}`}>This is a market-rate estimate. Use the full calculator to customize and export a PDF quote.</p>
+              <p className={`text-xs ${textSub}`}>This is a market-rate estimate. Use the Rate Calculator to customize and export a PDF quote.</p>
             </div>
 
             <button type="button" onClick={onFullMode}
               className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 font-bold text-sm transition-all">
-              Customize in Full Calculator →
+              Customize in Rate Calculator →
             </button>
           </div>
         )}

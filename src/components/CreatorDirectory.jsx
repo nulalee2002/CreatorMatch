@@ -791,11 +791,15 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Hero search */}
       <div className="text-center mb-6">
-        <h1 className={`font-display text-3xl sm:text-4xl font-bold mb-2 ${dark ? 'text-white' : 'text-gray-900'}`}>
-          Find a Content <span className="text-gradient-gold">Creator</span>
+        <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+          The creator marketplace
+        </p>
+        <h1 className={`font-display text-3xl sm:text-4xl font-bold mb-3 leading-tight ${dark ? 'text-white' : 'text-gray-900'}`}>
+          Hire the right creator.<br className="hidden sm:block" />
+          <span className="text-gradient-gold">Fast.</span>
         </h1>
-        <p className={`text-sm ${textSub} max-w-lg mx-auto mb-5`}>
-          Search photographers, videographers, podcast producers, and more. Browse portfolios, compare rates, and connect directly.
+        <p className={`text-sm ${textSub} max-w-xl mx-auto mb-5`}>
+          Browse verified videographers, photographers, podcast producers, drone operators, and more from around the world. Compare portfolios, see real rates, and book directly.
         </p>
 
         {/* Main search bar */}

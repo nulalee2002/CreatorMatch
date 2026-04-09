@@ -315,7 +315,7 @@ export default function App() {
               { path: '/',           id: 'directory',  icon: Search,   label: 'Find Creators' },
               { path: '/projects',   id: 'projects',   icon: Briefcase, label: 'Projects' },
               { path: '/register',   id: 'register',   icon: UserPlus, label: 'Join' },
-              { path: '/calculator', id: 'calculator', icon: Zap,      label: 'Quote Builder' },
+              { path: '/calculator', id: 'calculator', icon: Zap,      label: 'Rate Calculator' },
             ].map(({ path, id, icon: Icon, label }) => (
               <button key={id} type="button" onClick={() => navigate(path)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors ${
@@ -640,10 +640,10 @@ export default function App() {
         <footer className={`mt-12 border-t ${dark ? 'border-charcoal-800' : 'border-gray-200'} py-6`}>
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p className={`text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
-              CreatorMatch — connecting clients with content creators worldwide
+              CreatorMatch — the marketplace for professional content creators worldwide
             </p>
             <p className={`text-xs ${dark ? 'text-charcoal-700' : 'text-gray-300'}`}>
-              All rates are industry estimates. Verify with local market data.
+              Rate estimates are based on industry data. Always confirm rates directly with your creator.
             </p>
           </div>
         </footer>
