@@ -36,7 +36,10 @@ export function CreatorProfilePage({ dark }) {
 
   async function loadCreator() {
     setLoading(true);
-    if (supabaseConfigured) {
+    // Seed creators (id starts with "seed-") only exist in localStorage —
+    // never query Supabase for them even when Supabase is configured.
+    const isSeed = id.startsWith('seed-');
+    if (supabaseConfigured && !isSeed) {
       const { data } = await supabase
         .from('creator_listings')
         .select(`*, creator_services(*), portfolio_items(*), packages(*), reviews(*)`)
@@ -56,6 +59,7 @@ export function CreatorProfilePage({ dark }) {
         supabase.from('creator_listings').update({ view_count: (data.view_count || 0) + 1 }).eq('id', id);
       }
     } else {
+      // Seed creators or no Supabase — always use localStorage
       const all = loadAllListings();
       const found = all.find(c => c.id === id);
       setCreator(found || null);
@@ -64,7 +68,7 @@ export function CreatorProfilePage({ dark }) {
   }
 
   async function checkFavorite() {
-    if (!user || !supabaseConfigured) {
+    if (!user || !supabaseConfigured || id.startsWith('seed-')) {
       const favs = JSON.parse(localStorage.getItem('creator-favorites') || '[]');
       setIsFav(favs.includes(id));
       return;
@@ -74,7 +78,7 @@ export function CreatorProfilePage({ dark }) {
   }
 
   async function toggleFavorite() {
-    if (supabaseConfigured && user) {
+    if (supabaseConfigured && user && !id.startsWith('seed-')) {
       if (isFav) {
         await supabase.from('favorites').delete().eq('user_id', user.id).eq('listing_id', id);
       } else {

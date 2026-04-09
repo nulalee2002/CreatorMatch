@@ -33,7 +33,8 @@ export function ReviewsSection({ creator, dark }) {
   }, [creator?.id]);
 
   async function loadReviews() {
-    if (supabaseConfigured) {
+    const isSeed = creator.id?.startsWith('seed-');
+    if (supabaseConfigured && !isSeed) {
       const { data } = await supabase
         .from('reviews')
         .select('*')
@@ -41,8 +42,14 @@ export function ReviewsSection({ creator, dark }) {
         .order('created_at', { ascending: false });
       setReviews(data || []);
     } else {
+      // Seed creators and no-Supabase fallback: read from localStorage.
+      // Seed reviews use listing_id; user-submitted ones use listingId.
       const all = JSON.parse(localStorage.getItem('creator-reviews') || '[]');
-      setReviews(all.filter(r => r.listingId === creator.id));
+      setReviews(
+        all
+          .filter(r => r.listing_id === creator.id || r.listingId === creator.id)
+          .sort((a, b) => new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0))
+      );
     }
   }
 
@@ -56,11 +63,12 @@ export function ReviewsSection({ creator, dark }) {
       rating:        form.rating,
       comment:       form.comment,
     };
-    if (supabaseConfigured) {
+    const isSeed = creator.id?.startsWith('seed-');
+    if (supabaseConfigured && !isSeed) {
       await supabase.from('reviews').insert(review);
     } else {
       const all = JSON.parse(localStorage.getItem('creator-reviews') || '[]');
-      all.unshift({ ...review, listingId: creator.id, id: Date.now().toString(), created_at: new Date().toISOString() });
+      all.unshift({ ...review, listingId: creator.id, id: Date.now().toString(), createdAt: new Date().toISOString() });
       localStorage.setItem('creator-reviews', JSON.stringify(all));
     }
     setForm({ rating: 5, comment: '', reviewerName: '' });
