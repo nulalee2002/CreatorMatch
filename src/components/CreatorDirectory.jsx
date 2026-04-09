@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Star, ChevronDown, ChevronUp, X, Globe, Mail, Phone, Instagram, Plus, Trash2, ArrowRight, Filter, UserPlus, Heart, ExternalLink, BadgeCheck } from 'lucide-react';
 import { SERVICES, RATES } from '../data/rates.js';
 import { REGIONS } from '../data/regions.js';
-import { SEED_CREATORS, initSeedData } from '../data/seedCreators.js';
+import { SEED_CREATORS, initSeedData, SHOW_DEMO_CREATORS } from '../data/seedCreators.js';
 import { zipToRegion, zipToCity } from '../data/zipCodes.js';
 
-// Initialize seed data on first load
+// Initialize seed data (version-gated — replaces stale seeds automatically)
 initSeedData();
 
 // ── LocalStorage helpers ──────────────────────────────────────

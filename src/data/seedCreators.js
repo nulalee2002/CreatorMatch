@@ -1,507 +1,462 @@
-// Seed data: worldwide creator listings across all service types
-// These populate the directory on first visit so clients see results immediately
+// ── Demo creator seed data ────────────────────────────────────────
+//
+// Toggle this to false to hide demo creators from the directory.
+// CreatorDirectory checks this before loading seed data.
+export const SHOW_DEMO_CREATORS = true;
 
+// Bump this number whenever SEED_CREATORS changes.
+// initSeedData() compares against localStorage 'creator-seed-version'
+// and forces a full re-write when the version is out of date.
+// This is what guarantees the profile-page "Creator not found" bug
+// cannot happen from stale localStorage.
+const SEED_VERSION = 3;
+
+// ── Three demo creators: filmmaker, photographer, podcast producer ─
 export const SEED_CREATORS = [
-  // ── US TIER 1 ─────────────────────────────────────────────
+
+  // ── 1. Filmmaker / Videographer ───────────────────────────────
   {
     id: 'seed-1',
+    user_id: null,
     name: 'Marcus Chen',
     businessName: 'Elevation Films',
     avatar: '🎬',
-    bio: 'Award-winning cinematographer and director specializing in corporate storytelling, brand films, and documentary. 10+ years shooting for Fortune 500 clients. RED and ARRI certified.',
-    location: { city: 'Los Angeles', state: 'CA', country: 'US', zip: '90028', regionKey: 'us-tier1' },
+    bio: 'Award-winning cinematographer and director with 12 years producing brand films, corporate stories, and documentary content for Fortune 500 clients. RED and ARRI certified. Available for single-day shoots, full campaigns, and long-term production partnerships.',
+    experience: 'senior',
+    yearsExperience: 12,
+    availability: 'available',
+    verified: true,
+    rating: 4.9,
+    reviewCount: 87,
+    plan: 'pro',
+    tags: ['Corporate', 'Documentary', 'Drone', 'Brand Film', 'RED Camera', 'ARRI', 'Color Grade'],
+    location: {
+      city: 'Los Angeles',
+      state: 'CA',
+      country: 'US',
+      zip: '90028',
+      regionKey: 'us-tier1',
+    },
+    contact: {
+      email: 'marcus@elevationfilms.co',
+      phone: '(323) 555-0247',
+      website: 'elevationfilms.co',
+      instagram: '@elevationfilms',
+    },
     services: [
       {
         serviceId: 'video',
         subtypes: ['Corporate', 'Documentary', 'Music Video', 'Social Media Content'],
-        rates: { hourlyShoot: 350, fullDay: 2800, corporateProject: 8500, musicVideoProject: 6000 },
-        description: 'Full-service video production from concept to final cut. Includes pre-production planning, on-site direction, and post-production.',
-      },
-      {
-        serviceId: 'drone',
-        subtypes: ['Commercial', 'Real Estate', 'Film/TV'],
-        rates: { hourlyVideo: 400, fullDay: 2200 },
-        description: 'FAA Part 107 certified. Cinema-grade aerial cinematography with DJI Inspire 3 and Mavic 3 Pro.',
+        description: 'Full-service video production from concept to final cut. Pre-production planning, on-site direction, and post-production all included. I bring a full grip package and work with a trusted crew of 2-4 depending on scope.',
+        rates: {
+          hourlyShoot:      350,
+          halfDay:         1400,
+          fullDay:         2800,
+          corporateProject: 8500,
+          musicVideoProject: 6000,
+          editHourly:       125,
+        },
       },
     ],
     portfolio: [
-      { title: 'Nike Brand Film', description: 'Full brand story campaign, 3-day shoot across LA', serviceId: 'video' },
-      { title: 'TechCorp Annual Report', description: 'Corporate documentary showcasing company culture', serviceId: 'video' },
-      { title: 'Malibu Estate Aerial', description: '$12M property aerial showcase for Coldwell Banker', serviceId: 'drone' },
+      {
+        title: 'Nike Brand Film — "Rise Every Day"',
+        description: '3-day shoot across 5 LA locations. Brand story campaign used across broadcast and digital. Directed, DP\'d, and edited in-house.',
+        serviceId: 'video',
+        link: 'https://vimeo.com',
+      },
+      {
+        title: 'Salesforce Annual Keynote Film',
+        description: 'Corporate documentary showcasing customer impact stories. Screened at Dreamforce to 40,000 attendees.',
+        serviceId: 'video',
+        link: 'https://vimeo.com',
+      },
+      {
+        title: 'TechCorp Culture Documentary',
+        description: '18-minute internal documentary on company culture. Used for recruiting and investor relations.',
+        serviceId: 'video',
+      },
     ],
-    experience: 'senior', yearsExperience: 12,
-    tags: ['Corporate', 'Documentary', 'Drone', 'Brand Film', 'RED Camera', 'ARRI'],
-    contact: { email: 'marcus@elevationfilms.co', phone: '(323) 555-0247', website: 'elevationfilms.co', instagram: '@elevationfilms' },
-    rating: 4.9, reviewCount: 87, availability: 'available',
+    packages: [
+      {
+        name: 'Basic',
+        serviceId: 'video',
+        price: 2800,
+        description: 'Perfect for single-location shoots and social media content.',
+        deliverables: [
+          'Full-day shoot (8 hrs)',
+          'Up to 3 finished video edits',
+          '1-minute hero cut + 2 social cuts (30s, 15s)',
+          'Licensed background music',
+          'Subtitles and captions',
+        ],
+        turnaround_days: 7,
+        revisions: 2,
+      },
+      {
+        name: 'Standard',
+        serviceId: 'video',
+        price: 6500,
+        description: 'Multi-day production for brand films and corporate content.',
+        deliverables: [
+          '2-day full shoot',
+          'Full pre-production planning call',
+          '1 hero edit (2–4 min) + 3 cut-downs',
+          'Color grade and audio mix',
+          'Drone footage (if location permits)',
+          'Licensed music from premium library',
+          'Subtitles and 2 social aspect ratios',
+        ],
+        turnaround_days: 14,
+        revisions: 3,
+      },
+      {
+        name: 'Premium',
+        serviceId: 'video',
+        price: 12000,
+        description: 'Full campaign production — concept to delivery.',
+        deliverables: [
+          '3-day production (locations, crew, lighting)',
+          'Creative concept development and script',
+          '1 flagship film (3–5 min)',
+          '6 social cuts optimized per platform',
+          'Full color grade (DaVinci Resolve)',
+          'Professional audio mix and master',
+          'Motion graphics and titles',
+          'Two rounds of client revisions',
+          'Final delivery in all formats',
+        ],
+        turnaround_days: 21,
+        revisions: 5,
+      },
+    ],
   },
+
+  // ── 2. Photographer ──────────────────────────────────────────
   {
     id: 'seed-2',
+    user_id: null,
     name: 'Aria Vasquez',
     businessName: 'Aria Visual Studio',
     avatar: '📷',
-    bio: 'Commercial and portrait photographer with a bold, editorial style. Featured in Vogue, Harper\'s Bazaar, and Architectural Digest. Specializing in luxury real estate, fashion, and brand photography.',
-    location: { city: 'Miami', state: 'FL', country: 'US', zip: '33101', regionKey: 'us-tier1' },
+    bio: 'Commercial and portrait photographer with a bold, editorial aesthetic. Featured in Vogue Business, Harper\'s Bazaar, and Architectural Digest. I specialize in luxury real estate, fashion campaigns, and executive portraits. Every image is delivered fully retouched, color-graded, and ready for print or digital.',
+    experience: 'senior',
+    yearsExperience: 9,
+    availability: 'available',
+    verified: true,
+    rating: 4.9,
+    reviewCount: 64,
+    plan: 'studio',
+    tags: ['Commercial', 'Real Estate', 'Fashion', 'Luxury', 'Editorial', 'Headshots', 'Product'],
+    location: {
+      city: 'Miami',
+      state: 'FL',
+      country: 'US',
+      zip: '33101',
+      regionKey: 'us-tier1',
+    },
+    contact: {
+      email: 'aria@ariavisual.com',
+      phone: '(305) 555-0182',
+      website: 'ariavisual.com',
+      instagram: '@ariavisualstudio',
+    },
     services: [
       {
         serviceId: 'photography',
-        subtypes: ['Commercial', 'Real Estate', 'Portraits', 'Headshots', 'Product'],
-        rates: { hourlyEvent: 400, dayRateCommercial: 3500, realEstatePerListing: 400, headshotsSession: 800, productPerImage: 120 },
-        description: 'Editorial-quality photography for brands, real estate, and professionals. Full retouching included.',
+        subtypes: ['Commercial', 'Real Estate', 'Portraits', 'Headshots', 'Product', 'Editorial'],
+        description: 'Editorial-quality photography for brands, real estate developers, and executives. All packages include full RAW processing, retouching, and delivery via private online gallery. Studio in Wynwood or on-location throughout South Florida.',
+        rates: {
+          hourlyEvent:         400,
+          dayRateCommercial:  3500,
+          realEstatePerListing: 400,
+          headshotsSession:    800,
+          productPerImage:     120,
+        },
       },
     ],
     portfolio: [
-      { title: 'South Beach Luxury Condos', description: 'Marketing photography for 40-unit luxury development', serviceId: 'photography' },
-      { title: 'Zara Campaign', description: 'Spring/summer lookbook — 200 final images', serviceId: 'photography' },
+      {
+        title: 'South Beach Luxury Condos — Brickell',
+        description: 'Marketing photography package for a 40-unit luxury waterfront development. 200+ final images delivered for print, OOH, and digital advertising.',
+        serviceId: 'photography',
+        link: 'https://instagram.com',
+      },
+      {
+        title: 'Zara Spring Campaign — South Florida',
+        description: 'Spring/summer lookbook shoot at Art Basel locations. 220 final images, licensing included for 12-month North America digital use.',
+        serviceId: 'photography',
+        link: 'https://instagram.com',
+      },
+      {
+        title: 'C-Suite Portrait Series — Fortune 500',
+        description: 'Executive portrait series for a financial services firm. 12 subjects across 2 days, used across annual report, LinkedIn, and press materials.',
+        serviceId: 'photography',
+      },
     ],
-    experience: 'senior', yearsExperience: 9,
-    tags: ['Commercial', 'Real Estate', 'Fashion', 'Luxury', 'Editorial', 'Headshots'],
-    contact: { email: 'aria@ariavisual.com', phone: '(305) 555-0182', website: 'ariavisual.com', instagram: '@ariavisualstudio' },
-    rating: 4.9, reviewCount: 64, availability: 'available',
+    packages: [
+      {
+        name: 'Basic',
+        serviceId: 'photography',
+        price: 1200,
+        description: 'Ideal for headshots, small product shoots, and social content.',
+        deliverables: [
+          '2-hour studio session',
+          '20 fully retouched final images',
+          'Private online gallery',
+          'Commercial usage license (digital)',
+          '48-hour delivery',
+        ],
+        turnaround_days: 2,
+        revisions: 1,
+      },
+      {
+        name: 'Standard',
+        serviceId: 'photography',
+        price: 3800,
+        description: 'Half-day commercial shoot for brands and real estate.',
+        deliverables: [
+          'Half-day shoot (4 hrs, studio or location)',
+          '60 fully retouched final images',
+          'Art direction and shot list planning',
+          'Commercial license (print + digital, 12 months)',
+          'Private gallery within 5 business days',
+          'Two background/color variants per hero image',
+        ],
+        turnaround_days: 5,
+        revisions: 2,
+      },
+      {
+        name: 'Premium',
+        serviceId: 'photography',
+        price: 7500,
+        description: 'Full-day campaign production with unlimited usage licensing.',
+        deliverables: [
+          'Full-day shoot (8 hrs, any location)',
+          '150+ fully retouched final images',
+          'Full creative direction and mood board',
+          'Hair/makeup coordination',
+          'Unlimited commercial license (worldwide)',
+          'Priority 3-day turnaround',
+          'Print-ready files + web-optimized exports',
+        ],
+        turnaround_days: 3,
+        revisions: 3,
+      },
+    ],
   },
+
+  // ── 3. Podcast Producer ──────────────────────────────────────
   {
     id: 'seed-3',
+    user_id: null,
     name: 'Jordan Mitchell',
     businessName: 'SoundWave Podcast Co.',
     avatar: '🎙️',
-    bio: 'Full-service podcast production studio in NYC. We handle everything from recording in our Midtown studio to editing, mastering, and distribution. Over 200 shows launched.',
-    location: { city: 'New York', state: 'NY', country: 'US', zip: '10001', regionKey: 'us-tier1' },
+    bio: 'Full-service podcast production studio in NYC. We\'ve launched over 200 shows from scratch and taken dozens of existing podcasts from hobbyist recordings to top-charting. Our team handles recording, editing, mastering, show notes, and distribution setup — you just show up and talk.',
+    experience: 'senior',
+    yearsExperience: 8,
+    availability: 'available',
+    verified: true,
+    rating: 4.8,
+    reviewCount: 53,
+    plan: 'pro',
+    tags: ['Podcast', 'Audio Editing', 'Video Podcast', 'Studio Recording', 'Monthly Retainer', 'Show Notes', 'Distribution'],
+    location: {
+      city: 'New York',
+      state: 'NY',
+      country: 'US',
+      zip: '10001',
+      regionKey: 'us-tier1',
+    },
+    contact: {
+      email: 'studio@soundwavepod.com',
+      phone: '(212) 555-0319',
+      website: 'soundwavepod.com',
+      instagram: '@soundwavepodco',
+    },
     services: [
       {
         serviceId: 'podcast',
-        subtypes: ['Audio Only', 'Video Podcast', 'In-Studio', 'Remote Recording'],
-        rates: { basicEditPerEp: 300, fullProductionPerEp: 1400, monthlyRetainer4Eps: 4200, recordingSession: 500, showNotesClipsPerEp: 125 },
-        description: 'End-to-end podcast production. Studio recording in NYC, remote recording support, editing, mastering, show notes, and social clips.',
+        subtypes: ['Audio Only', 'Video Podcast', 'In-Studio Recording', 'Remote Recording', 'Show Launch'],
+        description: 'End-to-end podcast production. In-studio recording at our Midtown NYC facility, or remote recording support via Riverside.fm or SquadCast. Editing, mastering, show notes, transcription, and social audio clips all included depending on tier.',
+        rates: {
+          basicEditPerEp:        300,
+          fullProductionPerEp:  1400,
+          monthlyRetainer4Eps:  4200,
+          recordingSession:      500,
+          showNotesClipsPerEp:   125,
+        },
       },
     ],
     portfolio: [
-      { title: 'The Growth Playbook', description: 'Top 50 business podcast — full production since launch', serviceId: 'podcast' },
-      { title: 'Culture Shift', description: 'Video podcast with 500K+ monthly downloads', serviceId: 'podcast' },
-    ],
-    experience: 'senior', yearsExperience: 8,
-    tags: ['Podcast', 'Audio', 'Video Podcast', 'Studio', 'NYC', 'Monthly Retainer'],
-    contact: { email: 'studio@soundwavepod.com', phone: '(212) 555-0319', website: 'soundwavepod.com', instagram: '@soundwavepodco' },
-    rating: 4.8, reviewCount: 53, availability: 'available',
-  },
-  {
-    id: 'seed-4',
-    name: 'Deja Williams',
-    businessName: 'ContentFirst Creative',
-    avatar: '📱',
-    bio: 'Social media content strategist and creator. We produce scroll-stopping Reels, TikToks, and YouTube content for brands looking to grow. Full brand campaign management available.',
-    location: { city: 'Chicago', state: 'IL', country: 'US', zip: '60601', regionKey: 'us-tier1' },
-    services: [
       {
-        serviceId: 'social',
-        subtypes: ['Reels/TikTok', 'YouTube', 'UGC', 'Brand Campaign', 'Monthly Package'],
-        rates: { singleReelTikTok: 500, contentDay: 3000, monthlyStandard: 2200, monthlyPremium: 5000, brandCampaignProject: 8000 },
-        description: 'Strategy-first content creation. We plan, shoot, edit, and optimize content for maximum engagement across all platforms.',
-      },
-    ],
-    portfolio: [
-      { title: 'Glossier Chicago Launch', description: 'Full social campaign — 40 assets, 12M impressions', serviceId: 'social' },
-      { title: 'Monthly Content for Allbirds', description: 'Ongoing 25-piece/month package', serviceId: 'social' },
-    ],
-    experience: 'mid', yearsExperience: 5,
-    tags: ['Social Media', 'TikTok', 'Reels', 'UGC', 'Brand Campaign', 'YouTube'],
-    contact: { email: 'deja@contentfirst.co', website: 'contentfirst.co', instagram: '@contentfirstcreative' },
-    rating: 4.8, reviewCount: 42, availability: 'available',
-  },
-
-  // ── US TIER 2 ─────────────────────────────────────────────
-  {
-    id: 'seed-5',
-    name: 'Tyler Nguyen',
-    businessName: 'NightHawk Drone',
-    avatar: '🚁',
-    bio: 'FAA Part 107 licensed aerial cinematography for real estate, events, construction, and commercial projects across DFW. 4K cinema-grade footage.',
-    location: { city: 'Dallas', state: 'TX', country: 'US', zip: '75201', regionKey: 'us-tier2' },
-    services: [
-      {
-        serviceId: 'drone',
-        subtypes: ['Real Estate', 'Commercial', 'Event', 'Mapping/Survey'],
-        rates: { hourlyPhoto: 225, hourlyVideo: 300, halfDay: 700, fullDay: 1300, realEstatePerProperty: 250, mappingPerAcre: 35 },
-        description: 'FAA Part 107 certified. DJI Inspire 3 and Mavic 3 Pro. All footage delivered in 4K with color grading included.',
-      },
-    ],
-    portfolio: [
-      { title: 'Highland Park Estates', description: 'Aerial tours for 15 luxury listings', serviceId: 'drone' },
-      { title: 'AT&T Stadium Event', description: 'Live event aerial coverage', serviceId: 'drone' },
-    ],
-    experience: 'mid', yearsExperience: 5,
-    tags: ['Drone', 'Aerial', 'Real Estate', 'FAA Part 107', 'DFW', 'Construction'],
-    contact: { email: 'fly@nighthawkdrone.com', phone: '(972) 555-0408', website: 'nighthawkdrone.com', instagram: '@nighthawkdrone' },
-    rating: 4.7, reviewCount: 31, availability: 'available',
-  },
-  {
-    id: 'seed-6',
-    name: 'Sam Rivera',
-    businessName: 'Frame & Flow Post',
-    avatar: '🎛️',
-    bio: 'Post-production studio specializing in color grading, motion graphics, and audio mixing for indie films, music videos, and corporate content.',
-    location: { city: 'Portland', state: 'OR', country: 'US', zip: '97201', regionKey: 'us-tier2' },
-    services: [
-      {
-        serviceId: 'postProduction',
-        subtypes: ['Video Editing', 'Color Grading', 'Motion Graphics', 'Audio Mix/Master'],
-        rates: { videoEditingHourly: 70, colorGradingHourly: 110, motionGraphicsHourly: 120, audioMixPerEp: 350, mediumProject: 1200, largeProject: 3500 },
-        description: 'DaVinci Resolve certified colorist. After Effects and Cinema 4D for motion graphics. Pro Tools for audio.',
-      },
-    ],
-    portfolio: [
-      { title: 'Indie Film Color Grade', description: 'Feature-length color grade — selected for SXSW', serviceId: 'postProduction' },
-      { title: 'Nike Motion Package', description: 'Animated graphics package for social campaign', serviceId: 'postProduction' },
-    ],
-    experience: 'senior', yearsExperience: 10,
-    tags: ['Color Grading', 'Motion Graphics', 'DaVinci Resolve', 'Post-Production', 'Audio'],
-    contact: { email: 'post@frameandflow.studio', website: 'frameandflow.studio', instagram: '@frameandflow' },
-    rating: 4.9, reviewCount: 48, availability: 'available',
-  },
-  {
-    id: 'seed-7',
-    name: 'Keisha Thomas',
-    businessName: 'Reels & Co.',
-    avatar: '📱',
-    bio: 'Atlanta-based social media content house creating scroll-stopping content for restaurants, fitness brands, and local businesses. We shoot, edit, and post.',
-    location: { city: 'Atlanta', state: 'GA', country: 'US', zip: '30301', regionKey: 'us-tier2' },
-    services: [
-      {
-        serviceId: 'social',
-        subtypes: ['Reels/TikTok', 'UGC', 'Monthly Package'],
-        rates: { singleReelTikTok: 250, contentDay: 1500, monthlyBasic: 800, monthlyStandard: 1600, ugcPerVideo: 175 },
-        description: 'Trend-driven short-form content. We handle concepting, shooting, and editing. Captions and hashtag strategy included.',
-      },
-      {
-        serviceId: 'photography',
-        subtypes: ['Commercial', 'Product', 'Event'],
-        rates: { hourlyEvent: 175, productPerImage: 50 },
-        description: 'Product and lifestyle photography for social media and e-commerce.',
-      },
-    ],
-    portfolio: [
-      { title: 'Sweetgreen ATL Launch', description: '30-piece content campaign for 3 new locations', serviceId: 'social' },
-      { title: 'FitBody Monthly', description: 'Ongoing 20-piece/month fitness content package', serviceId: 'social' },
-    ],
-    experience: 'mid', yearsExperience: 4,
-    tags: ['Social Media', 'UGC', 'Reels', 'Atlanta', 'Restaurants', 'Fitness'],
-    contact: { email: 'create@reelsandco.com', phone: '(404) 555-0512', website: 'reelsandco.com', instagram: '@reelsandco' },
-    rating: 4.7, reviewCount: 38, availability: 'available',
-  },
-  {
-    id: 'seed-8',
-    name: 'Ryan Cooper',
-    businessName: 'Cooper Wedding Films',
-    avatar: '🎬',
-    bio: 'Cinematic wedding filmmaker based in Nashville. Every love story deserves a film, not just a highlight reel. Serving TN, GA, AL, and destination weddings.',
-    location: { city: 'Nashville', state: 'TN', country: 'US', zip: '37201', regionKey: 'us-tier2' },
-    services: [
-      {
-        serviceId: 'video',
-        subtypes: ['Wedding', 'Event'],
-        rates: { weddingPackage: 4000, halfDay: 800, fullDay: 1500 },
-        description: 'Cinematic wedding films. Packages include ceremony + reception coverage, highlight film, and full ceremony edit.',
-      },
-      {
-        serviceId: 'photography',
-        subtypes: ['Event'],
-        rates: { weddingPackage: 3500, hourlyEvent: 200 },
-        description: 'Documentary-style wedding photography. 400+ edited photos delivered in online gallery.',
-      },
-    ],
-    portfolio: [
-      { title: 'Belle Meade Plantation Wedding', description: 'Cinematic wedding film — 150K views on Vimeo', serviceId: 'video' },
-      { title: 'Cheekwood Estate Wedding', description: 'Full day photo + video coverage', serviceId: 'video' },
-    ],
-    experience: 'mid', yearsExperience: 6,
-    tags: ['Wedding', 'Cinematic', 'Nashville', 'Destination', 'Film'],
-    contact: { email: 'ryan@cooperweddingfilms.com', website: 'cooperweddingfilms.com', instagram: '@cooperweddingfilms' },
-    rating: 4.9, reviewCount: 73, availability: 'available',
-  },
-
-  // ── US TIER 3 ─────────────────────────────────────────────
-  {
-    id: 'seed-9',
-    name: 'Megan Olsen',
-    businessName: 'Olsen Photo',
-    avatar: '📷',
-    bio: 'Boise photographer specializing in real estate, small business branding, and family portraits. Affordable rates with fast turnaround.',
-    location: { city: 'Boise', state: 'ID', country: 'US', zip: '83702', regionKey: 'us-tier3' },
-    services: [
-      {
-        serviceId: 'photography',
-        subtypes: ['Real Estate', 'Commercial', 'Portraits', 'Headshots'],
-        rates: { hourlyEvent: 125, realEstatePerListing: 175, headshotsSession: 250 },
-        description: 'Clean, bright photography for real estate agents and small businesses. 24-hour turnaround on real estate.',
-      },
-    ],
-    portfolio: [
-      { title: 'Boise Bench Real Estate', description: '50+ listings for local agents', serviceId: 'photography' },
-    ],
-    experience: 'mid', yearsExperience: 4,
-    tags: ['Real Estate', 'Portraits', 'Small Business', 'Boise', 'Affordable'],
-    contact: { email: 'megan@olsenphoto.com', website: 'olsenphoto.com', instagram: '@olsenphoto' },
-    rating: 4.6, reviewCount: 22, availability: 'available',
-  },
-
-  // ── CANADA ────────────────────────────────────────────────
-  {
-    id: 'seed-10',
-    name: 'Liam Tremblay',
-    businessName: 'North Light Films',
-    avatar: '🎬',
-    bio: 'Toronto-based production company creating corporate videos, commercials, and brand content for Canadian and international clients. Bilingual (EN/FR).',
-    location: { city: 'Toronto', state: 'ON', country: 'CA', zip: '', regionKey: 'ca-tier1' },
-    services: [
-      {
-        serviceId: 'video',
-        subtypes: ['Corporate', 'Social Media Content', 'Event'],
-        rates: { hourlyShoot: 250, fullDay: 1800, corporateProject: 6000 },
-        description: 'Full-service video production. Rates in CAD. Travel across Ontario included.',
-      },
-    ],
-    portfolio: [
-      { title: 'Shopify Brand Film', description: 'Internal culture video for Shopify HQ', serviceId: 'video' },
-      { title: 'Toronto Raptors Event', description: 'Fan event highlight reel', serviceId: 'video' },
-    ],
-    experience: 'senior', yearsExperience: 8,
-    tags: ['Corporate', 'Commercial', 'Toronto', 'Bilingual', 'Brand Film'],
-    contact: { email: 'liam@northlightfilms.ca', website: 'northlightfilms.ca', instagram: '@northlightfilms' },
-    rating: 4.8, reviewCount: 39, availability: 'available',
-  },
-  {
-    id: 'seed-11',
-    name: 'Priya Sharma',
-    businessName: 'Priya Sharma Photography',
-    avatar: '📷',
-    bio: 'Vancouver wedding and portrait photographer. Natural light specialist with a warm, timeless editing style. Serving BC and destination weddings worldwide.',
-    location: { city: 'Vancouver', state: 'BC', country: 'CA', zip: '', regionKey: 'ca-tier1' },
-    services: [
-      {
-        serviceId: 'photography',
-        subtypes: ['Portraits', 'Event', 'Commercial'],
-        rates: { hourlyEvent: 300, weddingPackage: 5000, headshotsSession: 400 },
-        description: 'Natural light photography with warm, editorial toning. All packages include an online gallery and print rights.',
-      },
-    ],
-    portfolio: [
-      { title: 'Stanley Park Elopement', description: 'Intimate elopement in the forest — featured in Junebug Weddings', serviceId: 'photography' },
-    ],
-    experience: 'mid', yearsExperience: 6,
-    tags: ['Wedding', 'Portrait', 'Natural Light', 'Vancouver', 'Destination'],
-    contact: { email: 'hello@priyasharma.ca', website: 'priyasharma.ca', instagram: '@priyasharmaphoto' },
-    rating: 4.9, reviewCount: 56, availability: 'available',
-  },
-
-  // ── UK ────────────────────────────────────────────────────
-  {
-    id: 'seed-12',
-    name: 'James O\'Brien',
-    businessName: 'JBOB Films',
-    avatar: '🎬',
-    bio: 'London-based filmmaker creating branded content, music videos, and corporate films. Clients include Universal Music, BBC, and Unilever.',
-    location: { city: 'London', state: '', country: 'UK', zip: '', regionKey: 'uk-tier1' },
-    services: [
-      {
-        serviceId: 'video',
-        subtypes: ['Corporate', 'Music Video', 'Social Media Content'],
-        rates: { hourlyShoot: 200, fullDay: 1200, corporateProject: 7000, musicVideoProject: 5000 },
-        description: 'Cinematic video production for brands and artists. All rates in GBP.',
-      },
-      {
-        serviceId: 'postProduction',
-        subtypes: ['Video Editing', 'Color Grading'],
-        rates: { videoEditingHourly: 80, colorGradingHourly: 120 },
-        description: 'DaVinci Resolve grading. Premiere Pro and Avid editing.',
-      },
-    ],
-    portfolio: [
-      { title: 'Unilever Sustainability', description: 'Global sustainability campaign — 5 films across 3 countries', serviceId: 'video' },
-      { title: 'Stormzy Music Video', description: 'Full production music video — 8M YouTube views', serviceId: 'video' },
-    ],
-    experience: 'senior', yearsExperience: 11,
-    tags: ['Corporate', 'Music Video', 'London', 'BBC', 'Brand Content'],
-    contact: { email: 'james@jbobfilms.co.uk', website: 'jbobfilms.co.uk', instagram: '@jbobfilms' },
-    rating: 4.8, reviewCount: 44, availability: 'available',
-  },
-  {
-    id: 'seed-13',
-    name: 'Sophie Clarke',
-    businessName: 'Clarke Creative Studio',
-    avatar: '📷',
-    bio: 'Manchester-based commercial photographer and content creator. Clean, modern aesthetic for e-commerce, food, and lifestyle brands.',
-    location: { city: 'Manchester', state: '', country: 'UK', zip: '', regionKey: 'uk-tier2' },
-    services: [
-      {
-        serviceId: 'photography',
-        subtypes: ['Commercial', 'Product', 'Headshots'],
-        rates: { hourlyEvent: 120, dayRateCommercial: 900, productPerImage: 45, headshotsSession: 250 },
-        description: 'Studio and location photography. All rates in GBP. Retouching included.',
-      },
-      {
-        serviceId: 'social',
-        subtypes: ['Reels/TikTok', 'UGC', 'Monthly Package'],
-        rates: { singleReelTikTok: 150, contentDay: 800, monthlyBasic: 500 },
-        description: 'Social content creation with a focus on lifestyle and product brands.',
-      },
-    ],
-    portfolio: [
-      { title: 'ASOS Product Shoot', description: '500+ product images for online catalog', serviceId: 'photography' },
-    ],
-    experience: 'mid', yearsExperience: 5,
-    tags: ['Product', 'E-commerce', 'Content Creator', 'Manchester', 'Food'],
-    contact: { email: 'sophie@clarkecreative.co.uk', website: 'clarkecreative.co.uk', instagram: '@clarkecreativestudio' },
-    rating: 4.7, reviewCount: 29, availability: 'available',
-  },
-
-  // ── EUROPE ────────────────────────────────────────────────
-  {
-    id: 'seed-14',
-    name: 'Lukas Weber',
-    businessName: 'Weber Filmproduktion',
-    avatar: '🎬',
-    bio: 'Berlin-based filmmaker producing commercials, corporate films, and music videos. Multilingual team (DE/EN/FR). Known for bold visual storytelling.',
-    location: { city: 'Berlin', state: '', country: 'DE', zip: '', regionKey: 'eu-de' },
-    services: [
-      {
-        serviceId: 'video',
-        subtypes: ['Corporate', 'Music Video', 'Documentary'],
-        rates: { hourlyShoot: 150, fullDay: 1000, corporateProject: 5000, musicVideoProject: 3500 },
-        description: 'Full production house. All rates in EUR. Travel across Germany and EU included.',
-      },
-    ],
-    portfolio: [
-      { title: 'Siemens Future Tech', description: 'Corporate innovation film — screened at CES', serviceId: 'video' },
-      { title: 'Berlin Music Scene', description: '3-part documentary series on underground music', serviceId: 'video' },
-    ],
-    experience: 'senior', yearsExperience: 9,
-    tags: ['Corporate', 'Music Video', 'Berlin', 'Documentary', 'Multilingual'],
-    contact: { email: 'lukas@weberfilm.de', website: 'weberfilm.de', instagram: '@weberfilmproduktion' },
-    rating: 4.8, reviewCount: 36, availability: 'available',
-  },
-  {
-    id: 'seed-15',
-    name: 'Camille Dupont',
-    businessName: 'Dupont Photo Paris',
-    avatar: '📷',
-    bio: 'Paris-based fashion and commercial photographer. Clients include Louis Vuitton, Chanel, and Le Monde. Editorial and advertising work.',
-    location: { city: 'Paris', state: '', country: 'FR', zip: '', regionKey: 'eu-fr' },
-    services: [
-      {
-        serviceId: 'photography',
-        subtypes: ['Commercial', 'Portraits', 'Product'],
-        rates: { hourlyEvent: 200, dayRateCommercial: 2500, productPerImage: 100 },
-        description: 'Fashion and luxury brand photography. All rates in EUR.',
-      },
-    ],
-    portfolio: [
-      { title: 'Chanel SS26 Campaign', description: 'Spring/summer editorial — 80 final images', serviceId: 'photography' },
-    ],
-    experience: 'senior', yearsExperience: 14,
-    tags: ['Fashion', 'Luxury', 'Paris', 'Editorial', 'Advertising'],
-    contact: { email: 'camille@dupontphoto.fr', website: 'dupontphoto.fr', instagram: '@dupontphotoparis' },
-    rating: 5.0, reviewCount: 52, availability: 'available',
-  },
-  {
-    id: 'seed-16',
-    name: 'Erik Lindqvist',
-    businessName: 'Nordic Content Studio',
-    avatar: '📱',
-    bio: 'Stockholm-based content agency creating social media campaigns, brand films, and podcasts for Scandinavian and international brands.',
-    location: { city: 'Stockholm', state: '', country: 'SE', zip: '', regionKey: 'eu-scan' },
-    services: [
-      {
-        serviceId: 'social',
-        subtypes: ['Brand Campaign', 'Monthly Package', 'YouTube'],
-        rates: { monthlyStandard: 1800, brandCampaignProject: 6000, contentDay: 2000 },
-        description: 'Full-service content studio. Strategy, production, editing, and analytics. Rates in EUR.',
-      },
-      {
+        title: 'The Growth Playbook — Top 50 Business Podcast',
+        description: 'Full production partnership since launch. 180+ episodes, currently ranked #34 in Business on Apple Podcasts. We handle everything post-record.',
         serviceId: 'podcast',
-        subtypes: ['Audio Only', 'Video Podcast'],
-        rates: { fullProductionPerEp: 800, monthlyRetainer4Eps: 2800 },
-        description: 'Podcast production for brands and thought leaders. Scandinavian and English language.',
-      },
-    ],
-    portfolio: [
-      { title: 'Spotify Nordics Campaign', description: 'Multi-platform content campaign — 6 months', serviceId: 'social' },
-      { title: 'IKEA Sustainability Podcast', description: '20-episode branded podcast series', serviceId: 'podcast' },
-    ],
-    experience: 'mid', yearsExperience: 6,
-    tags: ['Social Media', 'Podcast', 'Stockholm', 'Scandinavian', 'Brand Campaign'],
-    contact: { email: 'erik@nordiccontent.se', website: 'nordiccontent.se', instagram: '@nordiccontentstudio' },
-    rating: 4.7, reviewCount: 25, availability: 'available',
-  },
-  {
-    id: 'seed-17',
-    name: 'Isabella Rossi',
-    businessName: 'Rossi Visuals',
-    avatar: '🎬',
-    bio: 'Milan-based video producer and photographer. Fashion, food, and luxury lifestyle content for Italian and international brands.',
-    location: { city: 'Milan', state: '', country: 'IT', zip: '', regionKey: 'eu-it' },
-    services: [
-      {
-        serviceId: 'video',
-        subtypes: ['Corporate', 'Social Media Content'],
-        rates: { hourlyShoot: 130, fullDay: 850, corporateProject: 4000 },
-        description: 'Fashion and lifestyle video production. Rates in EUR.',
+        link: 'https://podcasts.apple.com',
       },
       {
-        serviceId: 'photography',
-        subtypes: ['Commercial', 'Product'],
-        rates: { dayRateCommercial: 1800, productPerImage: 80 },
-        description: 'High-end product and editorial photography for fashion and food.',
-      },
-    ],
-    portfolio: [
-      { title: 'Gucci Product Campaign', description: 'Product photography for e-commerce launch', serviceId: 'photography' },
-    ],
-    experience: 'mid', yearsExperience: 7,
-    tags: ['Fashion', 'Food', 'Milan', 'Luxury', 'Italian'],
-    contact: { email: 'isabella@rossivisuals.it', website: 'rossivisuals.it', instagram: '@rossivisuals' },
-    rating: 4.8, reviewCount: 33, availability: 'available',
-  },
-  {
-    id: 'seed-18',
-    name: 'Carlos Mendez',
-    businessName: 'Mendez Media',
-    avatar: '🚁',
-    bio: 'Madrid-based drone and video specialist. Certified EU drone operator. Real estate, tourism, and event aerial coverage across Spain.',
-    location: { city: 'Madrid', state: '', country: 'ES', zip: '', regionKey: 'eu-es' },
-    services: [
-      {
-        serviceId: 'drone',
-        subtypes: ['Real Estate', 'Event', 'Commercial'],
-        rates: { hourlyPhoto: 120, hourlyVideo: 160, halfDay: 450, realEstatePerProperty: 180 },
-        description: 'EU-certified drone pilot. DJI Inspire and Mavic platforms. 4K aerial video and photography.',
+        title: 'Culture Shift — Video Podcast',
+        description: 'Weekly video podcast with 500K+ monthly downloads across YouTube and audio platforms. Studio recording in Midtown with full video edit and chapter markers.',
+        serviceId: 'podcast',
+        link: 'https://youtube.com',
       },
       {
-        serviceId: 'video',
-        subtypes: ['Event', 'Corporate'],
-        rates: { hourlyShoot: 100, fullDay: 700 },
-        description: 'Event and corporate videography. Bilingual (ES/EN).',
+        title: 'The Founder Files — Launch Package',
+        description: 'Took a founder from zero to launched in 6 weeks. Trailer, first 5 episodes, Spotify/Apple distribution setup, and PR pitch kit.',
+        serviceId: 'podcast',
       },
     ],
-    portfolio: [
-      { title: 'Ibiza Resort Aerial', description: 'Tourism promotional video — aerial + ground footage', serviceId: 'drone' },
+    packages: [
+      {
+        name: 'Basic',
+        serviceId: 'podcast',
+        price: 350,
+        description: 'Per-episode editing for established shows. You record, we polish.',
+        deliverables: [
+          'Audio editing and noise removal',
+          'Levels normalization and mastering',
+          'Intro/outro insertion',
+          'ID3 tags and metadata',
+          'MP3 delivery (podcast-ready)',
+        ],
+        turnaround_days: 3,
+        revisions: 1,
+      },
+      {
+        name: 'Standard',
+        serviceId: 'podcast',
+        price: 1500,
+        description: 'Per-episode full production. Remote or in-studio recording included.',
+        deliverables: [
+          'Remote recording session (Riverside.fm)',
+          'Full audio edit and mastering',
+          'Intro/outro + ad break insertion',
+          'Show notes (300–500 words)',
+          'Transcript (AI-assisted, proofed)',
+          '3 audiogram social clips',
+          'Chapter markers (Spotify)',
+        ],
+        turnaround_days: 5,
+        revisions: 2,
+      },
+      {
+        name: 'Premium',
+        serviceId: 'podcast',
+        price: 4500,
+        description: 'Monthly retainer for 4 episodes. Best value for weekly shows.',
+        deliverables: [
+          '4 episodes per month (full production)',
+          'In-studio recording (NYC) or remote',
+          'Full audio + video edit (if video podcast)',
+          'YouTube upload and thumbnail',
+          'Show notes, transcript, and chapters',
+          'Social clips (5 per episode)',
+          'Monthly analytics review call',
+          'Guest coordination support',
+        ],
+        turnaround_days: 5,
+        revisions: 3,
+      },
     ],
-    experience: 'mid', yearsExperience: 5,
-    tags: ['Drone', 'Aerial', 'Madrid', 'Tourism', 'Real Estate', 'Spain'],
-    contact: { email: 'carlos@mendezmedia.es', website: 'mendezmedia.es', instagram: '@mendezmedia' },
-    rating: 4.6, reviewCount: 18, availability: 'available',
   },
 ];
 
-// Initialize localStorage with seed data if empty or stale format
+// ── Pre-seeded reviews ────────────────────────────────────────────
+// These give profiles a realistic feel on first load.
+// Keyed by listing_id so ReviewsSection can filter them.
+const SEED_REVIEWS = [
+  // seed-1 (Marcus Chen)
+  {
+    id: 'srev-1a', listing_id: 'seed-1', reviewer_name: 'Jamie R.', rating: 5,
+    comment: 'Marcus delivered a brand film that stopped everyone in their tracks at our all-hands. The pre-production process was incredibly organized and he brought ideas we hadn\'t even considered. Highly recommend for any corporate video project.',
+    createdAt: new Date(Date.now() - 86400000 * 14).toISOString(),
+  },
+  {
+    id: 'srev-1b', listing_id: 'seed-1', reviewer_name: 'Danielle P.', rating: 5,
+    comment: 'We hired Elevation Films for a product launch and the result was cinematic quality we didn\'t expect at this budget. Fast turnaround, professional crew, and Marcus is great to work with on set.',
+    createdAt: new Date(Date.now() - 86400000 * 45).toISOString(),
+  },
+  {
+    id: 'srev-1c', listing_id: 'seed-1', reviewer_name: 'Thomas N.', rating: 4,
+    comment: 'Solid production quality and very responsive communication. The final edit was excellent. Would have loved slightly faster turnaround but the quality made it worth the wait.',
+    createdAt: new Date(Date.now() - 86400000 * 90).toISOString(),
+  },
+  // seed-2 (Aria Vasquez)
+  {
+    id: 'srev-2a', listing_id: 'seed-2', reviewer_name: 'Sofia M.', rating: 5,
+    comment: 'Aria shot our entire condo development campaign and the images are stunning. Every real estate agent who sees them asks who the photographer is. She made our properties look like they belong in Architectural Digest.',
+    createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+  },
+  {
+    id: 'srev-2b', listing_id: 'seed-2', reviewer_name: 'Carlos E.', rating: 5,
+    comment: 'Booked Aria for executive headshots and she made the whole process easy and comfortable. The final images are professional and distinctive — exactly what we needed for press and LinkedIn.',
+    createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
+  },
+  {
+    id: 'srev-2c', listing_id: 'seed-2', reviewer_name: 'Michelle T.', rating: 5,
+    comment: 'We\'ve worked with a lot of photographers for our brand campaigns. Aria stands apart — she understands light, story, and brand in a way that produces images that actually perform. Our email CTR went up 40% after switching to her photography.',
+    createdAt: new Date(Date.now() - 86400000 * 60).toISOString(),
+  },
+  // seed-3 (Jordan Mitchell)
+  {
+    id: 'srev-3a', listing_id: 'seed-3', reviewer_name: 'Alex K.', rating: 5,
+    comment: 'SoundWave took our podcast from a side project to a serious production. The editing quality is top-tier — every episode sounds like it was recorded in a professional studio even when we\'re remote. Jordan\'s show notes are better than anything I\'d write myself.',
+    createdAt: new Date(Date.now() - 86400000 * 7).toISOString(),
+  },
+  {
+    id: 'srev-3b', listing_id: 'seed-3', reviewer_name: 'Rachel B.', rating: 5,
+    comment: 'We launched with Jordan from day one. Within 6 weeks we were on Apple Podcasts New and Noteworthy. The launch package was worth every penny — they handled everything we didn\'t even know we needed.',
+    createdAt: new Date(Date.now() - 86400000 * 21).toISOString(),
+  },
+  {
+    id: 'srev-3c', listing_id: 'seed-3', reviewer_name: 'David W.', rating: 4,
+    comment: 'Consistent, high-quality production every single week for 18 months. That kind of reliability is priceless for a weekly show. Minor note: scheduling can take a bit of lead time since they\'re popular, so plan ahead.',
+    createdAt: new Date(Date.now() - 86400000 * 75).toISOString(),
+  },
+];
+
+// ── Initialize localStorage ───────────────────────────────────────
 export function initSeedData() {
+  // If demo creators are disabled, remove any existing seed entries and exit.
+  if (!SHOW_DEMO_CREATORS) {
+    try {
+      const all = JSON.parse(localStorage.getItem('creator-directory') || '[]');
+      const userListings = all.filter(l => !l.id.startsWith('seed-'));
+      localStorage.setItem('creator-directory', JSON.stringify(userListings));
+    } catch {}
+    return;
+  }
+
   try {
-    const existing = JSON.parse(localStorage.getItem('creator-directory') || '[]');
-    // Check if data is in the new format (has services array) or old format (flat serviceId)
-    const isNewFormat = existing.length > 0 && existing[0].services && Array.isArray(existing[0].services);
-    if (existing.length === 0 || !isNewFormat) {
-      // Keep any user-added listings (non-seed, non-demo), migrate them if possible
-      const userListings = existing.filter(l => !l.id.startsWith('seed-') && !l.id.startsWith('demo-'));
-      localStorage.setItem('creator-directory', JSON.stringify([...SEED_CREATORS, ...userListings]));
+    const storedVersion = parseInt(localStorage.getItem('creator-seed-version') || '0', 10);
+
+    if (storedVersion < SEED_VERSION) {
+      // ── Re-write seed creators ─────────────────────────────────
+      // Always keep user-added listings (anything not prefixed 'seed-').
+      const all = JSON.parse(localStorage.getItem('creator-directory') || '[]');
+      const userListings = all.filter(l => !l.id.startsWith('seed-'));
+      localStorage.setItem(
+        'creator-directory',
+        JSON.stringify([...SEED_CREATORS, ...userListings])
+      );
+
+      // ── Re-write seed reviews ──────────────────────────────────
+      const existingReviews = JSON.parse(localStorage.getItem('creator-reviews') || '[]');
+      const userReviews = existingReviews.filter(r => !r.id?.startsWith('srev-'));
+      localStorage.setItem(
+        'creator-reviews',
+        JSON.stringify([...SEED_REVIEWS, ...userReviews])
+      );
+
+      // ── Stamp version so this only runs once per seed version ──
+      localStorage.setItem('creator-seed-version', String(SEED_VERSION));
     }
   } catch {
+    // Hard fallback: write seeds regardless
     localStorage.setItem('creator-directory', JSON.stringify(SEED_CREATORS));
+    localStorage.setItem('creator-reviews', JSON.stringify(SEED_REVIEWS));
+    localStorage.setItem('creator-seed-version', String(SEED_VERSION));
   }
 }
