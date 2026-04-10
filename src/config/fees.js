@@ -86,6 +86,51 @@ export function dollarsToDisplay(dollars) {
   return `$${Number(dollars).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+/**
+ * Cancellation fee schedule — percentage of project total the creator retains.
+ * 'before_acceptance' = client cancels before creator accepts
+ * 'after_acceptance'  = creator accepted but retainer not yet paid
+ * 'after_retainer'    = retainer paid but work not started
+ * 'work_in_progress'  = work has started (in_progress status)
+ * 'after_delivery'    = work delivered but client cancels instead of approving
+ */
+export const CANCELLATION_FEES = {
+  before_acceptance:  0,
+  after_acceptance:   15,
+  after_retainer:     25,
+  work_in_progress:   40,
+  after_delivery:     100,
+};
+
+/** Map a project status to the relevant cancellation stage */
+export function getCancellationStage(projectStatus) {
+  switch (projectStatus) {
+    case 'open':          return 'before_acceptance';
+    case 'accepted':      return 'after_acceptance';
+    case 'retainer_paid': return 'after_retainer';
+    case 'in_progress':
+    case 'revision':      return 'work_in_progress';
+    case 'delivered':
+    case 'approved':      return 'after_delivery';
+    default:              return 'before_acceptance';
+  }
+}
+
+/**
+ * Calculate how much the creator keeps (and client gets back) on cancellation.
+ * @param {number} projectTotal - Full project value in dollars
+ * @param {string} projectStatus - Current status of the project
+ * @returns {{ stage: string, feePct: number, creatorKeepsDollars: number, clientRefundDollars: number }}
+ */
+export function getCancellationFee(projectTotal, projectStatus) {
+  const stage   = getCancellationStage(projectStatus);
+  const feePct  = CANCELLATION_FEES[stage];
+  const total   = Number(projectTotal) || 0;
+  const creatorKeepsDollars = (total * feePct) / 100;
+  const clientRefundDollars = total - creatorKeepsDollars;
+  return { stage, feePct, creatorKeepsDollars, clientRefundDollars };
+}
+
 /** Project status labels and badge colors */
 export const PROJECT_STATUSES = {
   open:             { label: 'Open',                   color: 'teal'   },

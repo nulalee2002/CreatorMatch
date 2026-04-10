@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import {
   Briefcase, Plus, MapPin, Clock, DollarSign, ChevronRight,
   Check, X, Filter, Search, Tag, Send, ArrowLeft, Users,
-  Eye, Star, Calendar, CreditCard, Truck, ThumbsUp, RotateCcw,
+  Eye, Star, Calendar, CreditCard, Truck, ThumbsUp, RotateCcw, Zap,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { SERVICES } from '../data/rates.js';
 import { PROJECT_STATUSES, statusBadgeClass } from '../config/fees.js';
 import { ProjectTimeline } from '../components/ProjectTimeline.jsx';
 import { DisputeModal } from '../components/DisputeModal.jsx';
+import { CancellationModal } from '../components/CancellationModal.jsx';
+import { ClientReputationBadge, loadClientReputation, RateClientModal } from '../components/ClientReputationBadge.jsx';
 
 // ── localStorage helpers ────────────────────────────────────────
 function loadProjects() {
@@ -276,6 +278,15 @@ function ProjectActionButtons({ project, isClient, applied, dark, onApply, onSta
 
   // Client buttons
   if (isClient) {
+    if (status === 'open') {
+      return (
+        <button type="button"
+          onClick={e => { e.stopPropagation(); navigate(`/matches/${project.id}`); }}
+          className="w-full py-2 rounded-xl bg-gold-500/15 hover:bg-gold-500/25 text-gold-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 border border-gold-500/30">
+          <Zap size={11} /> View Your Matches
+        </button>
+      );
+    }
     if (status === 'accepted') {
       return (
         <button type="button"
@@ -340,6 +351,16 @@ function ProjectActionButtons({ project, isClient, applied, dark, onApply, onSta
   return null;
 }
 
+// ── Inline client rep loader ──────────────────────────────────────
+function InlineClientRep({ clientId, dark }) {
+  const [metrics, setMetrics] = useState(null);
+  useEffect(() => {
+    loadClientReputation(clientId).then(setMetrics);
+  }, [clientId]);
+  if (!metrics) return null;
+  return <ClientReputationBadge metrics={metrics} dark={dark} size="sm" />;
+}
+
 // ── Project Card ─────────────────────────────────────────────────
 function ProjectCard({ project, dark, onApply, myApplications, isClient, onView, onStatusChange }) {
   const navigate = useNavigate();
@@ -366,7 +387,11 @@ function ProjectCard({ project, dark, onApply, myApplications, isClient, onView,
           </div>
           <div>
             <h3 className={`font-semibold text-sm ${dark ? 'text-white' : 'text-gray-900'}`}>{project.title}</h3>
-            <p className={`text-[11px] ${textSub}`}>by {project.clientName} · {timeAgo(project.createdAt)}</p>
+            <div className={`flex items-center gap-1.5 text-[11px] ${textSub}`}>
+              by {project.clientName}
+              {project.clientId && <InlineClientRep clientId={project.clientId} dark={dark} />}
+              · {timeAgo(project.createdAt)}
+            </div>
           </div>
         </div>
         <span className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${statusBadgeClass(project.status, dark)}`}>
@@ -432,7 +457,9 @@ function ProjectDetailModal({ project, dark, onClose, onApply, myApplications, a
   const textSub     = dark ? 'text-charcoal-400' : 'text-gray-500';
   const applied     = myApplications.some(a => a.projectId === project.id);
   const projectApps = applications.filter(a => a.projectId === project.id);
-  const [showDispute, setShowDispute] = useState(false);
+  const [showDispute, setShowDispute]       = useState(false);
+  const [showCancel, setShowCancel]         = useState(false);
+  const [showRateClient, setShowRateClient] = useState(false);
 
   const budgetStr = project.budgetMin && project.budgetMax
     ? `$${Number(project.budgetMin).toLocaleString()} – $${Number(project.budgetMax).toLocaleString()}`
@@ -532,6 +559,20 @@ function ProjectDetailModal({ project, dark, onClose, onApply, myApplications, a
               onStatusChange={onStatusChange}
               navigate={navigate}
             />
+            {/* Rate Client — shown for creators on completed projects */}
+            {!isClient && project.status === 'completed' && (
+              <button type="button" onClick={() => setShowRateClient(true)}
+                className="w-full py-2 rounded-xl bg-gold-500/15 border border-gold-500/30 text-gold-400 text-xs font-bold transition-all hover:bg-gold-500/25">
+                ⭐ Rate This Client
+              </button>
+            )}
+            {/* Cancel button — shown for client on open/active projects */}
+            {isClient && ['open', 'accepted', 'retainer_paid', 'in_progress', 'revision'].includes(project.status) && (
+              <button type="button" onClick={() => setShowCancel(true)}
+                className={`w-full py-2 rounded-xl border text-xs font-medium transition-all text-red-400 border-red-500/30 hover:bg-red-500/10`}>
+                Cancel Project
+              </button>
+            )}
             {/* Dispute button — shown for active projects */}
             {isClient && ['retainer_paid', 'in_progress', 'delivered', 'revision'].includes(project.status) && (
               <button type="button" onClick={() => setShowDispute(true)}
@@ -546,6 +587,28 @@ function ProjectDetailModal({ project, dark, onClose, onApply, myApplications, a
               dark={dark}
               onClose={() => setShowDispute(false)}
               onSubmitted={() => { setShowDispute(false); onStatusChange?.(project.id, 'disputed'); onClose(); }}
+            />
+          )}
+          {showCancel && (
+            <CancellationModal
+              project={project}
+              dark={dark}
+              onClose={() => setShowCancel(false)}
+              onConfirm={(proj, reason) => {
+                setShowCancel(false);
+                onStatusChange?.(proj.id, 'cancelled');
+                onClose();
+              }}
+            />
+          )}
+          {showRateClient && (
+            <RateClientModal
+              clientId={project.clientId}
+              clientName={project.clientName}
+              projectId={project.id}
+              dark={dark}
+              onClose={() => setShowRateClient(false)}
+              onSubmitted={() => setShowRateClient(false)}
             />
           )}
         </div>
@@ -636,6 +699,8 @@ export function ProjectBoard({ dark }) {
   function handlePosted(project) {
     setProjects(prev => [project, ...prev]);
     setShowPost(false);
+    // Redirect client to smart match results
+    navigate(`/matches/${project.id}`);
   }
 
   const myApplications = applications.filter(a => a.creatorId === creatorListing?.id);

@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Star, Globe, Mail, Phone, Instagram, Heart, Share2, Check, ExternalLink, Package, MessageSquare, BadgeCheck } from 'lucide-react';
 import { VerificationBadge } from '../components/VerificationFlow.jsx';
 import { LoyaltyBadge } from '../components/LoyaltyBadge.jsx';
+import { TierBadge } from '../components/TierBadge.jsx';
+import { IntentGate } from '../components/IntentGate.jsx';
 import { SERVICES, RATES } from '../data/rates.js';
 import { REGIONS } from '../data/regions.js';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
@@ -53,6 +55,7 @@ export function CreatorProfilePage({ dark }) {
   const [activeService, setActiveService] = useState(0);
   const [quoteDate, setQuoteDate]       = useState('');
   const [contactUnlocked, setContactUnlocked] = useState(false);
+  const [showIntentGate, setShowIntentGate]   = useState(false);
 
   const isOwnProfile = user && creator && creator.user_id === user.id;
 
@@ -125,6 +128,22 @@ export function CreatorProfilePage({ dark }) {
       localStorage.setItem('creator-favorites', JSON.stringify(updated));
     }
     setIsFav(f => !f);
+  }
+
+  function hasActiveProject() {
+    try {
+      const all = JSON.parse(localStorage.getItem('cm-projects') || '[]');
+      return all.some(p => p.clientId === user?.id && p.status === 'open');
+    } catch { return false; }
+  }
+
+  function handleQuoteClick() {
+    // If user has no active project brief, show the intent gate first
+    if (!isOwnProfile && !hasActiveProject()) {
+      setShowIntentGate(true);
+    } else {
+      setShowQuote(true);
+    }
   }
 
   function shareProfile() {
@@ -201,6 +220,7 @@ export function CreatorProfilePage({ dark }) {
                           <BadgeCheck size={11} /> Verified
                         </span>
                       ) : null}
+                      {creator.tier && <TierBadge tierId={creator.tier} />}
                       {creator.completed_projects > 0 && (
                         <LoyaltyBadge completedProjects={creator.completed_projects} />
                       )}
@@ -270,6 +290,25 @@ export function CreatorProfilePage({ dark }) {
               </div>
             )}
           </div>
+
+          {/* Video intro */}
+          {creator.video_intro_url && (
+            <div className={`${cardCls} p-5`}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-base">🎬</span>
+                <h2 className={`font-display font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>Video Introduction</h2>
+              </div>
+              <div className="rounded-xl overflow-hidden aspect-video bg-black">
+                <iframe
+                  src={creator.video_intro_url}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                  title={`${creator.businessName || creator.name} intro video`}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Services tabs */}
           {services.length > 0 && (
@@ -363,7 +402,7 @@ export function CreatorProfilePage({ dark }) {
                     {pkg.description && (
                       <p className={`text-xs mt-2 ${textSub}`}>{pkg.description}</p>
                     )}
-                    <button type="button" onClick={() => setShowQuote(true)}
+                    <button type="button" onClick={handleQuoteClick}
                       className="mt-3 w-full py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all">
                       Get This Package
                     </button>
@@ -417,7 +456,7 @@ export function CreatorProfilePage({ dark }) {
 
             {/* CTA card */}
             <div className={`${cardCls} p-5`}>
-              <button type="button" onClick={() => setShowQuote(true)}
+              <button type="button" onClick={handleQuoteClick}
                 className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2 mb-3">
                 <MessageSquare size={15} /> {quoteDate ? `Book for ${new Date(quoteDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'Request a Quote'}
               </button>
@@ -514,6 +553,15 @@ export function CreatorProfilePage({ dark }) {
           </div>
         </div>
       </div>
+
+      {/* Intent gate — shown before quote when user has no active project */}
+      {showIntentGate && (
+        <IntentGate
+          dark={dark}
+          prefillService={creator.services?.[0]?.serviceId}
+          onClose={() => setShowIntentGate(false)}
+        />
+      )}
 
       {/* Quote modal */}
       {showQuote && <RequestQuoteModal creator={creator} dark={dark} initialDate={quoteDate} onClose={() => setShowQuote(false)} />}

@@ -480,3 +480,38 @@ CREATE POLICY IF NOT EXISTS "Users can update own client profile"
 -- ── VERIFICATION: columns on creator_listings ────────────────
 ALTER TABLE creator_listings ADD COLUMN IF NOT EXISTS verification_status text DEFAULT 'unverified';
 ALTER TABLE creator_listings ADD COLUMN IF NOT EXISTS verification_steps  jsonb DEFAULT '{}';
+
+
+-- ── CREATOR TIER SYSTEM ──────────────────────────────────────────
+ALTER TABLE creator_listings ADD COLUMN IF NOT EXISTS tier text DEFAULT 'launch';
+ALTER TABLE creator_listings ADD COLUMN IF NOT EXISTS completion_rate numeric(5,2) DEFAULT 100;
+ALTER TABLE creator_listings ADD COLUMN IF NOT EXISTS video_intro_url text;
+
+-- ── CLIENT REPUTATION ────────────────────────────────────────────
+ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS avg_rating numeric(3,2) DEFAULT 0;
+ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS total_projects_completed integer DEFAULT 0;
+ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS cancellation_rate numeric(5,2) DEFAULT 0;
+ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS total_reviews integer DEFAULT 0;
+ALTER TABLE client_profiles ADD COLUMN IF NOT EXISTS fast_match_count integer DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS client_reviews (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id  uuid REFERENCES auth.users(id) NOT NULL,
+  creator_id text NOT NULL,
+  project_id text NOT NULL,
+  rating     integer CHECK (rating >= 1 AND rating <= 5),
+  comment    text,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE client_reviews ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Creators can insert client reviews"
+  ON client_reviews FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY IF NOT EXISTS "Anyone can view client reviews"
+  ON client_reviews FOR SELECT
+  USING (true);
+
+CREATE INDEX IF NOT EXISTS idx_client_reviews_client ON client_reviews(client_id);

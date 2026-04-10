@@ -7,6 +7,8 @@ import { SEED_CREATORS, initSeedData, SHOW_DEMO_CREATORS } from '../data/seedCre
 import { zipToRegion, zipToCity } from '../data/zipCodes.js';
 import { VerificationBadge } from './VerificationFlow.jsx';
 import { LoyaltyBadge } from './LoyaltyBadge.jsx';
+import { TierBadge } from './TierBadge.jsx';
+import { FastMatch } from './FastMatch.jsx';
 
 // Initialize seed data (version-gated — replaces stale seeds automatically)
 initSeedData();
@@ -91,8 +93,16 @@ function CreatorCard({ creator, dark, searchServiceId, budget, onDelete }) {
               ) : creator.verified ? (
                 <BadgeCheck size={14} className="text-teal-400 shrink-0 mt-0.5" title="Verified creator" />
               ) : null}
+              {creator.tier && creator.tier !== 'launch' && (
+                <TierBadge tierId={creator.tier} />
+              )}
               {creator.completed_projects > 0 && (
                 <LoyaltyBadge completedProjects={creator.completed_projects} />
+              )}
+              {creator.video_intro_url && (
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[9px] font-bold ring-1 ring-purple-500/20">
+                  🎬 Intro
+                </span>
               )}
             </div>
             {creator.businessName && creator.name && (
@@ -820,9 +830,12 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
           Where creators meet<br className="hidden sm:block" />
           <span className="text-gradient-gold">brands and clients.</span>
         </h1>
-        <p className={`text-sm ${textSub} max-w-xl mx-auto mb-5`}>
+        <p className={`text-sm ${textSub} max-w-xl mx-auto mb-4`}>
           CreatorMatch connects videographers, photographers, podcast producers, drone operators, and digital content specialists with brands and clients who need their work.
         </p>
+        <div className="flex justify-center mb-5">
+          <FastMatch dark={dark} onViewProfile={id => navigate(`/creator/${id}`)} />
+        </div>
 
         {/* Main search bar */}
         <div className={`max-w-2xl mx-auto flex rounded-2xl border overflow-hidden ${dark ? 'border-charcoal-600 bg-charcoal-800' : 'border-gray-200 bg-white'} shadow-lg`}>

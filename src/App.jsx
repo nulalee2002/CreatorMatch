@@ -11,6 +11,7 @@ import { MessagesPage } from './pages/MessagesPage.jsx';
 import { ProjectBoard } from './pages/ProjectBoard.jsx';
 import { CheckoutPage } from './pages/CheckoutPage.jsx';
 import { TermsPage } from './pages/TermsPage.jsx';
+import { MatchResultsPage } from './pages/MatchResultsPage.jsx';
 
 import { SERVICES, RATES, PACKAGE_TIERS } from './data/rates.js';
 import { DEFAULT_EXCHANGE_RATES } from './data/regions.js';
@@ -414,6 +415,7 @@ export default function App() {
         <Route path="/projects" element={<ProjectBoard dark={dark} />} />
         <Route path="/checkout/:projectId" element={<CheckoutPage dark={dark} />} />
         <Route path="/terms" element={<TermsPage dark={dark} />} />
+        <Route path="/matches/:projectId" element={<MatchResultsPage dark={dark} />} />
         <Route path="/calculator" element={null} />
       </Routes>
 

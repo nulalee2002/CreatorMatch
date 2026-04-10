@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
 import { SERVICES } from '../data/rates.js';
 import { checkMessage, logFilterEvent } from '../utils/messageFilter.js';
+import { ClientReputationBadge, loadClientReputation } from '../components/ClientReputationBadge.jsx';
 
 // ── localStorage helpers ────────────────────────────────────────
 function loadThreads(userId) {
@@ -231,11 +232,12 @@ export function MessagesPage({ dark }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [threads, setThreads]         = useState([]);
+  const [threads, setThreads]           = useState([]);
   const [activeThread, setActiveThread] = useState(null);
-  const [text, setText]               = useState('');
-  const [search, setSearch]           = useState('');
-  const [showNew, setShowNew]         = useState(false);
+  const [text, setText]                 = useState('');
+  const [search, setSearch]             = useState('');
+  const [showNew, setShowNew]           = useState(false);
+  const [otherMetrics, setOtherMetrics] = useState(null);
   const [mobileView, setMobileView]   = useState('list'); // 'list' | 'thread'
   const [filterWarning, setFilterWarning] = useState(false);
   const bottomRef = useRef(null);
@@ -267,6 +269,10 @@ export function MessagesPage({ dark }) {
   function openThread(thread) {
     setActiveThread({ ...thread, myId: user.id });
     setMobileView('thread');
+    setOtherMetrics(null);
+    if (!thread.otherIsCreator && thread.otherUserId) {
+      loadClientReputation(thread.otherUserId).then(setOtherMetrics);
+    }
     markMessagesRead(thread.threadId, user.id);
     setThreads(prev => prev.map(t =>
       t.threadId === thread.threadId
@@ -431,7 +437,10 @@ export function MessagesPage({ dark }) {
                       {activeThread.otherAvatar || '👤'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-bold truncate ${dark ? 'text-white' : 'text-gray-900'}`}>{activeThread.otherName}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className={`text-sm font-bold truncate ${dark ? 'text-white' : 'text-gray-900'}`}>{activeThread.otherName}</p>
+                        {otherMetrics && <ClientReputationBadge metrics={otherMetrics} dark={dark} size="sm" />}
+                      </div>
                       <p className={`text-[10px] ${textSub}`}>Active recently</p>
                     </div>
                   </div>

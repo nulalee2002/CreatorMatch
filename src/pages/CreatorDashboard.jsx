@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   LayoutDashboard, Eye, MessageSquare, Heart, Star, TrendingUp,
   Package, Edit3, ExternalLink, Check, Clock, ChevronRight,
-  Plus, Trash2, AlertCircle, Bell, BarChart2, Calendar, DollarSign, BadgeCheck,
+  Plus, Trash2, AlertCircle, Bell, BarChart2, Calendar, DollarSign, BadgeCheck, Video, Link, Save,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
@@ -15,6 +15,8 @@ import { EarningsTab } from '../components/EarningsTab.jsx';
 import { ViolationBanner, loadViolations } from '../components/ViolationBanner.jsx';
 import { LoyaltyProgress } from '../components/LoyaltyBadge.jsx';
 import { VerificationFlow } from '../components/VerificationFlow.jsx';
+import { TierBadge, TierProgress, TierUpBanner } from '../components/TierBadge.jsx';
+import { calculateTier } from '../config/tiers.js';
 import { dollarsToDisplay, statusBadgeClass, PROJECT_STATUSES } from '../config/fees.js';
 
 // ── Data helpers ────────────────────────────────────────────────
@@ -117,6 +119,7 @@ export function CreatorDashboard({ dark }) {
   const [loading, setLoading]       = useState(true);
   const [activeTab, setActiveTab]   = useState('overview');
   const [violations, setViolations] = useState([]);
+  const [tierUpBanner, setTierUpBanner] = useState(null);
 
   const textSub = dark ? 'text-charcoal-400' : 'text-gray-500';
   const cardCls = `rounded-2xl border ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`;
@@ -222,6 +225,7 @@ export function CreatorDashboard({ dark }) {
     { id: 'availability',  label: 'Availability', icon: Calendar },
     { id: 'earnings',      label: 'Earnings',     icon: DollarSign },
     { id: 'verification',  label: 'Verification', icon: BadgeCheck },
+    { id: 'video',         label: 'Video Intro',  icon: Video },
   ];
 
   const serviceIds = (creator.services || []).map(s => s.serviceId || s.service_id).filter(Boolean);
@@ -276,6 +280,11 @@ export function CreatorDashboard({ dark }) {
           ))}
         </div>
 
+        {/* ── Tier Up Banner ── */}
+        {tierUpBanner && (
+          <TierUpBanner newTierId={tierUpBanner} dark={dark} onDismiss={() => setTierUpBanner(null)} />
+        )}
+
         {/* ── Violation Banner ── */}
         <ViolationBanner violations={violations} dark={dark} />
 
@@ -298,6 +307,9 @@ export function CreatorDashboard({ dark }) {
               <StatCard icon={Heart}         label="Saved by Clients" value={favCount || '—'}  sub="In shortlists"          color="text-red-400"    dark={dark} />
               <StatCard icon={Star}          label="Avg Rating"      value={avgRating || '—'}   sub={`${creator.review_count || 0} reviews`} color="text-purple-400" dark={dark} />
             </div>
+
+            {/* Tier progress */}
+            <TierProgress creator={creator} dark={dark} />
 
             {/* Loyalty progress */}
             <LoyaltyProgress completedProjects={creator.completed_projects || 0} dark={dark} />
@@ -419,6 +431,11 @@ export function CreatorDashboard({ dark }) {
           />
         )}
 
+        {/* ── Video Intro Tab ── */}
+        {activeTab === 'video' && (
+          <VideoIntroTab creator={creator} dark={dark} onUpdate={(update) => setCreator(prev => ({ ...prev, ...update }))} />
+        )}
+
       </div>
     </div>
   );
@@ -473,6 +490,136 @@ function ProfileCompletion({ creator, dark, navigate }) {
           Complete Your Profile
         </button>
       )}
+    </div>
+  );
+}
+
+// ── Video Intro Tab ──────────────────────────────────────────────
+function VideoIntroTab({ creator, dark, onUpdate }) {
+  const [url, setUrl]       = useState(creator.video_intro_url || '');
+  const [saved, setSaved]   = useState(false);
+  const [error, setError]   = useState('');
+  const textSub  = dark ? 'text-charcoal-400' : 'text-gray-500';
+  const cardCls  = `rounded-2xl border p-5 ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`;
+  const inputCls = `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
+    dark ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
+         : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
+  }`;
+
+  // Normalize YouTube/Vimeo/Loom URL to embed URL
+  function toEmbedUrl(rawUrl) {
+    if (!rawUrl) return '';
+    const s = rawUrl.trim();
+    // Already an embed URL
+    if (s.includes('/embed/') || s.includes('player.vimeo') || s.includes('loom.com/embed')) return s;
+    // YouTube
+    const yt = s.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([A-Za-z0-9_-]{11})/);
+    if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+    // Vimeo
+    const vi = s.match(/vimeo\.com\/(\d+)/);
+    if (vi) return `https://player.vimeo.com/video/${vi[1]}`;
+    // Loom
+    const lo = s.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
+    if (lo) return `https://www.loom.com/embed/${lo[1]}`;
+    return s;
+  }
+
+  const embedUrl = toEmbedUrl(url);
+  const isValidEmbed = embedUrl && (
+    embedUrl.includes('youtube.com/embed') ||
+    embedUrl.includes('player.vimeo.com') ||
+    embedUrl.includes('loom.com/embed')
+  );
+
+  function handleSave() {
+    setError('');
+    const finalUrl = url.trim() ? embedUrl : '';
+    if (url.trim() && !isValidEmbed) {
+      setError('Please enter a valid YouTube, Vimeo, or Loom URL.');
+      return;
+    }
+    // Persist to localStorage
+    try {
+      const all = JSON.parse(localStorage.getItem('creator-directory') || '[]');
+      const updated = all.map(c =>
+        (c.id === creator.id || c.user_id === creator.user_id)
+          ? { ...c, video_intro_url: finalUrl }
+          : c
+      );
+      localStorage.setItem('creator-directory', JSON.stringify(updated));
+    } catch {}
+    onUpdate?.({ video_intro_url: finalUrl });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className={cardCls}>
+        <div className="flex items-center gap-2 mb-1">
+          <Video size={16} className="text-gold-400" />
+          <h2 className={`font-display font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>Video Introduction</h2>
+        </div>
+        <p className={`text-xs mb-5 ${textSub}`}>
+          Add a short video intro (60–90 sec) so clients can get to know you before reaching out. YouTube, Vimeo, and Loom are supported.
+        </p>
+
+        <div className="mb-4">
+          <label className={`text-xs font-medium block mb-1.5 ${textSub}`}>
+            <Link size={11} className="inline -mt-0.5 mr-0.5" /> Video URL
+          </label>
+          <input
+            type="url"
+            value={url}
+            onChange={e => { setUrl(e.target.value); setSaved(false); setError(''); }}
+            placeholder="https://youtube.com/watch?v=... or Vimeo / Loom link"
+            className={inputCls}
+          />
+          {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+          {isValidEmbed && !error && (
+            <p className={`text-xs mt-1 text-teal-400`}>✓ Valid video URL detected</p>
+          )}
+        </div>
+
+        {/* Preview */}
+        {isValidEmbed && (
+          <div className="mb-4">
+            <p className={`text-xs font-medium mb-2 ${textSub}`}>Preview</p>
+            <div className="rounded-xl overflow-hidden aspect-video bg-black">
+              <iframe
+                src={embedUrl}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+                title="Video intro preview"
+              />
+            </div>
+          </div>
+        )}
+
+        <button type="button" onClick={handleSave}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            saved ? 'bg-teal-500 text-white' : 'bg-gold-500 hover:bg-gold-600 text-charcoal-900'
+          }`}>
+          <Save size={14} /> {saved ? 'Saved!' : 'Save Video Intro'}
+        </button>
+      </div>
+
+      <div className={`${cardCls} ${dark ? 'bg-charcoal-800/50' : 'bg-gray-50'}`}>
+        <p className={`text-[10px] font-bold uppercase tracking-wider mb-3 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>Tips for a great intro</p>
+        <ul className={`space-y-1.5 text-xs ${textSub}`}>
+          {[
+            'Keep it under 90 seconds — clients watch short intros more often',
+            'Introduce yourself, your specialty, and your style',
+            'Show examples of your work or a behind-the-scenes clip',
+            'Record in a well-lit space with good audio',
+          ].map(tip => (
+            <li key={tip} className="flex items-start gap-2">
+              <span className="text-gold-400 mt-0.5">•</span> {tip}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
