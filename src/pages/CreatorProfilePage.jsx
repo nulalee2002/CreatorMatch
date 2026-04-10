@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Star, Globe, Mail, Phone, Instagram, Heart, Share2, Check, ExternalLink, Package, MessageSquare, BadgeCheck } from 'lucide-react';
+import { VerificationBadge } from '../components/VerificationFlow.jsx';
+import { LoyaltyBadge } from '../components/LoyaltyBadge.jsx';
 import { SERVICES, RATES } from '../data/rates.js';
 import { REGIONS } from '../data/regions.js';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
@@ -14,18 +16,43 @@ function loadAllListings() {
   try { return JSON.parse(localStorage.getItem('creator-directory') || '[]'); } catch { return []; }
 }
 
+/** Returns true if `clientId` has a paid retainer (or completed project) with `creatorId`. */
+async function hasActiveBooking(clientId, creatorId) {
+  if (!clientId || !creatorId) return false;
+  try {
+    if (supabaseConfigured) {
+      const { data } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('client_id', clientId)
+        .eq('creator_id', creatorId)
+        .in('payment_type', ['retainer', 'final'])
+        .limit(1);
+      if (data?.length > 0) return true;
+    }
+    // localStorage fallback
+    const txns = JSON.parse(localStorage.getItem('cm-transactions') || '[]');
+    return txns.some(t =>
+      t.clientId === clientId &&
+      t.creatorId === creatorId &&
+      ['retainer', 'final'].includes(t.paymentType)
+    );
+  } catch { return false; }
+}
+
 export function CreatorProfilePage({ dark }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [creator, setCreator]     = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [isFav, setIsFav]         = useState(false);
-  const [showQuote, setShowQuote] = useState(false);
-  const [copied, setCopied]       = useState(false);
+  const [creator, setCreator]           = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [isFav, setIsFav]               = useState(false);
+  const [showQuote, setShowQuote]       = useState(false);
+  const [copied, setCopied]             = useState(false);
   const [activeService, setActiveService] = useState(0);
-  const [quoteDate, setQuoteDate] = useState('');
+  const [quoteDate, setQuoteDate]       = useState('');
+  const [contactUnlocked, setContactUnlocked] = useState(false);
 
   const isOwnProfile = user && creator && creator.user_id === user.id;
 
@@ -47,22 +74,30 @@ export function CreatorProfilePage({ dark }) {
         .single();
       if (data) {
         // Normalize to same shape as localStorage format
-        setCreator({
+        const normalized = {
           ...data,
           location: { city: data.city, state: data.state, country: data.country, zip: data.zip, regionKey: data.region_key },
           contact: { email: data.email, phone: data.phone, website: data.website, instagram: data.instagram },
           services: data.creator_services?.map(s => ({ ...s, serviceId: s.service_id, rates: s.rates || {} })) || [],
           portfolio: data.portfolio_items || [],
           tags: data.tags || [],
-        });
+        };
+        setCreator(normalized);
         // Increment view count
         supabase.from('creator_listings').update({ view_count: (data.view_count || 0) + 1 }).eq('id', id);
+        // Check booking status
+        if (user) {
+          hasActiveBooking(user.id, id).then(setContactUnlocked);
+        }
       }
     } else {
       // Seed creators or no Supabase — always use localStorage
       const all = loadAllListings();
       const found = all.find(c => c.id === id);
       setCreator(found || null);
+      if (user && found) {
+        hasActiveBooking(user.id, id).then(setContactUnlocked);
+      }
     }
     setLoading(false);
   }
@@ -159,10 +194,15 @@ export function CreatorProfilePage({ dark }) {
                       <h1 className={`font-display font-bold text-2xl ${dark ? 'text-white' : 'text-gray-900'}`}>
                         {creator.businessName || creator.name}
                       </h1>
-                      {creator.verified && (
+                      {creator.verification_status && creator.verification_status !== 'unverified' ? (
+                        <VerificationBadge status={creator.verification_status} />
+                      ) : creator.verified ? (
                         <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-400 text-[10px] font-bold">
                           <BadgeCheck size={11} /> Verified
                         </span>
+                      ) : null}
+                      {creator.completed_projects > 0 && (
+                        <LoyaltyBadge completedProjects={creator.completed_projects} />
                       )}
                     </div>
                     {creator.businessName && creator.name && (
@@ -385,18 +425,31 @@ export function CreatorProfilePage({ dark }) {
 
               {/* Contact links */}
               <div className={`mt-4 border-t pt-4 space-y-2 ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
-                {contact.email && (
+                {/* Email: only visible after booking */}
+                {contact.email && (isOwnProfile || contactUnlocked) ? (
                   <a href={`mailto:${contact.email}`}
                     className={`flex items-center gap-2 text-xs transition-colors ${dark ? 'text-charcoal-400 hover:text-gold-400' : 'text-gray-500 hover:text-gold-500'}`}>
                     <Mail size={13} /> {contact.email}
                   </a>
-                )}
-                {contact.phone && (
+                ) : contact.email ? (
+                  <div className={`flex items-center gap-2 text-xs italic ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
+                    <Mail size={13} /> Book through CreatorMatch to contact
+                  </div>
+                ) : null}
+
+                {/* Phone: only visible after booking */}
+                {contact.phone && (isOwnProfile || contactUnlocked) ? (
                   <a href={`tel:${contact.phone}`}
                     className={`flex items-center gap-2 text-xs transition-colors ${dark ? 'text-charcoal-400 hover:text-gold-400' : 'text-gray-500 hover:text-gold-500'}`}>
                     <Phone size={13} /> {contact.phone}
                   </a>
-                )}
+                ) : contact.phone ? (
+                  <div className={`flex items-center gap-2 text-xs italic ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
+                    <Phone size={13} /> Available after booking
+                  </div>
+                ) : null}
+
+                {/* Website: always visible (helps verify creator is real) */}
                 {contact.website && (
                   <a href={contact.website.startsWith('http') ? contact.website : `https://${contact.website}`}
                     target="_blank" rel="noreferrer"
@@ -404,6 +457,7 @@ export function CreatorProfilePage({ dark }) {
                     <Globe size={13} /> {contact.website}
                   </a>
                 )}
+                {/* Instagram: always visible (helps verify creator is real) */}
                 {contact.instagram && (
                   <a href={`https://instagram.com/${contact.instagram.replace('@','')}`}
                     target="_blank" rel="noreferrer"

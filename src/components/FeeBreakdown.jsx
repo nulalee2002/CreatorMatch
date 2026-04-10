@@ -3,12 +3,13 @@ import { calcFees, PLATFORM_FEES } from '../config/fees.js';
 /**
  * FeeBreakdown
  * Props:
- *   projectAmount  — number (dollars)
- *   viewMode       — 'client' | 'creator'
- *   dark           — boolean
+ *   projectAmount   — number (dollars)
+ *   viewMode        — 'client' | 'creator'
+ *   dark            — boolean
+ *   creatorFeePct   — number (optional, overrides default 10% for loyalty tiers)
  */
-export function FeeBreakdown({ projectAmount, viewMode = 'client', dark }) {
-  const f = calcFees(projectAmount || 0);
+export function FeeBreakdown({ projectAmount, viewMode = 'client', dark, creatorFeePct }) {
+  const f = calcFees(projectAmount || 0, creatorFeePct);
 
   const cardCls  = `rounded-2xl border p-5 ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`;
   const textMain = dark ? 'text-white' : 'text-gray-900';
@@ -81,12 +82,12 @@ export function FeeBreakdown({ projectAmount, viewMode = 'client', dark }) {
         <>
           <SectionLabel>Retainer Payment</SectionLabel>
           <Row label="Retainer payment (50%)" amount={f.retainerAmount} />
-          <Row label={`Platform fee (${PLATFORM_FEES.creatorFeePct}%)`} amount={f.creatorFeeRetainer} sign="-" sub />
+          <Row label={`Platform fee (${creatorFeePct ?? PLATFORM_FEES.creatorFeePct}%)`} amount={f.creatorFeeRetainer} sign="-" sub />
           <Row label="You receive" amount={f.retainerCreatorGets} bold highlight accent="text-teal-400" />
 
           <SectionLabel>Final Payment</SectionLabel>
           <Row label="Final payment (50%)" amount={f.finalAmount} />
-          <Row label={`Platform fee (${PLATFORM_FEES.creatorFeePct}%)`} amount={f.creatorFeeFinal} sign="-" sub />
+          <Row label={`Platform fee (${creatorFeePct ?? PLATFORM_FEES.creatorFeePct}%)`} amount={f.creatorFeeFinal} sign="-" sub />
           <Row label="You receive" amount={f.finalCreatorGets} bold />
 
           <div className={divider} />

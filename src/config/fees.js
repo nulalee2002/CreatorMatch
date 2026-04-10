@@ -1,24 +1,48 @@
 export const PLATFORM_FEES = {
-  creatorFeePct:     10,   // 10% taken from creator's earnings
+  creatorFeePct:     10,   // 10% taken from creator's earnings (Standard tier)
   clientFeePct:       5,   // 5% added on top of client's payment
   retainerPct:       50,   // 50% retainer upfront, 50% on delivery
   autoApproveDays:    7,   // Days before auto-approval if client does not respond
   cancellationFeePct: 10,  // Creator keeps 10% if client cancels after retainer paid
 };
 
+/** Loyalty tiers based on completed projects */
+export const LOYALTY_TIERS = [
+  { name: 'Standard', minProjects: 0,  maxProjects: 9,  feePct: 10, badge: null },
+  { name: 'Silver',   minProjects: 10, maxProjects: 24, feePct: 8,  badge: 'silver' },
+  { name: 'Gold',     minProjects: 25, maxProjects: Infinity, feePct: 6, badge: 'gold' },
+];
+
+/**
+ * Returns the loyalty tier for a creator based on their completed project count.
+ * @param {number} completedProjects
+ * @returns {{ name: string, feePct: number, badge: string|null, nextTier: object|null, projectsToNext: number }}
+ */
+export function getLoyaltyTier(completedProjects = 0) {
+  const count = Number(completedProjects) || 0;
+  const tier = LOYALTY_TIERS.find(t => count >= t.minProjects && count <= t.maxProjects)
+    || LOYALTY_TIERS[0];
+  const nextTier = LOYALTY_TIERS.find(t => t.minProjects > count) || null;
+  const projectsToNext = nextTier ? nextTier.minProjects - count : 0;
+  return { ...tier, nextTier, projectsToNext };
+}
+
 /**
  * Calculate all fee amounts for a given project total (in dollars).
  * Returns amounts in both dollars and cents.
+ * @param {number} projectAmountDollars
+ * @param {number} [creatorFeePctOverride] - Override the creator fee % (for loyalty tiers)
  */
-export function calcFees(projectAmountDollars) {
+export function calcFees(projectAmountDollars, creatorFeePctOverride) {
   const total      = Number(projectAmountDollars) || 0;
   const retainer   = total * (PLATFORM_FEES.retainerPct / 100);
   const final      = total - retainer;
+  const creatorPct = creatorFeePctOverride != null ? creatorFeePctOverride : PLATFORM_FEES.creatorFeePct;
 
-  const clientFeeRetainer  = retainer  * (PLATFORM_FEES.clientFeePct  / 100);
-  const clientFeeFinal     = final     * (PLATFORM_FEES.clientFeePct  / 100);
-  const creatorFeeRetainer = retainer  * (PLATFORM_FEES.creatorFeePct / 100);
-  const creatorFeeFinal    = final     * (PLATFORM_FEES.creatorFeePct / 100);
+  const clientFeeRetainer  = retainer  * (PLATFORM_FEES.clientFeePct / 100);
+  const clientFeeFinal     = final     * (PLATFORM_FEES.clientFeePct / 100);
+  const creatorFeeRetainer = retainer  * (creatorPct / 100);
+  const creatorFeeFinal    = final     * (creatorPct / 100);
 
   return {
     // Dollar amounts (for display)

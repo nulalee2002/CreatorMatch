@@ -10,6 +10,7 @@ import { CreatorDashboard } from './pages/CreatorDashboard.jsx';
 import { MessagesPage } from './pages/MessagesPage.jsx';
 import { ProjectBoard } from './pages/ProjectBoard.jsx';
 import { CheckoutPage } from './pages/CheckoutPage.jsx';
+import { TermsPage } from './pages/TermsPage.jsx';
 
 import { SERVICES, RATES, PACKAGE_TIERS } from './data/rates.js';
 import { DEFAULT_EXCHANGE_RATES } from './data/regions.js';
@@ -412,6 +413,7 @@ export default function App() {
         <Route path="/messages" element={<MessagesPage dark={dark} />} />
         <Route path="/projects" element={<ProjectBoard dark={dark} />} />
         <Route path="/checkout/:projectId" element={<CheckoutPage dark={dark} />} />
+        <Route path="/terms" element={<TermsPage dark={dark} />} />
         <Route path="/calculator" element={null} />
       </Routes>
 
@@ -638,13 +640,23 @@ export default function App() {
       {/* ── Footer ── */}
       {activeTab !== 'calculator' && location.pathname.startsWith('/creator') ? null : (
         <footer className={`mt-12 border-t ${dark ? 'border-charcoal-800' : 'border-gray-200'} py-6`}>
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className={`text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
               CreatorMatch — the marketplace for professional content creators worldwide
             </p>
-            <p className={`text-xs ${dark ? 'text-charcoal-700' : 'text-gray-300'}`}>
-              Rate estimates are based on industry data. Always confirm rates directly with your creator.
-            </p>
+            <div className={`flex items-center gap-4 text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
+              <a href="/terms" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                Terms of Service
+              </a>
+              <span className={dark ? 'text-charcoal-700' : 'text-gray-300'}>|</span>
+              <a href="/terms#privacy" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                Privacy
+              </a>
+              <span className={dark ? 'text-charcoal-700' : 'text-gray-300'}>|</span>
+              <a href="mailto:support@creatormatch.studio" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                Support
+              </a>
+            </div>
           </div>
         </footer>
       )}

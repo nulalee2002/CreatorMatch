@@ -10,7 +10,7 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
-  const [form, setForm]         = useState({ fullName: '', email: '', password: '' });
+  const [form, setForm]         = useState({ fullName: '', email: '', password: '', tosAccepted: false });
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -32,6 +32,7 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
     }
 
     if (tab === 'signup') {
+      if (!form.tosAccepted) { setError('You must agree to the Terms of Service to create an account.'); setLoading(false); return; }
       const { error } = await signUp({ email: form.email, password: form.password, fullName: form.fullName, role });
       if (error) setError(error.message);
       else { onClose?.(); }
@@ -137,11 +138,30 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
               </button>
             </div>
 
+            {tab === 'signup' && (
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.tosAccepted}
+                  onChange={e => set('tosAccepted', e.target.checked)}
+                  className="mt-0.5 accent-gold-500 shrink-0"
+                />
+                <span className={`text-[11px] leading-snug ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+                  I agree to the{' '}
+                  <a href="/terms" target="_blank" rel="noreferrer"
+                    className="text-gold-400 hover:text-gold-300 underline">
+                    Terms of Service
+                  </a>{' '}
+                  and Platform Policies
+                </span>
+              </label>
+            )}
+
             {error && (
               <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2">{error}</p>
             )}
 
-            <button type="submit" disabled={loading}
+            <button type="submit" disabled={loading || (tab === 'signup' && !form.tosAccepted)}
               className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold disabled:opacity-50 transition-all">
               {loading ? 'Please wait...' : tab === 'login' ? 'Sign In' : `Create ${role === 'creator' ? 'Creator' : 'Client'} Account`}
             </button>

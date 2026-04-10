@@ -5,6 +5,8 @@ import { SERVICES, RATES } from '../data/rates.js';
 import { REGIONS } from '../data/regions.js';
 import { SEED_CREATORS, initSeedData, SHOW_DEMO_CREATORS } from '../data/seedCreators.js';
 import { zipToRegion, zipToCity } from '../data/zipCodes.js';
+import { VerificationBadge } from './VerificationFlow.jsx';
+import { LoyaltyBadge } from './LoyaltyBadge.jsx';
 
 // Initialize seed data (version-gated — replaces stale seeds automatically)
 initSeedData();
@@ -84,8 +86,13 @@ function CreatorCard({ creator, dark, searchServiceId, budget, onDelete }) {
               <h3 className={`font-display font-bold text-base leading-tight ${dark ? 'text-white' : 'text-gray-900'}`}>
                 {creator.businessName || creator.name}
               </h3>
-              {creator.verified && (
+              {creator.verification_status && creator.verification_status !== 'unverified' ? (
+                <VerificationBadge status={creator.verification_status} />
+              ) : creator.verified ? (
                 <BadgeCheck size={14} className="text-teal-400 shrink-0 mt-0.5" title="Verified creator" />
+              ) : null}
+              {creator.completed_projects > 0 && (
+                <LoyaltyBadge completedProjects={creator.completed_projects} />
               )}
             </div>
             {creator.businessName && creator.name && (
@@ -729,6 +736,21 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
         }
         break;
     }
+
+    // Apply verification ranking boost on top of all sorts:
+    // Pro Verified > Verified > Unverified, then by rating, then by completed_projects
+    const verificationRank = (c) => {
+      if (c.verification_status === 'pro_verified') return 2;
+      if (c.verification_status === 'verified') return 1;
+      return 0;
+    };
+    list.sort((a, b) => {
+      const vDiff = verificationRank(b) - verificationRank(a);
+      if (vDiff !== 0) return vDiff;
+      const rDiff = (b.rating || 0) - (a.rating || 0);
+      if (rDiff !== 0) return rDiff;
+      return (b.completed_projects || 0) - (a.completed_projects || 0);
+    });
 
     return list;
   }, [listings, serviceFilter, searchQuery, budgetNum, zipRegion, sortBy]);

@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   MessageSquare, Send, Search, ArrowLeft, MoreVertical,
-  User, Check, CheckCheck, Circle,
+  User, Check, CheckCheck, Circle, AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
 import { SERVICES } from '../data/rates.js';
+import { checkMessage, logFilterEvent } from '../utils/messageFilter.js';
 
 // ── localStorage helpers ────────────────────────────────────────
 function loadThreads(userId) {
@@ -236,6 +237,7 @@ export function MessagesPage({ dark }) {
   const [search, setSearch]           = useState('');
   const [showNew, setShowNew]         = useState(false);
   const [mobileView, setMobileView]   = useState('list'); // 'list' | 'thread'
+  const [filterWarning, setFilterWarning] = useState(false);
   const bottomRef = useRef(null);
 
   const textSub  = dark ? 'text-charcoal-400' : 'text-gray-500';
@@ -275,6 +277,16 @@ export function MessagesPage({ dark }) {
 
   function sendMessage() {
     if (!text.trim() || !activeThread) return;
+
+    // Check for contact info violations
+    const { blocked, patternType } = checkMessage(text.trim());
+    if (blocked) {
+      setFilterWarning(true);
+      logFilterEvent(user.id, patternType, supabase, supabaseConfigured);
+      return;
+    }
+    setFilterWarning(false);
+
     const msg = {
       id:             Date.now().toString() + Math.random(),
       threadId:       activeThread.threadId,
@@ -434,11 +446,19 @@ export function MessagesPage({ dark }) {
 
                   {/* Input */}
                   <div className={`p-3 border-t ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
+                    {filterWarning && (
+                      <div className="flex items-start gap-2 mb-2 px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30">
+                        <AlertTriangle size={13} className="text-amber-400 mt-0.5 shrink-0" />
+                        <p className="text-xs text-amber-300 leading-snug">
+                          For your protection, contact information cannot be shared in messages. All bookings and payments are handled securely through CreatorMatch.
+                        </p>
+                      </div>
+                    )}
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={text}
-                        onChange={e => setText(e.target.value)}
+                        onChange={e => { setText(e.target.value); if (filterWarning) setFilterWarning(false); }}
                         onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
                         placeholder="Type a message..."
                         className={`flex-1 px-4 py-2.5 text-sm rounded-xl border outline-none transition-all ${

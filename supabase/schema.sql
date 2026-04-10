@@ -407,3 +407,76 @@ CREATE INDEX IF NOT EXISTS idx_transactions_client   ON transactions(client_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_project  ON transactions(project_id);
 CREATE INDEX IF NOT EXISTS idx_payment_events_txn    ON payment_events(transaction_id);
 CREATE INDEX IF NOT EXISTS idx_disputes_txn          ON disputes(transaction_id);
+
+-- ── VIOLATIONS (Strike system) ──────────────────────────────
+CREATE TABLE IF NOT EXISTS violations (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id        uuid REFERENCES auth.users(id) NOT NULL,
+  violation_type text NOT NULL,
+  description    text,
+  strike_number  integer NOT NULL,
+  status         text DEFAULT 'active',
+  created_at     timestamptz DEFAULT now()
+);
+
+ALTER TABLE violations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own violations"
+  ON violations FOR SELECT
+  USING (user_id = auth.uid());
+
+CREATE INDEX IF NOT EXISTS idx_violations_user ON violations(user_id);
+
+-- ── MESSAGE FILTER EVENTS ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS message_filter_events (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      uuid REFERENCES auth.users(id) NOT NULL,
+  pattern_type text NOT NULL,
+  created_at   timestamptz DEFAULT now()
+);
+
+ALTER TABLE message_filter_events ENABLE ROW LEVEL SECURITY;
+
+-- Only admins (service role) can read filter events
+CREATE POLICY IF NOT EXISTS "Users can insert own filter events"
+  ON message_filter_events FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE INDEX IF NOT EXISTS idx_filter_events_user ON message_filter_events(user_id);
+
+-- ── LOYALTY: completed_projects on creator_listings ──────────
+ALTER TABLE creator_listings ADD COLUMN IF NOT EXISTS completed_projects integer DEFAULT 0;
+
+-- ── CLIENT PROFILES ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS client_profiles (
+  id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id                 uuid REFERENCES auth.users(id) UNIQUE NOT NULL,
+  display_name            text,
+  phone                   text,
+  company_name            text,
+  tos_accepted_at         timestamptz,
+  email_verified          boolean DEFAULT false,
+  phone_verified          boolean DEFAULT false,
+  payment_method_on_file  boolean DEFAULT false,
+  spam_score              integer DEFAULT 0,
+  created_at              timestamptz DEFAULT now(),
+  updated_at              timestamptz DEFAULT now()
+);
+
+ALTER TABLE client_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own client profile"
+  ON client_profiles FOR SELECT
+  USING (user_id = auth.uid());
+
+CREATE POLICY IF NOT EXISTS "Users can insert own client profile"
+  ON client_profiles FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY IF NOT EXISTS "Users can update own client profile"
+  ON client_profiles FOR UPDATE
+  USING (user_id = auth.uid());
+
+-- ── VERIFICATION: columns on creator_listings ────────────────
+ALTER TABLE creator_listings ADD COLUMN IF NOT EXISTS verification_status text DEFAULT 'unverified';
+ALTER TABLE creator_listings ADD COLUMN IF NOT EXISTS verification_steps  jsonb DEFAULT '{}';

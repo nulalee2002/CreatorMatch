@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   LayoutDashboard, Eye, MessageSquare, Heart, Star, TrendingUp,
   Package, Edit3, ExternalLink, Check, Clock, ChevronRight,
-  Plus, Trash2, AlertCircle, Bell, BarChart2, Calendar, DollarSign,
+  Plus, Trash2, AlertCircle, Bell, BarChart2, Calendar, DollarSign, BadgeCheck,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
@@ -12,6 +12,9 @@ import { PackageBuilder } from '../components/PackageBuilder.jsx';
 import { AvailabilityEditor } from '../components/AvailabilityCalendar.jsx';
 import { StripeOnboarding } from '../components/StripeOnboarding.jsx';
 import { EarningsTab } from '../components/EarningsTab.jsx';
+import { ViolationBanner, loadViolations } from '../components/ViolationBanner.jsx';
+import { LoyaltyProgress } from '../components/LoyaltyBadge.jsx';
+import { VerificationFlow } from '../components/VerificationFlow.jsx';
 import { dollarsToDisplay, statusBadgeClass, PROJECT_STATUSES } from '../config/fees.js';
 
 // ── Data helpers ────────────────────────────────────────────────
@@ -109,10 +112,11 @@ export function CreatorDashboard({ dark }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [creator, setCreator]     = useState(null);
-  const [quotes, setQuotes]       = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [creator, setCreator]       = useState(null);
+  const [quotes, setQuotes]         = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [activeTab, setActiveTab]   = useState('overview');
+  const [violations, setViolations] = useState([]);
 
   const textSub = dark ? 'text-charcoal-400' : 'text-gray-500';
   const cardCls = `rounded-2xl border ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`;
@@ -151,6 +155,8 @@ export function CreatorDashboard({ dark }) {
       setCreator(found);
       if (found) setQuotes(loadQuoteRequests(found.id));
     }
+    // Load violation status
+    loadViolations(user.id, supabase, supabaseConfigured).then(setViolations);
     setLoading(false);
   }
 
@@ -210,11 +216,12 @@ export function CreatorDashboard({ dark }) {
   }
 
   const tabs = [
-    { id: 'overview',     label: 'Overview',    icon: BarChart2 },
-    { id: 'quotes',       label: `Quotes${unreadCount ? ` (${unreadCount})` : ''}`, icon: MessageSquare },
-    { id: 'packages',     label: 'Packages',    icon: Package },
-    { id: 'availability', label: 'Availability', icon: Calendar },
-    { id: 'earnings',     label: 'Earnings',    icon: DollarSign },
+    { id: 'overview',      label: 'Overview',     icon: BarChart2 },
+    { id: 'quotes',        label: `Quotes${unreadCount ? ` (${unreadCount})` : ''}`, icon: MessageSquare },
+    { id: 'packages',      label: 'Packages',     icon: Package },
+    { id: 'availability',  label: 'Availability', icon: Calendar },
+    { id: 'earnings',      label: 'Earnings',     icon: DollarSign },
+    { id: 'verification',  label: 'Verification', icon: BadgeCheck },
   ];
 
   const serviceIds = (creator.services || []).map(s => s.serviceId || s.service_id).filter(Boolean);
@@ -269,6 +276,9 @@ export function CreatorDashboard({ dark }) {
           ))}
         </div>
 
+        {/* ── Violation Banner ── */}
+        <ViolationBanner violations={violations} dark={dark} />
+
         {/* ── Stripe Onboarding Banner ── */}
         <div className="mb-5">
           <StripeOnboarding
@@ -288,6 +298,9 @@ export function CreatorDashboard({ dark }) {
               <StatCard icon={Heart}         label="Saved by Clients" value={favCount || '—'}  sub="In shortlists"          color="text-red-400"    dark={dark} />
               <StatCard icon={Star}          label="Avg Rating"      value={avgRating || '—'}   sub={`${creator.review_count || 0} reviews`} color="text-purple-400" dark={dark} />
             </div>
+
+            {/* Loyalty progress */}
+            <LoyaltyProgress completedProjects={creator.completed_projects || 0} dark={dark} />
 
             {/* Profile completion */}
             <ProfileCompletion creator={creator} dark={dark} navigate={navigate} />
@@ -395,6 +408,15 @@ export function CreatorDashboard({ dark }) {
         {/* ── Earnings Tab ── */}
         {activeTab === 'earnings' && (
           <EarningsTab creator={creator} dark={dark} />
+        )}
+
+        {/* ── Verification Tab ── */}
+        {activeTab === 'verification' && (
+          <VerificationFlow
+            creator={creator}
+            dark={dark}
+            onUpdate={(update) => setCreator(prev => ({ ...prev, ...update }))}
+          />
         )}
 
       </div>
