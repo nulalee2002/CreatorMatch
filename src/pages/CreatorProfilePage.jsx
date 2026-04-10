@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Star, Globe, Mail, Phone, Instagram, Heart, Share2, Check, ExternalLink, Package, MessageSquare, BadgeCheck } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Globe, Mail, Phone, Instagram, Heart, Share2, Check, ExternalLink, Package, MessageSquare, FileText, BadgeCheck } from 'lucide-react';
 import { VerificationBadge } from '../components/VerificationFlow.jsx';
 import { LoyaltyBadge } from '../components/LoyaltyBadge.jsx';
 import { TierBadge } from '../components/TierBadge.jsx';
@@ -457,9 +457,18 @@ export function CreatorProfilePage({ dark }) {
             {/* CTA card */}
             <div className={`${cardCls} p-5`}>
               <button type="button" onClick={handleQuoteClick}
-                className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2 mb-3">
-                <MessageSquare size={15} /> {quoteDate ? `Book for ${new Date(quoteDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'Request a Quote'}
+                className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2 mb-2">
+                <FileText size={15} /> {quoteDate ? `Book for ${new Date(quoteDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'Request a Quote'}
               </button>
+              {!isOwnProfile && (
+                <button type="button"
+                  onClick={() => navigate(`/messages?with=${creator.user_id || creator.id}`)}
+                  className={`w-full py-2.5 rounded-xl border text-sm font-semibold transition-all flex items-center justify-center gap-2 mb-3 ${
+                    dark ? 'border-charcoal-600 text-charcoal-300 hover:border-charcoal-400 hover:text-white' : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:text-gray-900'
+                  }`}>
+                  <MessageSquare size={15} /> Message
+                </button>
+              )}
               <p className={`text-center text-[10px] ${textSub}`}>Free to request. No payment until you hire.</p>
 
               {/* Contact links */}

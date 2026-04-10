@@ -422,6 +422,19 @@ export default function App() {
       {/* ── Calculator (rendered outside Routes to preserve state) ── */}
       <main className={`max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 ${activeTab !== 'calculator' ? 'hidden' : ''}`}>
 
+        {/* ── Calculator purpose label ── */}
+        <div className="col-span-full">
+          <div className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${dark ? 'bg-gold-500/5 border-gold-500/20' : 'bg-gold-50 border-gold-200'}`}>
+            <Zap size={15} className="text-gold-400 shrink-0" />
+            <p className={`text-sm font-semibold ${dark ? 'text-gold-300' : 'text-gold-700'}`}>
+              Creator Pricing Tool
+              <span className={`ml-2 font-normal text-xs ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+                Use this to build and calculate your service rates. This tool is for creators, not for client-facing quotes.
+              </span>
+            </p>
+          </div>
+        </div>
+
         {/* ── LEFT: Config panel ── */}
         <div className="space-y-4 min-w-0">
 
@@ -647,13 +660,15 @@ export default function App() {
               CreatorMatch — connecting content creators with brands and clients seeking media production and digital content services
             </p>
             <div className={`flex items-center gap-4 text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
-              <a href="/terms" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+              <button type="button" onClick={() => navigate('/terms')}
+                className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
                 Terms of Service
-              </a>
+              </button>
               <span className={dark ? 'text-charcoal-700' : 'text-gray-300'}>|</span>
-              <a href="/terms#privacy" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+              <button type="button" onClick={() => navigate('/terms#privacy')}
+                className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
                 Privacy
-              </a>
+              </button>
               <span className={dark ? 'text-charcoal-700' : 'text-gray-300'}>|</span>
               <a href="mailto:support@creatormatch.studio" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
                 Support

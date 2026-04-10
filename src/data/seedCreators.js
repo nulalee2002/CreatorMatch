@@ -9,7 +9,7 @@ export const SHOW_DEMO_CREATORS = true;
 // and forces a full re-write when the version is out of date.
 // This is what guarantees the profile-page "Creator not found" bug
 // cannot happen from stale localStorage.
-const SEED_VERSION = 4;
+const SEED_VERSION = 5;
 
 // ── Three demo creators: filmmaker, photographer, podcast producer ─
 export const SEED_CREATORS = [
@@ -33,7 +33,6 @@ export const SEED_CREATORS = [
     rating: 4.9,
     reviewCount: 87,
     plan: 'pro',
-    video_intro_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     tags: ['Corporate', 'Documentary', 'Drone', 'Brand Film', 'RED Camera', 'ARRI', 'Color Grade'],
     location: {
       city: 'Los Angeles',
@@ -156,7 +155,6 @@ export const SEED_CREATORS = [
     rating: 4.9,
     reviewCount: 64,
     plan: 'studio',
-    video_intro_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     tags: ['Commercial', 'Real Estate', 'Fashion', 'Luxury', 'Editorial', 'Headshots', 'Product'],
     location: {
       city: 'Miami',
@@ -275,7 +273,6 @@ export const SEED_CREATORS = [
     rating: 4.8,
     reviewCount: 53,
     plan: 'pro',
-    video_intro_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     tags: ['Podcast', 'Audio Editing', 'Video Podcast', 'Studio Recording', 'Monthly Retainer', 'Show Notes', 'Distribution'],
     location: {
       city: 'New York',

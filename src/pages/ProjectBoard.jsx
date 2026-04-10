@@ -193,6 +193,10 @@ function PostProjectModal({ dark, onClose, onPost, user }) {
 function ApplyModal({ project, dark, onClose, onApply, creatorListing }) {
   const [proposal, setProposal] = useState('');
   const [rate, setRate]         = useState('');
+  const [creatorName, setCreatorName] = useState(
+    creatorListing?.businessName || creatorListing?.name || ''
+  );
+  const [submitted, setSubmitted] = useState(false);
   const textSub  = dark ? 'text-charcoal-400' : 'text-gray-500';
   const inputCls = `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
     dark ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
@@ -205,7 +209,7 @@ function ApplyModal({ project, dark, onClose, onApply, creatorListing }) {
       id:          Date.now().toString() + Math.random(),
       projectId:   project.id,
       creatorId:   creatorListing?.id || 'unknown',
-      creatorName: creatorListing?.businessName || creatorListing?.name || 'Creator',
+      creatorName: creatorName.trim() || creatorListing?.businessName || creatorListing?.name || 'Creator',
       creatorAvatar: creatorListing?.avatar || '🎬',
       proposal:    proposal.trim(),
       rate:        parseFloat(rate) || null,
@@ -217,7 +221,8 @@ function ApplyModal({ project, dark, onClose, onApply, creatorListing }) {
     // Increment application count
     const projs = loadProjects();
     saveProjects(projs.map(p => p.id === project.id ? { ...p, applications: (p.applications || 0) + 1 } : p));
-    onApply(app);
+    setSubmitted(true);
+    setTimeout(() => { onApply(app); }, 1500);
   }
 
   return (
@@ -229,36 +234,53 @@ function ApplyModal({ project, dark, onClose, onApply, creatorListing }) {
           <X size={16} />
         </button>
         <div className="p-6">
-          <h3 className={`font-display font-bold text-base mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>Apply to Project</h3>
-          <p className={`text-xs mb-5 ${textSub}`}>{project.title}</p>
-
-          <div className="space-y-4">
-            <div>
-              <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Your Proposed Rate ($)</p>
-              <div className="relative">
-                <DollarSign size={13} className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${textSub}`} />
-                <input type="number" min={0} value={rate} onChange={e => setRate(e.target.value)}
-                  placeholder={project.budgetMax || '1500'} className={`${inputCls} pl-8`} />
+          {submitted ? (
+            <div className="text-center py-6">
+              <div className="w-14 h-14 rounded-full bg-teal-500/15 flex items-center justify-center mx-auto mb-4">
+                <Check size={28} className="text-teal-400" />
               </div>
+              <h3 className={`font-display font-bold text-lg mb-2 ${dark ? 'text-white' : 'text-gray-900'}`}>Proposal Submitted!</h3>
+              <p className={`text-sm ${textSub}`}>Your proposal for "{project.title}" has been saved. The client will review and reach out if interested.</p>
             </div>
-            <div>
-              <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Proposal / Cover Letter *</p>
-              <textarea rows={5} value={proposal} onChange={e => setProposal(e.target.value)}
-                placeholder="Introduce yourself, explain why you're a great fit, and outline your approach to this project..."
-                className={`${inputCls} resize-none`} />
-            </div>
-          </div>
+          ) : (
+            <>
+              <h3 className={`font-display font-bold text-base mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>Apply to Project</h3>
+              <p className={`text-xs mb-5 ${textSub}`}>{project.title}</p>
 
-          <div className="flex gap-2 mt-5">
-            <button type="button" onClick={onClose}
-              className={`flex-1 py-2.5 rounded-xl border text-sm font-semibold ${dark ? 'border-charcoal-600 text-charcoal-300 hover:text-white' : 'border-gray-200 text-gray-600 hover:text-gray-900'}`}>
-              Cancel
-            </button>
-            <button type="button" onClick={handleApply} disabled={!proposal.trim()}
-              className="flex-1 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 disabled:opacity-40 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2">
-              <Send size={13} /> Submit Proposal
-            </button>
-          </div>
+              <div className="space-y-4">
+                <div>
+                  <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Your Name / Studio</p>
+                  <input type="text" value={creatorName} onChange={e => setCreatorName(e.target.value)}
+                    placeholder="Your name or studio name" className={inputCls} />
+                </div>
+                <div>
+                  <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Your Proposed Rate ($)</p>
+                  <div className="relative">
+                    <DollarSign size={13} className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${textSub}`} />
+                    <input type="number" min={0} value={rate} onChange={e => setRate(e.target.value)}
+                      placeholder={project.budgetMax || '1500'} className={`${inputCls} pl-8`} />
+                  </div>
+                </div>
+                <div>
+                  <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Proposal / Cover Letter *</p>
+                  <textarea rows={5} value={proposal} onChange={e => setProposal(e.target.value)}
+                    placeholder="Introduce yourself, explain why you're a great fit, and outline your approach to this project..."
+                    className={`${inputCls} resize-none`} />
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-5">
+                <button type="button" onClick={onClose}
+                  className={`flex-1 py-2.5 rounded-xl border text-sm font-semibold ${dark ? 'border-charcoal-600 text-charcoal-300 hover:text-white' : 'border-gray-200 text-gray-600 hover:text-gray-900'}`}>
+                  Cancel
+                </button>
+                <button type="button" onClick={handleApply} disabled={!proposal.trim()}
+                  className="flex-1 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 disabled:opacity-40 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2">
+                  <Send size={13} /> Submit Proposal
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -841,7 +863,7 @@ export function ProjectBoard({ dark }) {
       {showPost && (
         <PostProjectModal dark={dark} onClose={() => setShowPost(false)} onPost={handlePosted} user={user} />
       )}
-      {applyTarget && creatorListing && (
+      {applyTarget && (
         <ApplyModal
           project={applyTarget}
           dark={dark}

@@ -5,6 +5,27 @@ import { getRegionRates } from '../utils/pricing.js';
 import { CurrencyInput } from './CurrencyInput.jsx';
 import { Tooltip } from './Tooltip.jsx';
 
+// Default "What's included" descriptions for common rate types
+const RATE_DESCRIPTIONS = {
+  'video.hourlyShoot':      'Includes on-site filming, camera operation, and basic on-set audio monitoring.',
+  'video.halfDay':          'Includes up to 5 hours on-site filming, camera/lens package, and basic color correction.',
+  'video.fullDay':          'Includes up to 10 hours filming, full camera package, on-set audio, and basic color correction.',
+  'video.editHourly':       'Includes rough cut, pacing, music sync, color grade, and delivery in requested format.',
+  'video.weddingPackage':   'Includes ceremony + reception coverage, highlight film (3–5 min), full-length edit, online gallery, and print release.',
+  'video.corporateProject': 'Includes pre-production planning, filming (1–2 days), editing, color grade, and 2 rounds of revisions.',
+  'video.musicVideoProject':'Includes concept development, full shoot day, editing, color grade, and 2 rounds of revisions.',
+  'photography.hourlyEvent':        'Includes on-location shooting, same-day file backup, and delivery of edited JPEGs via online gallery.',
+  'photography.headshotsSession':   'Includes studio or on-location session, 2–3 looks/outfits, 20 fully retouched final images, and commercial license.',
+  'photography.weddingPackage':     'Includes 8 hours of coverage, 400+ edited images, private online gallery, print release, and digital downloads.',
+  'photography.dayRateCommercial':  'Includes full-day shoot (8 hrs), art direction, 80+ edited images, and commercial usage license.',
+  'photography.realEstatePerListing':'Includes interior, exterior, and detail shots. 20–30 delivered images, HDR-processed and ready for MLS.',
+  'photography.productPerImage':    'Includes white-background or lifestyle setup, retouching, color correction, and web/print-ready files.',
+  'podcast.basicEditPerEp':         'Includes noise reduction, leveling, normalization, intro/outro insertion, and MP3 delivery.',
+  'podcast.fullProductionPerEp':    'Includes recording session, full audio edit, show notes (300–500 words), transcript, and 2 social audiogram clips.',
+  'podcast.monthlyRetainer4Eps':    'Includes 4 episodes/month, recording, full editing, mastering, show notes, transcripts, and social clips.',
+  'podcast.recordingSession':       'Includes remote or in-studio recording, raw file export, and basic cleanup pass.',
+};
+
 function SectionHeader({ title, open, onToggle, dark }) {
   return (
     <button
@@ -93,24 +114,36 @@ export function LineItemBuilder({ state, dispatch, dark = true }) {
                   </Tooltip>
                 </div>
                 {active && (
-                  <div className="grid grid-cols-2 gap-3 mt-1">
-                    <CurrencyInput
-                      label="Rate"
-                      unit={rateMeta.unit}
-                      value={currentVal}
-                      range={regionRate}
-                      dark={dark}
-                      currencySymbol={sym}
-                      onChange={v => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'value', value: v, rateMeta, regionRate })}
-                    />
+                  <div className="mt-1 space-y-2">
+                    <div className="grid grid-cols-2 gap-3">
+                      <CurrencyInput
+                        label="Rate"
+                        unit={rateMeta.unit}
+                        value={currentVal}
+                        range={regionRate}
+                        dark={dark}
+                        currencySymbol={sym}
+                        onChange={v => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'value', value: v, rateMeta, regionRate })}
+                      />
+                      <div className="flex flex-col gap-1">
+                        <label className={labelCls}>Quantity</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={qty}
+                          onChange={e => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'quantity', value: parseFloat(e.target.value) || 1, rateMeta, regionRate })}
+                          className={`w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all ${inputCls}`}
+                        />
+                      </div>
+                    </div>
                     <div className="flex flex-col gap-1">
-                      <label className={labelCls}>Quantity</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={qty}
-                        onChange={e => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'quantity', value: parseFloat(e.target.value) || 1, rateMeta, regionRate })}
-                        className={`w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all ${inputCls}`}
+                      <label className={labelCls}>What's included</label>
+                      <textarea
+                        rows={2}
+                        value={item?.description ?? (RATE_DESCRIPTIONS[`${serviceId}.${rateKey}`] || '')}
+                        onChange={e => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'description', value: e.target.value, rateMeta, regionRate })}
+                        placeholder="Describe what's included at this rate (e.g. number of images, hours of coverage, revisions)..."
+                        className={`w-full px-3 py-2 text-xs rounded-lg border outline-none transition-all resize-none ${inputCls}`}
                       />
                     </div>
                   </div>
