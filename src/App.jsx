@@ -642,7 +642,7 @@ export default function App() {
         <footer className={`mt-12 border-t ${dark ? 'border-charcoal-800' : 'border-gray-200'} py-6`}>
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className={`text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
-              CreatorMatch — the marketplace for professional content creators worldwide
+              CreatorMatch — connecting content creators with brands and clients seeking media production and digital content services
             </p>
             <div className={`flex items-center gap-4 text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
               <a href="/terms" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>

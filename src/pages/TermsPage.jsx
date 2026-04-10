@@ -81,8 +81,9 @@ export function TermsPage({ dark }) {
 
             <Section id="welcome" title="1. Welcome to CreatorMatch" dark={dark}>
               <p>
-                CreatorMatch is an online marketplace that connects clients with professional content creators
-                including videographers, photographers, podcast producers, drone operators, and other creative professionals.
+                CreatorMatch is an online platform connecting content creators with brands and clients seeking
+                media production and digital content services. Our community includes videographers, photographers,
+                podcast producers, drone operators, and other creative professionals across every market and specialty.
                 We provide the tools, infrastructure, and payment system to help creative work get done safely and professionally.
               </p>
               <p>

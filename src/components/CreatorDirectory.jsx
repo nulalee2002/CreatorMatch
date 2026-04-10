@@ -814,14 +814,14 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
       {/* Hero search */}
       <div className="text-center mb-6">
         <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
-          The creator marketplace
+          Media production and digital content services
         </p>
         <h1 className={`font-display text-3xl sm:text-4xl font-bold mb-3 leading-tight ${dark ? 'text-white' : 'text-gray-900'}`}>
-          Hire the right creator.<br className="hidden sm:block" />
-          <span className="text-gradient-gold">Fast.</span>
+          Where creators meet<br className="hidden sm:block" />
+          <span className="text-gradient-gold">brands and clients.</span>
         </h1>
         <p className={`text-sm ${textSub} max-w-xl mx-auto mb-5`}>
-          Browse verified videographers, photographers, podcast producers, drone operators, and more from around the world. Compare portfolios, see real rates, and book directly.
+          CreatorMatch connects videographers, photographers, podcast producers, drone operators, and digital content specialists with brands and clients who need their work.
         </p>
 
         {/* Main search bar */}
