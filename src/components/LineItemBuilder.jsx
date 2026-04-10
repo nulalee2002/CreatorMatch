@@ -5,6 +5,17 @@ import { getRegionRates } from '../utils/pricing.js';
 import { CurrencyInput } from './CurrencyInput.jsx';
 import { Tooltip } from './Tooltip.jsx';
 
+// Hours options for hourly rates
+const PHOTO_HOURS = [2, 4, 6, 8, 10, 12];
+const VIDEO_HOURS = [
+  { value: 4,  label: 'Half Day (4 hrs)' },
+  { value: 8,  label: 'Full Day (8 hrs)' },
+  { value: 10, label: 'Extended Day (10 hrs)' },
+  { value: 12, label: 'Double Day (12 hrs)' },
+];
+const HOURLY_PHOTO_RATES = ['hourlyEvent', 'editHourly'];
+const HOURLY_VIDEO_RATES = ['hourlyShoot', 'editHourly', 'equipmentHourly'];
+
 // Default "What's included" descriptions for common rate types
 const RATE_DESCRIPTIONS = {
   'video.hourlyShoot':      'Includes on-site filming, camera operation, and basic on-set audio monitoring.',
@@ -24,6 +35,34 @@ const RATE_DESCRIPTIONS = {
   'podcast.fullProductionPerEp':    'Includes recording session, full audio edit, show notes (300–500 words), transcript, and 2 social audiogram clips.',
   'podcast.monthlyRetainer4Eps':    'Includes 4 episodes/month, recording, full editing, mastering, show notes, transcripts, and social clips.',
   'podcast.recordingSession':       'Includes remote or in-studio recording, raw file export, and basic cleanup pass.',
+  'drone.hourlyPhoto':              'Includes one FAA Part 107 licensed pilot, drone operations, and delivered aerial stills (color-corrected JPEGs).',
+  'drone.hourlyVideo':              'Includes one FAA Part 107 licensed pilot, drone videography, and color-corrected footage delivered in requested format.',
+  'drone.halfDay':                  'Includes up to 4 hours of flight operations, equipment, and footage/stills delivered within 3 business days.',
+  'drone.fullDay':                  'Includes up to 8 flight hours, full equipment, FAA compliance documentation, and footage delivered within 5 business days.',
+  'drone.realEstatePerProperty':    'Includes exterior aerial stills and a 1-minute walk-around video clip. Delivered within 48 hours.',
+  'drone.mappingPerAcre':           'Includes orthomosaic map, DSM, and raw GeoTIFF data. FAA waivers and site permissions are client responsibility.',
+  'drone.editingHourly':            'Includes color grading, stabilization, and sync of aerial footage for delivery in H.264 or ProRes.',
+  'social.singleReelTikTok':        'Includes filming, editing, music licensing, captions, and one round of revisions. Delivered in 9:16 vertical format.',
+  'social.contentDay':              'Includes a full shoot day producing 8–15 platform-ready pieces. Includes scripting, filming, editing, and caption copy.',
+  'social.monthlyBasic':            'Includes 4–8 pieces of content per month, platform-specific formatting, and scheduling.',
+  'social.monthlyStandard':         'Includes 12–20 pieces/month, content calendar, analytics review, and strategy session.',
+  'social.monthlyPremium':          'Includes 25–40 pieces/month, full content strategy, paid ad creative, and monthly performance report.',
+  'social.ugcPerVideo':             'Includes UGC-style filming, editing, and captions. Delivered raw (unbranded) for use in paid ads.',
+  'social.brandCampaignProject':    'Includes campaign strategy, content creation, ad asset production, and post-campaign analytics summary.',
+  'postProduction.videoEditingHourly':   'Includes rough cut through picture lock: cuts, transitions, titles, and lower thirds.',
+  'postProduction.colorGradingHourly':   'Includes professional color correction and grading using DaVinci Resolve or equivalent. LUT available on request.',
+  'postProduction.audioMixPerEp':        'Includes audio leveling, EQ, compression, noise reduction, and loudness mastering to platform specs.',
+  'postProduction.motionGraphicsHourly': 'Includes animated titles, lower thirds, transitions, and branded graphics in After Effects or Premiere.',
+  'postProduction.photoRetouchingPerImg':'Includes skin retouching, color correction, background cleanup, and object removal as needed.',
+  'postProduction.shortProject':         'Includes full edit up to 3 minutes: assembly, music, titles, color, and one round of revisions.',
+  'postProduction.mediumProject':        'Includes full edit 3–10 minutes: assembly, b-roll, music sync, graphics, color, and 2 revision rounds.',
+  'postProduction.largeProject':         'Includes full edit 10+ minutes or complex deliverables: assembly, graphics, color, audio mix, and 3 revision rounds.',
+  'liveevents.halfDayEvent':         'Includes up to 4 hours of on-site coverage, multi-camera operation, and same-day file backup.',
+  'liveevents.fullDayEvent':         'Includes 8 hours on-site, multi-camera setup, live monitoring, and footage delivered within 5 business days.',
+  'liveevents.multiDayEvent':        'Per-day rate includes full coverage day, equipment, and crew. Travel and accommodation billed at cost.',
+  'liveevents.streamingSetup':       'Includes encoder configuration, multi-camera switching, platform broadcast, and post-event archive download.',
+  'liveevents.highlightEdit':        'Includes 2–5 minute highlight reel: assembly, music, titles, color grade, and one revision round.',
+  'liveevents.photographyEvent':     'Includes on-site photography, same-day culling, and delivery of edited selects within 48 hours.',
 };
 
 function SectionHeader({ title, open, onToggle, dark }) {
@@ -113,41 +152,76 @@ export function LineItemBuilder({ state, dispatch, dark = true }) {
                     <span />
                   </Tooltip>
                 </div>
-                {active && (
-                  <div className="mt-1 space-y-2">
-                    <div className="grid grid-cols-2 gap-3">
-                      <CurrencyInput
-                        label="Rate"
-                        unit={rateMeta.unit}
-                        value={currentVal}
-                        range={regionRate}
-                        dark={dark}
-                        currencySymbol={sym}
-                        onChange={v => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'value', value: v, rateMeta, regionRate })}
-                      />
+                {active && (() => {
+                  const isHourly = rateMeta.unit === 'hr';
+                  const isPhotoHourly = serviceId === 'photography' && isHourly && HOURLY_PHOTO_RATES.includes(rateKey);
+                  const isVideoHourly = serviceId === 'video' && isHourly && HOURLY_VIDEO_RATES.includes(rateKey);
+                  const showHoursSelect = isPhotoHourly || isVideoHourly;
+                  const lineTotal = currentVal * qty;
+
+                  return (
+                    <div className="mt-1 space-y-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        <CurrencyInput
+                          label="Rate per hr"
+                          unit={rateMeta.unit}
+                          value={currentVal}
+                          range={regionRate}
+                          dark={dark}
+                          currencySymbol={sym}
+                          onChange={v => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'value', value: v, rateMeta, regionRate })}
+                        />
+                        <div className="flex flex-col gap-1">
+                          <label className={labelCls}>{showHoursSelect ? 'Hours' : 'Quantity'}</label>
+                          {isPhotoHourly ? (
+                            <select
+                              value={qty}
+                              onChange={e => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'quantity', value: Number(e.target.value), rateMeta, regionRate })}
+                              className={`w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all ${inputCls}`}
+                            >
+                              {PHOTO_HOURS.map(h => (
+                                <option key={h} value={h}>{h} hours</option>
+                              ))}
+                            </select>
+                          ) : isVideoHourly ? (
+                            <select
+                              value={qty}
+                              onChange={e => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'quantity', value: Number(e.target.value), rateMeta, regionRate })}
+                              className={`w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all ${inputCls}`}
+                            >
+                              {VIDEO_HOURS.map(({ value, label }) => (
+                                <option key={value} value={value}>{label}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type="number"
+                              min={0}
+                              value={qty}
+                              onChange={e => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'quantity', value: parseFloat(e.target.value) || 1, rateMeta, regionRate })}
+                              className={`w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all ${inputCls}`}
+                            />
+                          )}
+                        </div>
+                      </div>
+                      {showHoursSelect && (
+                        <div className={`text-xs px-3 py-1.5 rounded-lg ${dark ? 'bg-charcoal-900/60 text-charcoal-400' : 'bg-gray-100 text-gray-500'}`}>
+                          {qty} hrs × {sym}{currentVal.toLocaleString()}/hr = <span className={`font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>{sym}{lineTotal.toLocaleString()}</span>
+                        </div>
+                      )}
                       <div className="flex flex-col gap-1">
-                        <label className={labelCls}>Quantity</label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={qty}
-                          onChange={e => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'quantity', value: parseFloat(e.target.value) || 1, rateMeta, regionRate })}
-                          className={`w-full px-3 py-2 text-sm rounded-lg border outline-none transition-all ${inputCls}`}
+                        <label className={labelCls}>What's included</label>
+                        <textarea
+                          rows={2}
+                          value={item?.description ?? (RATE_DESCRIPTIONS[`${serviceId}.${rateKey}`] || '')}
+                          onChange={e => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'description', value: e.target.value, rateMeta, regionRate })}
+                          placeholder="Describe what's included at this rate (e.g. number of images, hours of coverage, revisions)..."
+                          className={`w-full px-3 py-2 text-xs rounded-lg border outline-none transition-all resize-none ${inputCls}`}
                         />
                       </div>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <label className={labelCls}>What's included</label>
-                      <textarea
-                        rows={2}
-                        value={item?.description ?? (RATE_DESCRIPTIONS[`${serviceId}.${rateKey}`] || '')}
-                        onChange={e => dispatch({ type: 'SET_LINE_ITEM', rateKey, field: 'description', value: e.target.value, rateMeta, regionRate })}
-                        placeholder="Describe what's included at this rate (e.g. number of images, hours of coverage, revisions)..."
-                        className={`w-full px-3 py-2 text-xs rounded-lg border outline-none transition-all resize-none ${inputCls}`}
-                      />
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             );
           })}

@@ -1,101 +1,246 @@
 import { useState } from 'react';
-import { Plus, Trash2, Check, GripVertical, Package } from 'lucide-react';
+import { Check, Package, Save } from 'lucide-react';
 import { SERVICES } from '../data/rates.js';
 
 const PACKAGE_TEMPLATES = {
-  Basic:    { color: 'text-charcoal-400', bg: 'bg-charcoal-700/50', border: 'border-charcoal-600' },
-  Standard: { color: 'text-gold-400',     bg: 'bg-gold-500/10',     border: 'border-gold-500/40' },
-  Premium:  { color: 'text-purple-400',   bg: 'bg-purple-500/10',   border: 'border-purple-500/40' },
+  Basic:    { color: 'text-charcoal-400', bg: 'bg-charcoal-700/50', border: 'border-charcoal-600', label: 'Basic' },
+  Standard: { color: 'text-gold-400',     bg: 'bg-gold-500/10',     border: 'border-gold-500/40',  label: 'Standard' },
+  Premium:  { color: 'text-purple-400',   bg: 'bg-purple-500/10',   border: 'border-purple-500/40', label: 'Premium' },
 };
 
+const TIER_NAMES = ['Basic', 'Standard', 'Premium'];
+
 function loadPackages(creatorId) {
-  try { return JSON.parse(localStorage.getItem(`creator-packages-${creatorId}`) || '[]'); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem(`creator-packages-${creatorId}`) || 'null'); } catch { return null; }
 }
 function savePackages(creatorId, pkgs) {
   localStorage.setItem(`creator-packages-${creatorId}`, JSON.stringify(pkgs));
 }
 
-function newPackage(name = 'Basic', serviceId = 'photography') {
-  return {
+function defaultPackage(name, serviceId) {
+  const base = {
     id: Date.now().toString() + Math.random(),
     name,
-    serviceId,
+    serviceId: serviceId || 'photography',
     price: '',
     description: '',
-    deliverables: [''],
     turnaroundDays: '',
     revisions: 1,
+    deliverables: [''],
   };
+  if (serviceId === 'video') {
+    return { ...base, hoursCoverage: '', numVideos: '', videoLength: '', droneFootage: false, colorGrading: true, rawFootage: false, travelIncluded: false, travelRadius: '' };
+  }
+  if (serviceId === 'photography') {
+    return { ...base, hoursCoverage: 4, editedImages: '', engagementSession: false, onlineGallery: true, printRights: false, secondShooter: false };
+  }
+  return base;
+}
+
+function Toggle({ value, onChange, dark }) {
+  return (
+    <button type="button" onClick={() => onChange(!value)}
+      className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${value ? 'bg-gold-500' : dark ? 'bg-charcoal-600' : 'bg-gray-300'}`}>
+      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${value ? 'translate-x-4' : ''}`} />
+    </button>
+  );
+}
+
+function VideoFields({ pkg, onUpdate, dark, inputCls, textSub, labelCls }) {
+  return (
+    <div className="space-y-3 mt-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className={labelCls}>Hours of Coverage</p>
+          <input type="number" min={1} value={pkg.hoursCoverage || ''} placeholder="8"
+            onChange={e => onUpdate('hoursCoverage', e.target.value)}
+            className={inputCls} />
+        </div>
+        <div>
+          <p className={labelCls}>Video Deliverables</p>
+          <input type="number" min={1} value={pkg.numVideos || ''} placeholder="1"
+            onChange={e => onUpdate('numVideos', e.target.value)}
+            className={inputCls} />
+        </div>
+      </div>
+      <div>
+        <p className={labelCls}>Length per Deliverable</p>
+        <input type="text" value={pkg.videoLength || ''} placeholder="3 to 5 min"
+          onChange={e => onUpdate('videoLength', e.target.value)}
+          className={inputCls} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className={labelCls}>Revision Rounds</p>
+          <input type="number" min={0} value={pkg.revisions || ''} placeholder="2"
+            onChange={e => onUpdate('revisions', e.target.value)}
+            className={inputCls} />
+        </div>
+        <div>
+          <p className={labelCls}>Turnaround (days)</p>
+          <input type="number" min={1} value={pkg.turnaroundDays || ''} placeholder="14"
+            onChange={e => onUpdate('turnaroundDays', e.target.value)}
+            className={inputCls} />
+        </div>
+      </div>
+      <div className="space-y-2">
+        {[
+          { field: 'droneFootage', label: 'Drone footage included' },
+          { field: 'colorGrading', label: 'Color grading included' },
+          { field: 'rawFootage',   label: 'Raw footage included' },
+          { field: 'travelIncluded', label: 'Travel included' },
+        ].map(({ field, label }) => (
+          <div key={field} className="flex items-center justify-between">
+            <span className={`text-xs ${textSub}`}>{label}</span>
+            <Toggle value={!!pkg[field]} onChange={v => onUpdate(field, v)} dark={dark} />
+          </div>
+        ))}
+        {pkg.travelIncluded && (
+          <div>
+            <p className={labelCls}>Travel radius (miles)</p>
+            <input type="number" min={0} value={pkg.travelRadius || ''} placeholder="50"
+              onChange={e => onUpdate('travelRadius', e.target.value)}
+              className={inputCls} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PhotographyFields({ pkg, onUpdate, dark, inputCls, textSub, labelCls }) {
+  return (
+    <div className="space-y-3 mt-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className={labelCls}>Hours of Coverage</p>
+          <select value={pkg.hoursCoverage || 4} onChange={e => onUpdate('hoursCoverage', Number(e.target.value))}
+            className={inputCls}>
+            {[2, 4, 6, 8, 10, 12].map(h => <option key={h} value={h}>{h} hours</option>)}
+          </select>
+        </div>
+        <div>
+          <p className={labelCls}>Edited Images</p>
+          <input type="number" min={1} value={pkg.editedImages || ''} placeholder="100"
+            onChange={e => onUpdate('editedImages', e.target.value)}
+            className={inputCls} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className={labelCls}>Revision Rounds</p>
+          <input type="number" min={0} value={pkg.revisions || ''} placeholder="2"
+            onChange={e => onUpdate('revisions', e.target.value)}
+            className={inputCls} />
+        </div>
+        <div>
+          <p className={labelCls}>Turnaround (days)</p>
+          <input type="number" min={1} value={pkg.turnaroundDays || ''} placeholder="10"
+            onChange={e => onUpdate('turnaroundDays', e.target.value)}
+            className={inputCls} />
+        </div>
+      </div>
+      <div className="space-y-2">
+        {[
+          { field: 'engagementSession', label: 'Engagement session included' },
+          { field: 'onlineGallery',     label: 'Online gallery included' },
+          { field: 'printRights',       label: 'Print rights included' },
+          { field: 'secondShooter',     label: 'Second shooter included' },
+        ].map(({ field, label }) => (
+          <div key={field} className="flex items-center justify-between">
+            <span className={`text-xs ${textSub}`}>{label}</span>
+            <Toggle value={!!pkg[field]} onChange={v => onUpdate(field, v)} dark={dark} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BasicFields({ pkg, onUpdate, dark, inputCls, textSub, labelCls }) {
+  return (
+    <div className="space-y-3 mt-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className={labelCls}>Revision Rounds</p>
+          <input type="number" min={0} value={pkg.revisions || ''} placeholder="2"
+            onChange={e => onUpdate('revisions', e.target.value)}
+            className={inputCls} />
+        </div>
+        <div>
+          <p className={labelCls}>Turnaround (days)</p>
+          <input type="number" min={1} value={pkg.turnaroundDays || ''} placeholder="7"
+            onChange={e => onUpdate('turnaroundDays', e.target.value)}
+            className={inputCls} />
+        </div>
+      </div>
+      <div>
+        <p className={labelCls}>What's Included (one per line)</p>
+        <div className="space-y-1.5">
+          {(pkg.deliverables || ['']).map((d, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <Check size={10} className="text-teal-400 shrink-0" />
+              <input type="text" value={d}
+                onChange={e => {
+                  const arr = [...(pkg.deliverables || [''])];
+                  arr[i] = e.target.value;
+                  onUpdate('deliverables', arr);
+                }}
+                placeholder="e.g. 10 edited images"
+                className={`flex-1 px-2 py-1.5 text-xs rounded-lg border outline-none transition-all ${
+                  dark ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-600 focus:border-gold-500'
+                       : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gold-500'
+                }`} />
+              {(pkg.deliverables || []).length > 1 && (
+                <button type="button"
+                  onClick={() => { const arr = [...(pkg.deliverables || [])].filter((_, j) => j !== i); onUpdate('deliverables', arr); }}
+                  className="text-red-400/60 hover:text-red-400 text-xs shrink-0">x</button>
+              )}
+            </div>
+          ))}
+          <button type="button"
+            onClick={() => onUpdate('deliverables', [...(pkg.deliverables || ['']), ''])}
+            className={`text-[10px] flex items-center gap-1 mt-1 transition-colors ${dark ? 'text-charcoal-500 hover:text-gold-400' : 'text-gray-400 hover:text-gold-500'}`}>
+            + Add item
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function PackageBuilder({ creatorId, dark, serviceIds = [] }) {
+  const primaryServiceId = serviceIds[0] || 'photography';
+
   const [packages, setPackages] = useState(() => {
     const saved = loadPackages(creatorId);
-    if (saved.length > 0) return saved;
-    // Default 3 packages
-    return ['Basic', 'Standard', 'Premium'].map(name =>
-      newPackage(name, serviceIds[0] || 'photography')
-    );
+    if (saved && saved.length > 0) return saved;
+    return TIER_NAMES.map(name => defaultPackage(name, primaryServiceId));
   });
   const [saved, setSaved] = useState(false);
 
-  const inputCls = `w-full px-3 py-2 text-sm rounded-xl border outline-none transition-all ${
+  const inputCls = `w-full px-3 py-2 text-xs rounded-xl border outline-none transition-all ${
     dark
       ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
   }`;
   const textSub = dark ? 'text-charcoal-400' : 'text-gray-500';
+  const labelCls = `text-[10px] font-medium mb-1 ${textSub}`;
 
   function updatePkg(id, field, val) {
     setPackages(prev => prev.map(p => p.id === id ? { ...p, [field]: val } : p));
     setSaved(false);
   }
 
-  function updateDeliverable(pkgId, idx, val) {
-    setPackages(prev => prev.map(p => {
-      if (p.id !== pkgId) return p;
-      const d = [...p.deliverables];
-      d[idx] = val;
-      return { ...p, deliverables: d };
-    }));
-    setSaved(false);
-  }
-
-  function addDeliverable(pkgId) {
-    setPackages(prev => prev.map(p =>
-      p.id === pkgId ? { ...p, deliverables: [...p.deliverables, ''] } : p
-    ));
-  }
-
-  function removeDeliverable(pkgId, idx) {
-    setPackages(prev => prev.map(p =>
-      p.id === pkgId ? { ...p, deliverables: p.deliverables.filter((_, i) => i !== idx) } : p
-    ));
-    setSaved(false);
-  }
-
-  function addPackage() {
-    setPackages(prev => [...prev, newPackage(`Package ${prev.length + 1}`, serviceIds[0] || 'photography')]);
-    setSaved(false);
-  }
-
-  function removePackage(id) {
-    setPackages(prev => prev.filter(p => p.id !== id));
-    setSaved(false);
-  }
-
   function handleSave() {
-    const clean = packages.map(p => ({
-      ...p,
-      price: parseFloat(p.price) || 0,
-      turnaroundDays: parseInt(p.turnaroundDays) || null,
-      revisions: parseInt(p.revisions) || 1,
-      deliverables: p.deliverables.filter(d => d.trim()),
-    }));
-    savePackages(creatorId, clean);
+    savePackages(creatorId, packages);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
+
+  const serviceId = primaryServiceId;
+  const isVideo = serviceId === 'video';
+  const isPhotography = serviceId === 'photography';
 
   return (
     <div className={`rounded-2xl border p-5 ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
@@ -112,36 +257,32 @@ export function PackageBuilder({ creatorId, dark, serviceIds = [] }) {
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             saved ? 'bg-teal-500 text-white' : 'bg-gold-500 hover:bg-gold-600 text-charcoal-900'
           }`}>
-          {saved ? <><Check size={12} /> Saved</> : 'Save Packages'}
+          {saved ? <><Check size={12} /> Saved</> : <><Save size={12} /> Save Packages</>}
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {packages.map((pkg, pIdx) => {
+        {packages.map((pkg) => {
           const template = PACKAGE_TEMPLATES[pkg.name] || PACKAGE_TEMPLATES.Basic;
+          const onUpdate = (field, val) => updatePkg(pkg.id, field, val);
+
           return (
             <div key={pkg.id} className={`rounded-2xl border p-4 ${template.border} ${template.bg}`}>
               {/* Package header */}
-              <div className="flex items-center justify-between mb-3">
-                <input
-                  type="text"
-                  value={pkg.name}
-                  onChange={e => updatePkg(pkg.id, 'name', e.target.value)}
-                  className={`font-display font-bold text-sm bg-transparent border-none outline-none w-full ${template.color}`}
-                  placeholder="Package name"
-                />
-                <button type="button" onClick={() => removePackage(pkg.id)}
-                  className={`shrink-0 ml-2 p-1 rounded-lg transition-colors text-red-400 hover:bg-red-400/10`}>
-                  <Trash2 size={12} />
-                </button>
-              </div>
+              <input
+                type="text"
+                value={pkg.name}
+                onChange={e => onUpdate('name', e.target.value)}
+                className={`font-display font-bold text-sm bg-transparent border-none outline-none w-full mb-3 ${template.color}`}
+                placeholder="Package name"
+              />
 
-              {/* Service type */}
+              {/* Service type (if multiple services) */}
               {serviceIds.length > 1 && (
                 <div className="mb-3">
-                  <p className={`text-[10px] font-medium mb-1 ${textSub}`}>Service</p>
-                  <select value={pkg.serviceId} onChange={e => updatePkg(pkg.id, 'serviceId', e.target.value)}
-                    className={`${inputCls} text-xs`}>
+                  <p className={labelCls}>Service</p>
+                  <select value={pkg.serviceId} onChange={e => onUpdate('serviceId', e.target.value)}
+                    className={inputCls}>
                     {serviceIds.map(sid => (
                       <option key={sid} value={sid}>{SERVICES[sid]?.icon} {SERVICES[sid]?.name}</option>
                     ))}
@@ -151,82 +292,40 @@ export function PackageBuilder({ creatorId, dark, serviceIds = [] }) {
 
               {/* Price */}
               <div className="mb-3">
-                <p className={`text-[10px] font-medium mb-1 ${textSub}`}>Price *</p>
+                <p className={labelCls}>Price *</p>
                 <div className="relative">
                   <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs pointer-events-none ${textSub}`}>$</span>
                   <input type="number" min={0} value={pkg.price}
-                    onChange={e => updatePkg(pkg.id, 'price', e.target.value)}
+                    onChange={e => onUpdate('price', e.target.value)}
                     placeholder="0"
-                    className={`${inputCls} pl-7`} />
+                    className={`${inputCls} pl-6`} />
                 </div>
               </div>
 
               {/* Description */}
-              <div className="mb-3">
-                <p className={`text-[10px] font-medium mb-1 ${textSub}`}>Description</p>
-                <textarea value={pkg.description} rows={2}
-                  onChange={e => updatePkg(pkg.id, 'description', e.target.value)}
+              <div className="mb-2">
+                <p className={labelCls}>Description (max 150 chars)</p>
+                <textarea value={pkg.description} rows={2} maxLength={150}
+                  onChange={e => onUpdate('description', e.target.value)}
                   placeholder="What's included in this package..."
-                  className={`${inputCls} resize-none text-xs`} />
+                  className={`${inputCls} resize-none`} />
+                <p className={`text-[9px] text-right mt-0.5 ${textSub}`}>{(pkg.description || '').length}/150</p>
               </div>
 
-              {/* Deliverables */}
-              <div className="mb-3">
-                <p className={`text-[10px] font-medium mb-1.5 ${textSub}`}>What's Included</p>
-                <div className="space-y-1.5">
-                  {pkg.deliverables.map((d, dIdx) => (
-                    <div key={dIdx} className="flex items-center gap-1.5">
-                      <Check size={10} className="text-teal-400 shrink-0" />
-                      <input type="text" value={d}
-                        onChange={e => updateDeliverable(pkg.id, dIdx, e.target.value)}
-                        placeholder="e.g. 10 edited photos"
-                        className={`flex-1 px-2 py-1.5 text-xs rounded-lg border outline-none transition-all ${
-                          dark ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-600 focus:border-gold-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-gold-500'
-                        }`} />
-                      {pkg.deliverables.length > 1 && (
-                        <button type="button" onClick={() => removeDeliverable(pkg.id, dIdx)}
-                          className="text-red-400/60 hover:text-red-400 transition-colors shrink-0">
-                          <Trash2 size={10} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button type="button" onClick={() => addDeliverable(pkg.id)}
-                    className={`text-[10px] flex items-center gap-1 mt-1 transition-colors ${dark ? 'text-charcoal-500 hover:text-gold-400' : 'text-gray-400 hover:text-gold-500'}`}>
-                    <Plus size={10} /> Add item
-                  </button>
-                </div>
-              </div>
-
-              {/* Turnaround + Revisions */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <p className={`text-[10px] font-medium mb-1 ${textSub}`}>Delivery (days)</p>
-                  <input type="number" min={1} value={pkg.turnaroundDays}
-                    onChange={e => updatePkg(pkg.id, 'turnaroundDays', e.target.value)}
-                    placeholder="7"
-                    className={`${inputCls} text-xs`} />
-                </div>
-                <div>
-                  <p className={`text-[10px] font-medium mb-1 ${textSub}`}>Revisions</p>
-                  <input type="number" min={0} value={pkg.revisions}
-                    onChange={e => updatePkg(pkg.id, 'revisions', e.target.value)}
-                    className={`${inputCls} text-xs`} />
-                </div>
-              </div>
+              {/* Service-specific fields */}
+              {isVideo && (
+                <VideoFields pkg={pkg} onUpdate={onUpdate} dark={dark} inputCls={inputCls} textSub={textSub} labelCls={labelCls} />
+              )}
+              {isPhotography && (
+                <PhotographyFields pkg={pkg} onUpdate={onUpdate} dark={dark} inputCls={inputCls} textSub={textSub} labelCls={labelCls} />
+              )}
+              {!isVideo && !isPhotography && (
+                <BasicFields pkg={pkg} onUpdate={onUpdate} dark={dark} inputCls={inputCls} textSub={textSub} labelCls={labelCls} />
+              )}
             </div>
           );
         })}
       </div>
-
-      {packages.length < 5 && (
-        <button type="button" onClick={addPackage}
-          className={`mt-4 w-full py-2.5 rounded-xl border-2 border-dashed text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-            dark ? 'border-charcoal-600 text-charcoal-400 hover:border-gold-500/50 hover:text-gold-400' : 'border-gray-300 text-gray-500 hover:border-gold-500/50 hover:text-gold-500'
-          }`}>
-          <Plus size={13} /> Add Package
-        </button>
-      )}
     </div>
   );
 }

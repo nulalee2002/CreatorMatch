@@ -10,15 +10,15 @@ import { CreatorDashboard } from './pages/CreatorDashboard.jsx';
 import { MessagesPage } from './pages/MessagesPage.jsx';
 import { ProjectBoard } from './pages/ProjectBoard.jsx';
 import { CheckoutPage } from './pages/CheckoutPage.jsx';
-import { TermsPage } from './pages/TermsPage.jsx';
 import { MatchResultsPage } from './pages/MatchResultsPage.jsx';
+import { TermsModal } from './components/TermsModal.jsx';
 
 import { SERVICES, RATES, PACKAGE_TIERS } from './data/rates.js';
 import { DEFAULT_EXCHANGE_RATES } from './data/regions.js';
 import { getRegionRates, buildQuote, getRate } from './utils/pricing.js';
 import { generateQuotePDF } from './utils/pdf.js';
 
-import { RegionSelector }      from './components/RegionSelector.jsx';
+import { StateCitySelector }   from './components/StateCitySelector.jsx';
 import { ServiceSelector }     from './components/ServiceSelector.jsx';
 import { LineItemBuilder }     from './components/LineItemBuilder.jsx';
 import { QuoteOutput }         from './components/QuoteOutput.jsx';
@@ -242,6 +242,9 @@ export default function App() {
   const [showAuth, setShowAuth]   = useState(false);
   const [authTab, setAuthTab]     = useState('login');
   const [quickMode, setQuickMode] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [termsPrivacy, setTermsPrivacy] = useState(false);
+  const [calcLocation, setCalcLocation] = useState(null); // { state, city, regionKey }
   const [profile, setProfile] = useState(() => {
     try { return JSON.parse(localStorage.getItem('creator-calc-profile') || '{}'); } catch { return {}; }
   });
@@ -414,7 +417,6 @@ export default function App() {
         <Route path="/messages" element={<MessagesPage dark={dark} />} />
         <Route path="/projects" element={<ProjectBoard dark={dark} />} />
         <Route path="/checkout/:projectId" element={<CheckoutPage dark={dark} />} />
-        <Route path="/terms" element={<TermsPage dark={dark} />} />
         <Route path="/matches/:projectId" element={<MatchResultsPage dark={dark} />} />
         <Route path="/calculator" element={null} />
       </Routes>
@@ -443,11 +445,14 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 items-end">
               <div>
                 <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
-                  Market Region
+                  Your Market
                 </p>
-                <RegionSelector
-                  value={state.regionKey}
-                  onChange={v => dispatch({ type: 'SET_REGION', value: v })}
+                <StateCitySelector
+                  value={calcLocation}
+                  onChange={loc => {
+                    setCalcLocation(loc);
+                    dispatch({ type: 'SET_REGION', value: loc.regionKey });
+                  }}
                   dark={dark}
                 />
               </div>
@@ -660,12 +665,12 @@ export default function App() {
               CreatorMatch — connecting content creators with brands and clients seeking media production and digital content services
             </p>
             <div className={`flex items-center gap-4 text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
-              <button type="button" onClick={() => navigate('/terms')}
+              <button type="button" onClick={() => { setTermsPrivacy(false); setShowTerms(true); }}
                 className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
                 Terms of Service
               </button>
               <span className={dark ? 'text-charcoal-700' : 'text-gray-300'}>|</span>
-              <button type="button" onClick={() => navigate('/terms#privacy')}
+              <button type="button" onClick={() => { setTermsPrivacy(true); setShowTerms(true); }}
                 className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
                 Privacy
               </button>
@@ -680,7 +685,12 @@ export default function App() {
 
       {/* Auth modal */}
       {showAuth && (
-        <AuthModal dark={dark} defaultTab={authTab} onClose={() => setShowAuth(false)} />
+        <AuthModal dark={dark} defaultTab={authTab} onClose={() => setShowAuth(false)} onOpenTerms={() => { setShowAuth(false); setTermsPrivacy(false); setShowTerms(true); }} />
+      )}
+
+      {/* Terms modal */}
+      {showTerms && (
+        <TermsModal dark={dark} onClose={() => setShowTerms(false)} scrollToPrivacy={termsPrivacy} />
       )}
     </div>
   );

@@ -9,7 +9,7 @@ export const SHOW_DEMO_CREATORS = true;
 // and forces a full re-write when the version is out of date.
 // This is what guarantees the profile-page "Creator not found" bug
 // cannot happen from stale localStorage.
-const SEED_VERSION = 5;
+const SEED_VERSION = 6;
 
 // ── Three demo creators: filmmaker, photographer, podcast producer ─
 export const SEED_CREATORS = [
@@ -289,7 +289,7 @@ export const SEED_CREATORS = [
     },
     services: [
       {
-        serviceId: 'podcast',
+        serviceId: 'video',
         subtypes: ['Audio Only', 'Video Podcast', 'In-Studio Recording', 'Remote Recording', 'Show Launch'],
         description: 'End-to-end podcast production. In-studio recording at our Midtown NYC facility, or remote recording support via Riverside.fm or SquadCast. Editing, mastering, show notes, transcription, and social audio clips all included depending on tier.',
         rates: {
@@ -305,25 +305,25 @@ export const SEED_CREATORS = [
       {
         title: 'The Growth Playbook — Top 50 Business Podcast',
         description: 'Full production partnership since launch. 180+ episodes, currently ranked #34 in Business on Apple Podcasts. We handle everything post-record.',
-        serviceId: 'podcast',
+        serviceId: 'video',
         link: 'https://podcasts.apple.com',
       },
       {
         title: 'Culture Shift — Video Podcast',
         description: 'Weekly video podcast with 500K+ monthly downloads across YouTube and audio platforms. Studio recording in Midtown with full video edit and chapter markers.',
-        serviceId: 'podcast',
+        serviceId: 'video',
         link: 'https://youtube.com',
       },
       {
         title: 'The Founder Files — Launch Package',
         description: 'Took a founder from zero to launched in 6 weeks. Trailer, first 5 episodes, Spotify/Apple distribution setup, and PR pitch kit.',
-        serviceId: 'podcast',
+        serviceId: 'video',
       },
     ],
     packages: [
       {
         name: 'Basic',
-        serviceId: 'podcast',
+        serviceId: 'video',
         price: 350,
         description: 'Per-episode editing for established shows. You record, we polish.',
         deliverables: [
@@ -338,7 +338,7 @@ export const SEED_CREATORS = [
       },
       {
         name: 'Standard',
-        serviceId: 'podcast',
+        serviceId: 'video',
         price: 1500,
         description: 'Per-episode full production. Remote or in-studio recording included.',
         deliverables: [
@@ -355,7 +355,7 @@ export const SEED_CREATORS = [
       },
       {
         name: 'Premium',
-        serviceId: 'podcast',
+        serviceId: 'video',
         price: 4500,
         description: 'Monthly retainer for 4 episodes. Best value for weekly shows.',
         deliverables: [

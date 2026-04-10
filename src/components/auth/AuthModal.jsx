@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { X, Mail, Lock, User, Building2, Users, Eye, EyeOff, Chrome } from 'lucide-react';
+import { X, Mail, Lock, User, Building2, Users, Eye, EyeOff, Chrome, Phone } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { supabaseConfigured } from '../../lib/supabase.js';
+import { supabase, supabaseConfigured } from '../../lib/supabase.js';
 
-export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = 'client' }) {
+export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = 'client', onOpenTerms }) {
   const { signIn, signUp, signInWithGoogle } = useAuth();
   const [tab, setTab]           = useState(defaultTab); // 'login' | 'signup'
   const [role, setRole]         = useState(defaultRole); // 'creator' | 'client'
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
-  const [form, setForm]         = useState({ fullName: '', email: '', password: '', tosAccepted: false });
+  const [form, setForm]         = useState({ fullName: '', email: '', password: '', phone: '', tosAccepted: false });
+  // SMS verification state (creator signup only, when Supabase configured)
+  const [smsStep, setSmsStep]   = useState(false); // true = show code entry
+  const [smsCode, setSmsCode]   = useState('');
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -20,27 +23,91 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
       : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
   }`;
 
+  /** Check for duplicate phone in localStorage (demo mode) */
+  function phoneAlreadyUsed(phone) {
+    try {
+      const profiles = JSON.parse(localStorage.getItem('creator-profiles') || '[]');
+      return profiles.some(p => p.phone === phone);
+    } catch { return false; }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    if (!supabaseConfigured) {
-      setError('Supabase is not configured yet. Please add your credentials to .env');
-      setLoading(false);
-      return;
-    }
-
     if (tab === 'signup') {
       if (!form.tosAccepted) { setError('You must agree to the Terms of Service to create an account.'); setLoading(false); return; }
+
+      // Creator phone verification
+      if (role === 'creator' && form.phone) {
+        if (!supabaseConfigured) {
+          // Demo mode: check for duplicate phone locally
+          if (phoneAlreadyUsed(form.phone)) {
+            setError('This phone number is already linked to a CreatorMatch account. Each creator can only have one account.');
+            setLoading(false);
+            return;
+          }
+          // Store phone in local profile and proceed
+          try {
+            const profiles = JSON.parse(localStorage.getItem('creator-profiles') || '[]');
+            profiles.push({ phone: form.phone, email: form.email });
+            localStorage.setItem('creator-profiles', JSON.stringify(profiles));
+          } catch {}
+        } else {
+          // Supabase mode: send OTP
+          const { error: otpErr } = await supabase.auth.signInWithOtp({ phone: form.phone });
+          if (otpErr) {
+            if (otpErr.message?.toLowerCase().includes('already')) {
+              setError('This phone number is already linked to a CreatorMatch account. Each creator can only have one account.');
+            } else {
+              setError(otpErr.message || 'Failed to send verification code.');
+            }
+            setLoading(false);
+            return;
+          }
+          setSmsStep(true);
+          setLoading(false);
+          return; // wait for user to enter code
+        }
+      }
+
+      if (!supabaseConfigured) {
+        setError('Supabase is not configured yet. Please add your credentials to .env');
+        setLoading(false);
+        return;
+      }
+
       const { error } = await signUp({ email: form.email, password: form.password, fullName: form.fullName, role });
       if (error) setError(error.message);
       else { onClose?.(); }
     } else {
+      if (!supabaseConfigured) {
+        setError('Supabase is not configured yet. Please add your credentials to .env');
+        setLoading(false);
+        return;
+      }
       const { error } = await signIn({ email: form.email, password: form.password });
       if (error) setError(error.message);
       else { onClose?.(); }
     }
+    setLoading(false);
+  }
+
+  async function handleVerifyCode(e) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    const { error: verifyErr } = await supabase.auth.verifyOtp({ phone: form.phone, token: smsCode, type: 'sms' });
+    if (verifyErr) {
+      setError(verifyErr.message || 'Invalid code. Please try again.');
+      setLoading(false);
+      return;
+    }
+    // Phone verified, now create account
+    const { error } = await signUp({ email: form.email, password: form.password, fullName: form.fullName, role });
+    if (error) setError(error.message);
+    else { onClose?.(); }
     setLoading(false);
   }
 
@@ -109,6 +176,40 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
             </div>
           )}
 
+          {/* SMS code entry screen */}
+          {smsStep ? (
+            <form onSubmit={handleVerifyCode} className="space-y-4">
+              <div className="text-center mb-2">
+                <div className="text-2xl mb-2">📱</div>
+                <p className={`text-sm font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>Check your phone</p>
+                <p className={`text-xs mt-1 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+                  We sent a 6-digit code to {form.phone}
+                </p>
+              </div>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                placeholder="Enter 6-digit code"
+                value={smsCode}
+                onChange={e => setSmsCode(e.target.value.replace(/\D/g, ''))}
+                className={`${inputCls} text-center text-xl tracking-widest`}
+                required
+                autoFocus
+              />
+              {error && <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2">{error}</p>}
+              <button type="submit" disabled={loading || smsCode.length !== 6}
+                className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold disabled:opacity-50 transition-all">
+                {loading ? 'Verifying...' : 'Verify and Create Account'}
+              </button>
+              <button type="button" onClick={() => { setSmsStep(false); setError(''); setSmsCode(''); }}
+                className={`w-full py-2 text-xs ${dark ? 'text-charcoal-400 hover:text-white' : 'text-gray-400 hover:text-gray-900'} transition-colors`}>
+                Back
+              </button>
+            </form>
+          ) : (
+          <>
           <form onSubmit={handleSubmit} className="space-y-3">
             {tab === 'signup' && (
               <div className="relative">
@@ -138,6 +239,20 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
               </button>
             </div>
 
+            {/* Phone number for creator signup */}
+            {tab === 'signup' && role === 'creator' && (
+              <div className="relative">
+                <Phone size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${dark ? 'text-charcoal-400' : 'text-gray-400'}`} />
+                <input type="tel" placeholder="Phone number (e.g. +1 555 000 0000)"
+                  value={form.phone}
+                  onChange={e => set('phone', e.target.value)}
+                  className={`${inputCls} pl-10`} />
+                <p className={`text-[10px] mt-1 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                  Required for identity verification. One account per phone number.
+                </p>
+              </div>
+            )}
+
             {tab === 'signup' && (
               <label className="flex items-start gap-2 cursor-pointer">
                 <input
@@ -148,10 +263,11 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
                 />
                 <span className={`text-[11px] leading-snug ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
                   I agree to the{' '}
-                  <a href="/terms" target="_blank" rel="noreferrer"
-                    className="text-gold-400 hover:text-gold-300 underline">
+                  <button type="button"
+                    onClick={e => { e.stopPropagation(); onOpenTerms?.(); }}
+                    className="text-gold-400 hover:text-gold-300 underline font-medium">
                     Terms of Service
-                  </a>{' '}
+                  </button>{' '}
                   and Platform Policies
                 </span>
               </label>
@@ -188,6 +304,8 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
               {tab === 'login' ? 'Sign up free' : 'Sign in'}
             </button>
           </p>
+          </>
+          )}
         </div>
       </div>
     </div>

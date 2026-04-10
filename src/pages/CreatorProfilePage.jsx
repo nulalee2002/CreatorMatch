@@ -42,6 +42,22 @@ async function hasActiveBooking(clientId, creatorId) {
   } catch { return false; }
 }
 
+/** Converts share URLs to embed URLs for YouTube, Vimeo, and Loom. */
+function toEmbedUrl(url) {
+  if (!url) return null;
+  if (url.includes('/embed/')) return url;
+  // YouTube: youtube.com/watch?v=ID or youtu.be/ID
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  // Vimeo: vimeo.com/ID
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  // Loom: loom.com/share/ID
+  const loomMatch = url.match(/loom\.com\/share\/([A-Za-z0-9]+)/);
+  if (loomMatch) return `https://www.loom.com/embed/${loomMatch[1]}`;
+  return url;
+}
+
 export function CreatorProfilePage({ dark }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -56,6 +72,7 @@ export function CreatorProfilePage({ dark }) {
   const [quoteDate, setQuoteDate]       = useState('');
   const [contactUnlocked, setContactUnlocked] = useState(false);
   const [showIntentGate, setShowIntentGate]   = useState(false);
+  const [showVideoModal, setShowVideoModal]   = useState(false);
 
   const isOwnProfile = user && creator && creator.user_id === user.id;
 
@@ -203,8 +220,25 @@ export function CreatorProfilePage({ dark }) {
           {/* Profile header */}
           <div className={`${cardCls} p-6`}>
             <div className="flex items-start gap-4">
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-4xl shrink-0 ${dark ? 'bg-charcoal-700' : 'bg-gray-100'}`}>
-                {creator.avatar || '🎬'}
+              <div className="relative shrink-0">
+                <div
+                  className={`w-20 h-20 rounded-2xl flex items-center justify-center text-4xl ${dark ? 'bg-charcoal-700' : 'bg-gray-100'} ${creator.video_intro_url ? 'cursor-pointer' : ''}`}
+                  onClick={() => creator.video_intro_url && setShowVideoModal(true)}
+                >
+                  {creator.avatar || '🎬'}
+                </div>
+                {creator.video_intro_url && (
+                  <button
+                    type="button"
+                    onClick={() => setShowVideoModal(true)}
+                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gold-500 hover:bg-gold-600 flex items-center justify-center shadow-lg transition-colors"
+                    title="Watch intro video"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" className="text-charcoal-900 ml-0.5">
+                      <polygon points="2,1 9,5 2,9" />
+                    </svg>
+                  </button>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 flex-wrap">
@@ -497,22 +531,30 @@ export function CreatorProfilePage({ dark }) {
                   </div>
                 ) : null}
 
-                {/* Website: always visible (helps verify creator is real) */}
-                {contact.website && (
+                {/* Website: only visible after booking or own profile */}
+                {contact.website && (isOwnProfile || contactUnlocked) ? (
                   <a href={contact.website.startsWith('http') ? contact.website : `https://${contact.website}`}
                     target="_blank" rel="noreferrer"
                     className={`flex items-center gap-2 text-xs transition-colors ${dark ? 'text-charcoal-400 hover:text-gold-400' : 'text-gray-500 hover:text-gold-500'}`}>
                     <Globe size={13} /> {contact.website}
                   </a>
-                )}
-                {/* Instagram: always visible (helps verify creator is real) */}
-                {contact.instagram && (
+                ) : contact.website ? (
+                  <div className={`flex items-center gap-2 text-xs italic ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
+                    <Globe size={13} /> Available after booking
+                  </div>
+                ) : null}
+                {/* Instagram: only visible after booking or own profile */}
+                {contact.instagram && (isOwnProfile || contactUnlocked) ? (
                   <a href={`https://instagram.com/${contact.instagram.replace('@','')}`}
                     target="_blank" rel="noreferrer"
                     className={`flex items-center gap-2 text-xs transition-colors ${dark ? 'text-charcoal-400 hover:text-gold-400' : 'text-gray-500 hover:text-gold-500'}`}>
                     <Instagram size={13} /> {contact.instagram}
                   </a>
-                )}
+                ) : contact.instagram ? (
+                  <div className={`flex items-center gap-2 text-xs italic ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
+                    <Instagram size={13} /> Available after booking
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -574,6 +616,35 @@ export function CreatorProfilePage({ dark }) {
 
       {/* Quote modal */}
       {showQuote && <RequestQuoteModal creator={creator} dark={dark} initialDate={quoteDate} onClose={() => setShowQuote(false)} />}
+
+      {/* Video intro modal */}
+      {showVideoModal && creator.video_intro_url && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowVideoModal(false)} />
+          <div className={`relative w-full max-w-2xl rounded-2xl border shadow-2xl overflow-hidden ${dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+            <div className={`flex items-center justify-between px-5 py-3 border-b ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
+              <p className={`text-sm font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>
+                Meet {creator.businessName || creator.name} — 1 to 2 minute intro
+              </p>
+              <button type="button" onClick={() => setShowVideoModal(false)}
+                className={`p-1.5 rounded-lg transition-colors ${dark ? 'text-charcoal-400 hover:text-white hover:bg-charcoal-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="2" y1="2" x2="14" y2="14" /><line x1="14" y1="2" x2="2" y2="14" />
+                </svg>
+              </button>
+            </div>
+            <div className="aspect-video bg-black">
+              <iframe
+                src={toEmbedUrl(creator.video_intro_url)}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+                title={`Meet ${creator.businessName || creator.name}`}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

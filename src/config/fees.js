@@ -87,27 +87,62 @@ export function dollarsToDisplay(dollars) {
 }
 
 /**
- * Cancellation fee schedule — percentage of project total the creator retains.
- * 'before_acceptance' = client cancels before creator accepts
- * 'after_acceptance'  = creator accepted but retainer not yet paid
- * 'after_retainer'    = retainer paid but work not started
- * 'work_in_progress'  = work has started (in_progress status)
- * 'after_delivery'    = work delivered but client cancels instead of approving
+ * Simplified 3-rule cancellation policy.
+ *
+ * Rule 1 — Before work begins: creator keeps 25% (cancellation fee).
+ *   Applies when: project accepted but creator has not started work yet.
+ *
+ * Rule 2 — After work begins: creator keeps 50% of project total.
+ *   Applies when: creator has actively started production (in_progress / revision).
+ *
+ * Rule 3 — After delivery: no refund. Creator keeps 100%.
+ *   Applies when: work has been delivered or approved.
  */
+export const CANCELLATION_RULES = [
+  {
+    id:       'before_work',
+    label:    'Before Work Begins',
+    keepPct:  25,
+    description: 'Creator keeps 25% as a cancellation fee. Client receives a 75% refund.',
+    applies:  ['open', 'accepted', 'retainer_paid'],
+  },
+  {
+    id:       'after_work_begins',
+    label:    'After Work Begins',
+    keepPct:  50,
+    description: 'Creator keeps 50% of the project total. Client receives a 50% refund.',
+    applies:  ['in_progress', 'revision'],
+  },
+  {
+    id:       'after_delivery',
+    label:    'After Delivery',
+    keepPct:  100,
+    description: 'No refund once work has been delivered. Creator retains full payment.',
+    applies:  ['delivered', 'approved', 'final_paid'],
+  },
+];
+
+/** Keep backward-compatible CANCELLATION_FEES shape for any component reading it */
 export const CANCELLATION_FEES = {
   before_acceptance:  0,
-  after_acceptance:   15,
+  after_acceptance:   25,
   after_retainer:     25,
-  work_in_progress:   40,
+  work_in_progress:   50,
   after_delivery:     100,
 };
 
-/** Map a project status to the relevant cancellation stage */
+/** Returns the cancellation rule that applies to the given project status */
+export function getCancellationRule(projectStatus) {
+  return CANCELLATION_RULES.find(r => r.applies.includes(projectStatus))
+    || CANCELLATION_RULES[0];
+}
+
+/** Map a project status to the relevant cancellation stage (legacy compat) */
 export function getCancellationStage(projectStatus) {
   switch (projectStatus) {
-    case 'open':          return 'before_acceptance';
-    case 'accepted':      return 'after_acceptance';
-    case 'retainer_paid': return 'after_retainer';
+    case 'open':
+    case 'accepted':
+    case 'retainer_paid': return 'before_acceptance';
     case 'in_progress':
     case 'revision':      return 'work_in_progress';
     case 'delivered':
@@ -120,15 +155,14 @@ export function getCancellationStage(projectStatus) {
  * Calculate how much the creator keeps (and client gets back) on cancellation.
  * @param {number} projectTotal - Full project value in dollars
  * @param {string} projectStatus - Current status of the project
- * @returns {{ stage: string, feePct: number, creatorKeepsDollars: number, clientRefundDollars: number }}
+ * @returns {{ rule: object, keepPct: number, creatorKeepsDollars: number, clientRefundDollars: number }}
  */
 export function getCancellationFee(projectTotal, projectStatus) {
-  const stage   = getCancellationStage(projectStatus);
-  const feePct  = CANCELLATION_FEES[stage];
-  const total   = Number(projectTotal) || 0;
-  const creatorKeepsDollars = (total * feePct) / 100;
+  const rule   = getCancellationRule(projectStatus);
+  const total  = Number(projectTotal) || 0;
+  const creatorKeepsDollars = (total * rule.keepPct) / 100;
   const clientRefundDollars = total - creatorKeepsDollars;
-  return { stage, feePct, creatorKeepsDollars, clientRefundDollars };
+  return { rule, feePct: rule.keepPct, creatorKeepsDollars, clientRefundDollars };
 }
 
 /** Project status labels and badge colors */

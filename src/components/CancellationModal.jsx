@@ -1,32 +1,30 @@
 import { useState } from 'react';
-import { X, AlertTriangle, DollarSign, ChevronRight } from 'lucide-react';
-import { getCancellationFee, CANCELLATION_FEES } from '../config/fees.js';
-
-const STAGE_LABELS = {
-  before_acceptance: 'Before creator acceptance',
-  after_acceptance:  'After acceptance, before retainer',
-  after_retainer:    'After retainer paid, before work started',
-  work_in_progress:  'Work in progress',
-  after_delivery:    'After work delivered',
-};
+import { X, AlertTriangle } from 'lucide-react';
+import { getCancellationFee, getCancellationRule, CANCELLATION_RULES } from '../config/fees.js';
 
 /**
  * CancellationModal — shown when a client wants to cancel a project.
- * Props: project, dark, onClose, onConfirm(project)
+ * Props: project, dark, onClose, onConfirm(project, reason)
+ *
+ * Cancellation policy (3 rules):
+ *  Rule 1 — Before work begins:  creator keeps 25%
+ *  Rule 2 — After work begins:   creator keeps 50%
+ *  Rule 3 — After delivery:      no refund (creator keeps 100%)
  */
 export function CancellationModal({ project, dark, onClose, onConfirm }) {
   const [confirmed, setConfirmed] = useState(false);
   const [reason, setReason]       = useState('');
 
   const projectTotal = Number(project?.budgetMax || project?.budgetMin || 0);
-  const { stage, feePct, creatorKeepsDollars, clientRefundDollars } = getCancellationFee(projectTotal, project?.status);
+  const { rule, feePct, creatorKeepsDollars, clientRefundDollars } = getCancellationFee(projectTotal, project?.status);
+  const currentRule = getCancellationRule(project?.status);
+
+  const fmt = (v) => `$${Number(v).toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
 
   const inputCls = `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
     dark ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
          : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
   }`;
-
-  const stageEntries = Object.entries(CANCELLATION_FEES);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -49,32 +47,45 @@ export function CancellationModal({ project, dark, onClose, onConfirm }) {
             </div>
           </div>
 
-          {/* Fee breakdown */}
+          {/* Policy rules */}
           <div className={`rounded-xl border p-4 mb-4 ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-gray-50 border-gray-200'}`}>
             <p className={`text-[10px] font-bold uppercase tracking-wider mb-3 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
-              Cancellation Fee Schedule
+              Cancellation Policy
             </p>
-
-            <div className="space-y-1.5 mb-4">
-              {stageEntries.map(([s, pct]) => (
-                <div key={s} className={`flex items-center justify-between py-1.5 px-2 rounded-lg transition-all ${
-                  s === stage
-                    ? dark ? 'bg-red-500/15 border border-red-500/30' : 'bg-red-50 border border-red-200'
-                    : ''
-                }`}>
-                  <div className="flex items-center gap-2">
-                    {s === stage && <ChevronRight size={10} className="text-red-400 shrink-0" />}
-                    <span className={`text-xs ${s === stage ? 'text-red-400 font-semibold' : dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-                      {STAGE_LABELS[s]}
-                    </span>
-                  </div>
-                  <span className={`text-xs font-bold shrink-0 ${
-                    s === stage ? 'text-red-400' : pct === 0 ? 'text-teal-400' : dark ? 'text-charcoal-300' : 'text-gray-700'
+            <div className="space-y-2 mb-4">
+              {CANCELLATION_RULES.map((r, i) => {
+                const isCurrent = r.id === currentRule.id;
+                return (
+                  <div key={r.id} className={`rounded-xl px-3 py-2.5 border transition-all ${
+                    isCurrent
+                      ? dark ? 'bg-red-500/15 border-red-500/40' : 'bg-red-50 border-red-200'
+                      : dark ? 'border-charcoal-700' : 'border-gray-200'
                   }`}>
-                    {pct === 0 ? 'Full refund' : `Creator keeps ${pct}%`}
-                  </span>
-                </div>
-              ))}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          isCurrent
+                            ? 'bg-red-500 text-white'
+                            : dark ? 'bg-charcoal-700 text-charcoal-400' : 'bg-gray-200 text-gray-500'
+                        }`}>Rule {i + 1}</span>
+                        <span className={`text-xs font-semibold ${isCurrent ? 'text-red-400' : dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
+                          {r.label}
+                        </span>
+                      </div>
+                      <span className={`text-xs font-bold shrink-0 ${
+                        r.keepPct === 100 ? 'text-red-400'
+                        : r.keepPct === 0 ? 'text-teal-400'
+                        : isCurrent ? 'text-red-400' : dark ? 'text-charcoal-400' : 'text-gray-500'
+                      }`}>
+                        Creator keeps {r.keepPct}%
+                      </span>
+                    </div>
+                    {isCurrent && (
+                      <p className={`text-[11px] mt-1 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>{r.description}</p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Current outcome */}
@@ -82,16 +93,16 @@ export function CancellationModal({ project, dark, onClose, onConfirm }) {
               <div className={`rounded-lg p-3 ${dark ? 'bg-charcoal-700' : 'bg-white border border-gray-200'}`}>
                 <div className="flex justify-between items-center mb-1">
                   <span className={`text-xs ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>Creator retains ({feePct}%)</span>
-                  <span className={`text-sm font-bold text-red-400`}>${creatorKeepsDollars.toLocaleString('en-US', { minimumFractionDigits: 0 })}</span>
+                  <span className="text-sm font-bold text-red-400">{fmt(creatorKeepsDollars)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className={`text-xs ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>Your refund</span>
-                  <span className={`text-sm font-bold text-teal-400`}>${clientRefundDollars.toLocaleString('en-US', { minimumFractionDigits: 0 })}</span>
+                  <span className="text-sm font-bold text-teal-400">{fmt(clientRefundDollars)}</span>
                 </div>
               </div>
             ) : (
               <p className={`text-xs ${dark ? 'text-charcoal-500' : 'text-gray-400'} italic`}>
-                Final amounts calculated at payment time.
+                Final amounts calculated at payment time based on the rule above.
               </p>
             )}
           </div>
@@ -123,7 +134,7 @@ export function CancellationModal({ project, dark, onClose, onConfirm }) {
             <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}
               className="mt-0.5 accent-gold-500" />
             <span className={`text-xs leading-snug ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
-              I understand the cancellation fee schedule and confirm I want to cancel this project.
+              I understand this cancellation cannot be undone.
             </span>
           </label>
 
@@ -137,7 +148,7 @@ export function CancellationModal({ project, dark, onClose, onConfirm }) {
               disabled={!confirmed}
               onClick={() => onConfirm?.(project, reason)}
               className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-bold transition-all">
-              Cancel Project
+              Confirm Cancellation
             </button>
           </div>
         </div>

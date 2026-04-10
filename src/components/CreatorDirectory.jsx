@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Star, ChevronDown, ChevronUp, X, Globe, Mail, Phone, Instagram, Plus, Trash2, ArrowRight, Filter, UserPlus, Heart, ExternalLink, BadgeCheck } from 'lucide-react';
+import { Search, MapPin, Star, ChevronDown, ChevronUp, X, Globe, Mail, Phone, Instagram, Plus, Trash2, ArrowRight, Filter, UserPlus, Heart, ExternalLink, BadgeCheck, AlertCircle } from 'lucide-react';
 import { SERVICES, RATES } from '../data/rates.js';
 import { REGIONS } from '../data/regions.js';
 import { SEED_CREATORS, initSeedData, SHOW_DEMO_CREATORS } from '../data/seedCreators.js';
@@ -9,6 +9,8 @@ import { VerificationBadge } from './VerificationFlow.jsx';
 import { LoyaltyBadge } from './LoyaltyBadge.jsx';
 import { TierBadge } from './TierBadge.jsx';
 import { FastMatch } from './FastMatch.jsx';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { supabase, supabaseConfigured } from '../lib/supabase.js';
 
 // Initialize seed data (version-gated — replaces stale seeds automatically)
 initSeedData();
@@ -296,7 +298,17 @@ function CreatorCard({ creator, dark, searchServiceId, budget, onDelete }) {
 }
 
 // ── Register Form ────────────────────────────────────────────
-function RegisterForm({ onSave, dark, onCancel }) {
+function RegisterForm({ onSave, dark, onCancel, user }) {
+  const navigate = useNavigate();
+
+  // Check if user already has a profile
+  const existingProfile = useMemo(() => {
+    if (!user?.id) return null;
+    const all = loadListings();
+    return all.find(c => c.user_id === user.id) || null;
+  }, [user?.id]);
+
+  const [serviceLimit, setServiceLimit] = useState('');
   const [form, setForm] = useState({
     name: '', businessName: '', bio: '', experience: 'mid',
     avatar: '', tags: '',
@@ -327,10 +339,16 @@ function RegisterForm({ onSave, dark, onCancel }) {
     });
   };
   const addService = () => {
-    setForm(f => ({
-      ...f,
-      services: [...f.services, { serviceId: 'video', subtypes: '', rates: {}, description: '' }],
-    }));
+    setForm(f => {
+      if (f.services.length >= 3) {
+        setServiceLimit('CreatorMatch encourages creators to focus on their strongest services. You can list a maximum of 3 service specialties. This helps clients find the right creator faster and helps you stand out in your strongest areas.');
+        return f;
+      }
+      return {
+        ...f,
+        services: [...f.services, { serviceId: 'video', subtypes: '', rates: {}, description: '' }],
+      };
+    });
   };
   const removeService = (idx) => {
     setForm(f => ({ ...f, services: f.services.filter((_, i) => i !== idx) }));
@@ -378,8 +396,32 @@ function RegisterForm({ onSave, dark, onCancel }) {
     onSave(listing);
   };
 
+  // If user already has a profile, show message instead of form
+  if (existingProfile) {
+    return (
+      <div className={`rounded-2xl border p-6 text-center space-y-4 ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+        <AlertCircle size={36} className="text-gold-400 mx-auto" />
+        <h3 className={`font-display font-bold text-lg ${dark ? 'text-white' : 'text-gray-900'}`}>
+          You already have a CreatorMatch profile.
+        </h3>
+        <p className={`text-sm ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
+          Each creator can only have one profile on the platform. Click below to edit your existing profile.
+        </p>
+        <button type="button" onClick={() => navigate('/dashboard')}
+          className="px-6 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 font-bold text-sm transition-all">
+          Go to My Dashboard
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
+      {/* Platform info */}
+      <div className={`rounded-xl border p-3 text-xs ${dark ? 'border-charcoal-600 bg-charcoal-900/40 text-charcoal-400' : 'border-gray-200 bg-gray-50 text-gray-500'}`}>
+        CreatorMatch is a curated platform. Each creator has one profile showcasing their best work.
+      </div>
+
       {/* Step indicator */}
       <div className="flex gap-2">
         {[
@@ -542,12 +584,19 @@ function RegisterForm({ onSave, dark, onCancel }) {
               </div>
             );
           })}
-          <button type="button" onClick={addService}
-            className={`w-full py-2.5 rounded-xl border-2 border-dashed text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-              dark ? 'border-charcoal-600 text-charcoal-400 hover:border-gold-500/50 hover:text-gold-400' : 'border-gray-300 text-gray-500 hover:border-gold-500/50 hover:text-gold-500'
-            }`}>
-            <Plus size={14} /> Add Another Service
-          </button>
+          {serviceLimit && (
+            <div className={`rounded-xl border p-3 text-xs ${dark ? 'border-amber-500/30 bg-amber-500/10 text-amber-300' : 'border-amber-300 bg-amber-50 text-amber-700'}`}>
+              {serviceLimit}
+            </div>
+          )}
+          {form.services.length < 3 && (
+            <button type="button" onClick={addService}
+              className={`w-full py-2.5 rounded-xl border-2 border-dashed text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                dark ? 'border-charcoal-600 text-charcoal-400 hover:border-gold-500/50 hover:text-gold-400' : 'border-gray-300 text-gray-500 hover:border-gold-500/50 hover:text-gold-500'
+              }`}>
+              <Plus size={14} /> Add Another Service
+            </button>
+          )}
         </div>
       )}
 
@@ -646,6 +695,7 @@ function RegisterForm({ onSave, dark, onCancel }) {
 
 // ── Main Component ───────────────────────────────────────────
 export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegister, onSwitchToSearch }) {
+  const { user } = useAuth();
   const [listings, setListings] = useState(loadListings);
   const [searchQuery, setSearchQuery] = useState('');
   const [serviceFilter, setServiceFilter] = useState('all');
@@ -766,7 +816,9 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
   }, [listings, serviceFilter, searchQuery, budgetNum, zipRegion, sortBy]);
 
   const handleSaveListing = (listing) => {
-    const updated = [listing, ...listings];
+    // Attach user_id to the listing if a user is logged in
+    const enriched = { ...listing, user_id: user?.id || null };
+    const updated = [enriched, ...listings];
     setListings(updated);
     saveListings(updated);
     if (onSwitchToSearch) onSwitchToSearch();
@@ -798,7 +850,7 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
         </div>
 
         <div className={`rounded-2xl border p-6 ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
-          <RegisterForm onSave={handleSaveListing} dark={dark} />
+          <RegisterForm onSave={handleSaveListing} dark={dark} user={user} />
         </div>
 
         {/* Stats */}

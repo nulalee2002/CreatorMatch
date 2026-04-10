@@ -702,7 +702,7 @@ export function ProjectBoard({ dark }) {
         {
           id: 'demo-4', title: 'Podcast Production & Editing (Weekly)',
           description: 'Established weekly business podcast (200+ episodes) seeking reliable audio editor. Tasks: noise reduction, leveling, intro/outro insertion, chapter markers. ~45 min raw audio per week. Long-term contract preferred.',
-          serviceId: 'podcast', budgetMin: 150, budgetMax: 300, deadline: null,
+          serviceId: 'video', budgetMin: 150, budgetMax: 300, deadline: null,
           location: '', remote: true, skills: ['Adobe Audition', 'podcast editing', 'Descript'],
           clientId: 'client-4', clientName: 'The Business Pod', status: 'open', applications: 5,
           createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),

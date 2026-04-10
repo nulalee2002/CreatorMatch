@@ -300,6 +300,11 @@ export function CreatorDashboard({ dark }) {
         {/* ── Overview Tab ── */}
         {activeTab === 'overview' && (
           <div className="space-y-5">
+            {/* Profile identity message */}
+            <div className={`rounded-xl border px-4 py-3 text-sm ${dark ? 'border-charcoal-700 bg-charcoal-800/60 text-charcoal-300' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+              Your CreatorMatch profile is your professional identity on the platform. Keep it focused and up to date.
+            </div>
+
             {/* Stats grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard icon={Eye}          label="Profile Views"   value={viewCount || '—'}  sub="All time"              color="text-teal-400"   dark={dark} />
@@ -561,7 +566,7 @@ function VideoIntroTab({ creator, dark, onUpdate }) {
           <h2 className={`font-display font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>Video Introduction</h2>
         </div>
         <p className={`text-xs mb-5 ${textSub}`}>
-          Add a short video intro (60–90 sec) so clients can get to know you before reaching out. YouTube, Vimeo, and Loom are supported.
+          Paste a YouTube, Vimeo, or Loom link. Keep it 1 to 2 minutes. Introduce yourself, show your work, and tell clients why they should hire you.
         </p>
 
         <div className="mb-4">

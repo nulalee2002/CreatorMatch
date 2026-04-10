@@ -47,6 +47,33 @@ export function StripeOnboarding({ creator, dark, onStatusChange }) {
     }
   }
 
+  async function checkStripeUniqueness(stripeAccountId) {
+    if (!stripeAccountId) return true;
+    // Check localStorage for duplicate stripe_account_id on a different listing
+    try {
+      const all = JSON.parse(localStorage.getItem('creator-directory') || '[]');
+      const conflict = all.find(c => c.stripe_account_id === stripeAccountId && c.id !== creator.id);
+      if (conflict) {
+        setError('This payment account is already connected to another CreatorMatch profile. Each creator can only have one active profile.');
+        return false;
+      }
+    } catch {}
+    // Check Supabase if configured
+    if (supabaseConfigured) {
+      const { data } = await supabase
+        .from('creator_listings')
+        .select('id')
+        .eq('stripe_account_id', stripeAccountId)
+        .neq('id', creator.id)
+        .limit(1);
+      if (data?.length > 0) {
+        setError('This payment account is already connected to another CreatorMatch profile. Each creator can only have one active profile.');
+        return false;
+      }
+    }
+    return true;
+  }
+
   async function handleConnect() {
     if (!supabaseConfigured || !stripeConfigured) {
       setError('Payment system not configured. Add your Stripe and Supabase keys to .env');
@@ -63,6 +90,10 @@ export function StripeOnboarding({ creator, dark, onStatusChange }) {
         },
       });
       if (fnErr) throw fnErr;
+      if (data?.stripeAccountId) {
+        const isUnique = await checkStripeUniqueness(data.stripeAccountId);
+        if (!isUnique) { setLoading(false); return; }
+      }
       if (data?.url) {
         // Redirect to Stripe onboarding
         window.location.href = data.url;

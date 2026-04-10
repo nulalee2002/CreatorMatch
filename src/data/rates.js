@@ -154,7 +154,7 @@ export const RATES = {
     },
   },
 
-  // ─── PODCAST PRODUCTION ──────────────────────────────────────
+  // ─── PODCAST PRODUCTION (sub-category of video) ─────────────
   podcast: {
     basicEditPerEp: {
       label: 'Basic Edit (per episode)',
@@ -393,6 +393,58 @@ export const RATES = {
       'uk-tier1': r(1800, 7000),  'uk-tier2': r(1000, 3500), 'eu-west': r(1500, 6000),
     },
   },
+
+  // ─── LIVE EVENTS ─────────────────────────────────────────────
+  liveevents: {
+    halfDayEvent: {
+      label: 'Half-Day Event Coverage (4 hrs)',
+      unit: 'session',
+      tooltip: 'On-site coverage for live events: conferences, performances, corporate gatherings. Approximately 4 hours.',
+      'us-tier1': r(600, 1800), 'us-tier2': r(400, 1200), 'us-tier3': r(300, 800),
+      'ca-tier1': r(500, 1500), 'ca-tier2': r(350, 1000), 'ca-tier3': r(260, 780),
+      'uk-tier1': r(400, 1200), 'uk-tier2': r(280, 800),  'eu-west': r(350, 1100),
+    },
+    fullDayEvent: {
+      label: 'Full-Day Event Coverage (8 hrs)',
+      unit: 'day',
+      tooltip: 'Full-day on-site coverage. Includes setup, full event, and basic post-production.',
+      'us-tier1': r(1200, 4000), 'us-tier2': r(800, 2500), 'us-tier3': r(500, 1500),
+      'ca-tier1': r(1000, 3200), 'ca-tier2': r(700, 2000), 'ca-tier3': r(520, 1550),
+      'uk-tier1': r(700, 2500),  'uk-tier2': r(500, 1500), 'eu-west': r(600, 2200),
+    },
+    multiDayEvent: {
+      label: 'Multi-Day Event (per day)',
+      unit: 'day',
+      tooltip: 'Per-day rate for multi-day events such as festivals or conferences. Includes travel accommodation at actual cost.',
+      'us-tier1': r(1000, 3500), 'us-tier2': r(700, 2200), 'us-tier3': r(450, 1400),
+      'ca-tier1': r(850, 2800),  'ca-tier2': r(600, 1800), 'ca-tier3': r(450, 1760),
+      'uk-tier1': r(600, 2200),  'uk-tier2': r(450, 1400), 'eu-west': r(550, 2000),
+    },
+    streamingSetup: {
+      label: 'Live Stream Setup & Operation',
+      unit: 'event',
+      tooltip: 'Full live streaming service: encoder setup, multi-camera switching, broadcast to platform.',
+      'us-tier1': r(800, 3000), 'us-tier2': r(500, 2000), 'us-tier3': r(300, 1200),
+      'ca-tier1': r(700, 2500), 'ca-tier2': r(400, 1600), 'ca-tier3': r(300, 1240),
+      'uk-tier1': r(500, 2000), 'uk-tier2': r(350, 1200), 'eu-west': r(400, 1800),
+    },
+    highlightEdit: {
+      label: 'Event Highlight Reel (edit)',
+      unit: 'project',
+      tooltip: 'Post-production edit of a 2–5 minute highlight video from event footage.',
+      'us-tier1': r(300, 1200), 'us-tier2': r(200, 800),  'us-tier3': r(150, 500),
+      'ca-tier1': r(250, 1000), 'ca-tier2': r(175, 650),  'ca-tier3': r(131, 488),
+      'uk-tier1': r(200, 800),  'uk-tier2': r(150, 500),  'eu-west': r(175, 700),
+    },
+    photographyEvent: {
+      label: 'Event Photography (per hour)',
+      unit: 'hr',
+      tooltip: 'On-site event photography rate. Includes one set of selects delivered within 48 hours.',
+      'us-tier1': r(150, 500), 'us-tier2': r(100, 300), 'us-tier3': r(75, 200),
+      'ca-tier1': r(125, 400), 'ca-tier2': r(80, 250),  'ca-tier3': r(60, 243),
+      'uk-tier1': r(100, 350), 'uk-tier2': r(75, 200),  'eu-west': r(80, 275),
+    },
+  },
 };
 
 // ─── SERVICE DEFINITIONS ───────────────────────────────────────
@@ -403,8 +455,8 @@ export const SERVICES = {
     icon: '🎬',
     color: 'from-purple-600 to-purple-800',
     accent: '#9333ea',
-    subtypes: ['Corporate', 'Wedding', 'Event', 'Music Video', 'Documentary', 'Social Media Content'],
-    description: 'Corporate, wedding, event, music video, documentary',
+    subtypes: ['Corporate', 'Wedding', 'Event', 'Music Video', 'Documentary', 'Social Media Content', 'Podcast (Video)', 'Podcast (Audio Only)'],
+    description: 'Corporate, wedding, event, music video, documentary, podcast',
     primaryRates: ['hourlyShoot', 'halfDay', 'fullDay', 'editHourly'],
     packageRates: ['weddingPackage', 'corporateProject', 'musicVideoProject'],
   },
@@ -418,17 +470,6 @@ export const SERVICES = {
     description: 'Real estate, commercial, portraits, product, events',
     primaryRates: ['hourlyEvent', 'dayRateCommercial', 'editHourly'],
     packageRates: ['weddingPackage', 'headshotsSession', 'realEstatePerListing', 'productPerImage'],
-  },
-  podcast: {
-    id: 'podcast',
-    name: 'Podcast Production',
-    icon: '🎙️',
-    color: 'from-green-600 to-green-800',
-    accent: '#16a34a',
-    subtypes: ['Audio Only', 'Video Podcast', 'Remote Recording', 'In-Studio'],
-    description: 'Recording, editing, full production, monthly retainers',
-    primaryRates: ['basicEditPerEp', 'editHourly', 'recordingSession'],
-    packageRates: ['fullProductionPerEp', 'monthlyRetainer4Eps'],
   },
   drone: {
     id: 'drone',
@@ -462,6 +503,17 @@ export const SERVICES = {
     description: 'Video editing, color, audio, motion graphics, retouching',
     primaryRates: ['videoEditingHourly', 'colorGradingHourly', 'audioMixPerEp', 'motionGraphicsHourly', 'photoRetouchingPerImg'],
     packageRates: ['shortProject', 'mediumProject', 'largeProject'],
+  },
+  liveevents: {
+    id: 'liveevents',
+    name: 'Live Events',
+    icon: '🎪',
+    color: 'from-rose-600 to-rose-800',
+    accent: '#e11d48',
+    subtypes: ['Conference', 'Concert / Performance', 'Corporate Event', 'Festival', 'Sports', 'Gala / Awards'],
+    description: 'Conferences, concerts, festivals, multi-day events, live streaming',
+    primaryRates: ['halfDayEvent', 'fullDayEvent', 'photographyEvent'],
+    packageRates: ['multiDayEvent', 'streamingSetup', 'highlightEdit'],
   },
 };
 
