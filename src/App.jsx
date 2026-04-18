@@ -9,6 +9,7 @@ import { CreatorProfilePage } from './pages/CreatorProfilePage.jsx';
 import { CreatorDashboard } from './pages/CreatorDashboard.jsx';
 import { MessagesPage } from './pages/MessagesPage.jsx';
 import { ProjectBoard } from './pages/ProjectBoard.jsx';
+import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { CheckoutPage } from './pages/CheckoutPage.jsx';
 import { MatchResultsPage } from './pages/MatchResultsPage.jsx';
 import { TermsModal } from './components/TermsModal.jsx';
@@ -421,7 +422,7 @@ export default function App() {
         <Route path="/creator/:id" element={<CreatorProfilePage dark={dark} />} />
         <Route path="/dashboard" element={<CreatorDashboard dark={dark} />} />
         <Route path="/messages" element={<MessagesPage dark={dark} />} />
-        <Route path="/projects" element={<ProjectBoard dark={dark} />} />
+        <Route path="/projects" element={<ErrorBoundary dark={dark} fallbackMessage="Could not load the Project Board"><ProjectBoard dark={dark} /></ErrorBoundary>} />
         <Route path="/checkout/:projectId" element={<CheckoutPage dark={dark} />} />
         <Route path="/matches/:projectId" element={<MatchResultsPage dark={dark} />} />
         <Route path="/calculator" element={null} />

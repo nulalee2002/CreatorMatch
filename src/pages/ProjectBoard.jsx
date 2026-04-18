@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Briefcase, Plus, MapPin, Clock, DollarSign, ChevronRight,
-  Check, X, Filter, Search, Tag, Send, ArrowLeft, Users,
-  Eye, Star, Calendar, CreditCard, Truck, ThumbsUp, RotateCcw, Zap,
+  Briefcase, Plus, MapPin, DollarSign,
+  Check, X, Search, Send, Users,
+  Star, Calendar, CreditCard, ThumbsUp, RotateCcw, Zap,
   Upload, AlertCircle, Timer,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
