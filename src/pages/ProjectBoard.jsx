@@ -36,6 +36,14 @@ function loadMyListing(userId) {
   } catch { return null; }
 }
 
+function locationStr(loc) {
+  if (!loc) return '';
+  if (typeof loc === 'object') {
+    return [loc.city, loc.state].filter(Boolean).join(', ') || loc.address || '';
+  }
+  return String(loc);
+}
+
 function timeAgo(iso) {
   const d = new Date(iso);
   const diff = Date.now() - d;
@@ -656,9 +664,9 @@ function ProjectCard({ project, dark, onApply, myApplications, isClient, onView,
             <Calendar size={10} /> {new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         )}
-        {project.location && (
+        {locationStr(project.location) && (
           <span className={`flex items-center gap-1 text-xs ${textSub}`}>
-            <MapPin size={10} /> {project.location}
+            <MapPin size={10} /> {locationStr(project.location)}
           </span>
         )}
         {project.remote && (
@@ -740,7 +748,7 @@ function ProjectDetailModal({ project, dark, onClose, onApply, myApplications, a
               { icon: DollarSign, label: 'Budget', value: budgetStr, color: 'text-teal-400' },
               { icon: Users,      label: 'Applications', value: `${project.applications || 0} proposals`, color: textSub },
               ...(project.deadline ? [{ icon: Calendar, label: 'Deadline', value: new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), color: textSub }] : []),
-              ...(project.location ? [{ icon: MapPin, label: 'Location', value: project.location + (project.remote ? ' (Remote OK)' : ''), color: textSub }] : []),
+              ...(locationStr(project.location) ? [{ icon: MapPin, label: 'Location', value: locationStr(project.location) + (project.remote ? ' (Remote OK)' : ''), color: textSub }] : []),
             ].map(({ icon: Icon, label, value, color }) => (
               <div key={label}>
                 <p className={`text-[10px] font-medium mb-0.5 ${textSub}`}>{label}</p>
