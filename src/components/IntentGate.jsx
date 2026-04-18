@@ -14,12 +14,12 @@ const SERVICE_TYPES = [
 ];
 
 const PROJECT_SUBTYPES = {
-  'Video Production':       ['Corporate', 'Wedding', 'Documentary', 'Music Video', 'Brand Commercial', 'Social Media Content', 'Podcast'],
-  'Photography':            ['Real Estate', 'Headshots', 'Wedding', 'Commercial', 'Event', 'Product', 'Brand'],
-  'Drone/Aerial':           ['Real Estate Aerial', 'Event Aerial', 'Mapping', 'Film/Video Support'],
-  'Social Media Content':   ['Reels/TikTok', 'YouTube', 'Brand Campaign', 'UGC'],
-  'Post-Production':        ['Video Editing', 'Color Grading', 'Audio Mixing', 'Motion Graphics'],
-  'Live Event Coverage':    ['Concert/Music', 'Sports', 'Corporate Event', 'Conference', 'Festival'],
+  'Video Production':       ['Corporate', 'Wedding', 'Documentary', 'Music Video', 'Brand Commercial', 'Social Media Content', 'Podcast', 'Birthday/Celebration', 'Anniversary', 'Graduation', 'Concert', 'Sports', 'Real Estate Tour', 'Other'],
+  'Photography':            ['Real Estate', 'Headshots', 'Wedding', 'Commercial', 'Event', 'Product', 'Brand', 'Birthday/Celebration', 'Anniversary', 'Graduation', 'Concert', 'Sports', 'Family Portrait', 'Maternity', 'Other'],
+  'Drone/Aerial':           ['Real Estate Aerial', 'Event Aerial', 'Mapping', 'Film/Video Support', 'Construction Progress', 'Other'],
+  'Social Media Content':   ['Reels/TikTok', 'YouTube', 'Brand Campaign', 'UGC', 'Behind the Scenes', 'Other'],
+  'Post-Production':        ['Video Editing', 'Color Grading', 'Audio Mixing', 'Motion Graphics', 'Podcast Editing', 'Other'],
+  'Live Event Coverage':    ['Concert/Music', 'Sports', 'Corporate Event', 'Conference', 'Festival', 'Birthday/Celebration', 'Wedding Reception', 'Other'],
 };
 
 const TIME_OPTIONS = [
@@ -69,6 +69,7 @@ export function IntentGate({ dark, onClose, prefillService, mode = 'modal' }) {
     projectTitle:        '',
     serviceType:         prefillService || '',
     projectType:         '',
+    otherProjectType:    '',
     projectDate:         '',
     projectTime:         '',
     venueAddress:        '',
@@ -88,7 +89,8 @@ export function IntentGate({ dark, onClose, prefillService, mode = 'modal' }) {
   const set = (k, v) => {
     setForm(f => {
       const next = { ...f, [k]: v };
-      if (k === 'serviceType') next.projectType = '';
+      if (k === 'serviceType') { next.projectType = ''; next.otherProjectType = ''; }
+      if (k === 'projectType') next.otherProjectType = '';
       return next;
     });
     setErrors(e => ({ ...e, [k]: '' }));
@@ -132,6 +134,7 @@ export function IntentGate({ dark, onClose, prefillService, mode = 'modal' }) {
     if (!form.projectTitle.trim())       e.projectTitle       = 'Give your project a clear title so creators understand what this is.';
     if (!form.serviceType)               e.serviceType        = 'Select the type of production service you need.';
     if (!form.projectType)               e.projectType        = 'Select the specific type of project within your chosen service.';
+    if (form.projectType === 'Other' && !form.otherProjectType.trim()) e.otherProjectType = 'Please describe your specific project type.';
     if (!form.projectDate)               e.projectDate        = 'Creators need to know when to show up or when this is due.';
     else if (form.projectDate <= today)  e.projectDate        = 'Project date must be in the future.';
     if (!form.projectTime)               e.projectTime        = 'Time of day affects lighting, crew scheduling, and availability.';
@@ -157,7 +160,7 @@ export function IntentGate({ dark, onClose, prefillService, mode = 'modal' }) {
       id:                 Date.now().toString() + Math.random(),
       title:              form.projectTitle.trim(),
       serviceType:        form.serviceType,
-      projectType:        form.projectType,
+      projectType:        form.projectType === 'Other' ? (form.otherProjectType.trim() || 'Other') : form.projectType,
       projectDate:        form.projectDate,
       projectTime:        form.projectTime,
       location: {
@@ -240,6 +243,16 @@ export function IntentGate({ dark, onClose, prefillService, mode = 'modal' }) {
               ))}
             </select>
             {errorMsg('projectType')}
+            {form.projectType === 'Other' && (
+              <input
+                type="text"
+                value={form.otherProjectType}
+                onChange={e => set('otherProjectType', e.target.value)}
+                placeholder="Describe your specific project type..."
+                className={`mt-2 ${inputCls('otherProjectType')}`}
+              />
+            )}
+            {errorMsg('otherProjectType')}
           </div>
         )}
 
@@ -317,13 +330,13 @@ export function IntentGate({ dark, onClose, prefillService, mode = 'modal' }) {
         {/* 9. Description */}
         <div>
           <label className={labelCls}>
-            Describe your project *
+            Describe your project and share a reference link *
             <span className={`ml-2 font-normal ${descLen >= 100 ? 'text-teal-400' : textSub}`}>
               ({descLen}/100 min)
             </span>
           </label>
           <textarea rows={4} value={form.description} onChange={e => set('description', e.target.value)}
-            placeholder="Describe what needs to be filmed or created. Include the style or mood you want, any specific shots or deliverables, important details the creator needs to know, and anything that makes this project unique."
+            placeholder="Describe what needs to be filmed or created. Include the style or mood you want, any specific shots or deliverables, and important details the creator needs to know. Feel free to paste a link to a YouTube, Instagram, TikTok, or any video that captures the look or vibe you are going for. The more detail you share, the better your matches will be."
             className={`${inputCls('description')} resize-none`} />
           {errorMsg('description')}
         </div>

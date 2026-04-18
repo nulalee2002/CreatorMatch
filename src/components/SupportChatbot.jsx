@@ -56,28 +56,38 @@ async function sendToAnthropic(messages) {
   return data.content?.[0]?.text || 'Sorry, I could not get a response.';
 }
 
-// Basic demo responses when no API key is configured
+// Demo responses when no API key is configured
 function getDemoResponse(question) {
   const q = question.toLowerCase();
-  if (q.includes('fee') || q.includes('cost') || q.includes('price')) {
-    return 'Creators pay a 10% platform fee (drops to 8% at 10 projects, 6% at 25). Clients pay a 5% booking fee on top of the project price.';
+
+  if (q.includes('how does this platform work') || q.includes('how does creatormatch work') || (q.includes('how does') && q.includes('work'))) {
+    return 'CreatorMatch connects clients with verified media creators. Clients post a project brief and get matched with 3 to 5 curated creators based on their budget, location, and needs. You pay a 50% retainer to get started, and the remaining 50% is released when you approve the final delivery. Creators keep 90% of every project.';
   }
-  if (q.includes('payment') || q.includes('retainer')) {
-    return 'Payment is split 50/50. You pay a 50% retainer upfront to secure your booking, then the remaining 50% is released when you approve the delivery.';
+  if (q.includes('fee') || q.includes('cost') || q.includes('price') || q.includes('how much')) {
+    return 'Creators pay a 10% platform fee that drops to 8% after 10 completed projects and 6% after 25. Clients pay a 5% booking fee. No subscriptions, no lead fees, no pay to apply.';
   }
-  if (q.includes('cancel')) {
-    return 'Retainers are refundable before work begins, minus a small cancellation fee. Once work has started, cancellation terms depend on the project agreement.';
+  if (q.includes('sign up') || q.includes('get started') || q.includes('join') || q.includes('register')) {
+    return 'Creators click Join in the nav and create a free profile with their services, rates, and portfolio. Clients can browse creators directly or post a project brief to get matched automatically with the best available creators.';
+  }
+  if (q.includes('payment') || q.includes('retainer') || q.includes('when do i get paid') || q.includes('when will i get paid')) {
+    return 'Clients pay a 50% retainer upfront to secure the booking. The remaining 50% is released when the client approves the final delivery. If the client does not respond within 72 hours of delivery, payment releases automatically.';
+  }
+  if (q.includes('not happy') || q.includes('unhappy') || q.includes('not satisfied') || q.includes('dispute')) {
+    return 'Clients have 72 hours after delivery to request a revision (2 free revisions included) or open a dispute. Disputes freeze the payment and are reviewed by the CreatorMatch team to reach a fair resolution.';
+  }
+  if (q.includes('cancel') || q.includes('refund')) {
+    return 'If a client cancels before work begins, the creator keeps 25% as a cancellation fee and the client gets 75% back. If work has already started, the creator keeps the full 50% retainer.';
+  }
+  if (q.includes('match') || q.includes('how does matching work') || q.includes('how do i get matched')) {
+    return 'When a client submits a project brief, the Smart Match algorithm finds the top 3 to 5 creators who match their service type, budget, location, and availability. Clients see curated matches - not an overwhelming list of everyone on the platform.';
+  }
+  if (q.includes('verif') || q.includes('verified') || q.includes('verification')) {
+    return 'Creators complete a 4-step verification process including connecting a Stripe payment account for identity verification, adding portfolio links, and linking a social media profile. Verified creators rank higher in search results.';
   }
   if (q.includes('insurance')) {
     return 'CreatorMatch does not verify creator insurance. For on-site projects, confirm coverage directly with your creator before booking.';
   }
-  if (q.includes('dispute')) {
-    return 'You have 72 hours after a delivery is submitted to approve or open a dispute. If no action is taken, payment releases automatically.';
-  }
-  if (q.includes('refund')) {
-    return 'Retainers are refundable before work begins. After work starts, disputes must be opened within 72 hours of delivery. Contact support at Nulalee2002@gmail.com for account-specific issues.';
-  }
-  return 'Thanks for reaching out! For account-specific questions, contact our support team at Nulalee2002@gmail.com. I can answer general questions about how CreatorMatch works - try asking about fees, payments, or how to get started.';
+  return 'Great question. I can help with questions about fees, payments, how matching works, verification, cancellations, and getting started on CreatorMatch. Try asking me about any of those topics, or email Nulalee2002@gmail.com for account-specific help.';
 }
 
 // ── Main component ───────────────────────────────────────────────

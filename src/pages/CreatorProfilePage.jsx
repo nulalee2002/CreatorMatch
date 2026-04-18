@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Star, Globe, Mail, Phone, Instagram, Heart, Share2, Check, ExternalLink, Package, MessageSquare, FileText, BadgeCheck } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Globe, Mail, Phone, Instagram, Heart, Share2, Check, ExternalLink, MessageSquare, FileText, BadgeCheck } from 'lucide-react';
 import { VerificationBadge } from '../components/VerificationFlow.jsx';
 import { LoyaltyBadge } from '../components/LoyaltyBadge.jsx';
 import { TierBadge } from '../components/TierBadge.jsx';
@@ -341,12 +341,14 @@ export function CreatorProfilePage({ dark }) {
             </div>
           )}
 
-          {/* Services & Rates - max 3 services, package cards only */}
+          {/* Services and Packages - unified section */}
           {services.length > 0 && (
             <div className={`${cardCls} p-5`}>
-              <h2 className={`font-display font-bold text-base mb-4 ${dark ? 'text-white' : 'text-gray-900'}`}>Services & Rates</h2>
+              <h2 className={`font-display font-bold text-base mb-4 ${dark ? 'text-white' : 'text-gray-900'}`}>
+                Services and Packages
+              </h2>
 
-              {/* Service tabs - capped at 3 */}
+              {/* Service tab buttons - capped at 3 */}
               {services.slice(0, 3).length > 1 && (
                 <div className="flex gap-2 mb-4 flex-wrap">
                   {services.slice(0, 3).map((svc, i) => {
@@ -358,7 +360,7 @@ export function CreatorProfilePage({ dark }) {
                             ? 'bg-gold-500 text-charcoal-900 border-gold-500'
                             : dark ? 'border-charcoal-700 text-charcoal-400 hover:border-charcoal-500' : 'border-gray-200 text-gray-500 hover:border-gray-300'
                         }`}>
-                        <span>{def?.icon}</span> {def?.name}
+                        <span>{def?.icon}</span> {def?.name || svc.serviceId}
                       </button>
                     );
                   })}
@@ -368,7 +370,7 @@ export function CreatorProfilePage({ dark }) {
               {currentService && (
                 <div>
                   {currentService.subtypes?.length > 0 && (
-                    <p className={`text-xs mb-3 ${textSub}`}>
+                    <p className={`text-xs mb-2 ${textSub}`}>
                       <span className="font-medium">Specialties:</span> {currentService.subtypes.join(' · ')}
                     </p>
                   )}
@@ -376,48 +378,90 @@ export function CreatorProfilePage({ dark }) {
                     <p className={`text-sm mb-4 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>{currentService.description}</p>
                   )}
 
-                  {/* Package cards: Basic, Standard, Premium */}
+                  {/* Packages: prefer creator.packages filtered by service, fallback to rate tiers */}
                   {(() => {
+                    const allPkgs = creator.packages || [];
+                    const pkgList = allPkgs.filter(pkg => {
+                      const sid = pkg.service_id || pkg.serviceId;
+                      return !sid || sid === currentService.serviceId;
+                    });
+
+                    if (pkgList.length > 0) {
+                      return (
+                        <div className="space-y-3">
+                          {pkgList.map((pkg, i) => (
+                            <div key={i} className={`rounded-xl border p-4 ${
+                              i === 1
+                                ? 'border-gold-500/50 bg-gold-500/5'
+                                : dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50'
+                            }`}>
+                              {i === 1 && <p className="text-[10px] font-bold text-gold-400 uppercase tracking-wider mb-1">Most Popular</p>}
+                              <p className={`font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>{pkg.name}</p>
+                              <p className="font-display text-2xl font-bold text-gradient-gold mt-1">${Number(pkg.price).toLocaleString()}</p>
+                              <div className={`flex flex-wrap gap-3 mt-1 text-xs ${textSub}`}>
+                                {pkg.turnaround_days && <span>{pkg.turnaround_days} day delivery</span>}
+                                {pkg.revisions && <span>{pkg.revisions} revision{pkg.revisions !== 1 ? 's' : ''} included</span>}
+                              </div>
+                              {pkg.deliverables?.length > 0 && (
+                                <ul className="mt-3 space-y-1.5">
+                                  {pkg.deliverables.map((d, di) => (
+                                    <li key={di} className={`text-xs flex items-center gap-1.5 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
+                                      <Check size={10} className="text-teal-400 shrink-0" /> {d}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                              {pkg.description && (
+                                <p className={`text-xs mt-2 ${textSub}`}>{pkg.description}</p>
+                              )}
+                              <button type="button" onClick={handleQuoteClick}
+                                className="mt-4 w-full py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all">
+                                Get This Package
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+
+                    // Fallback: build Basic/Standard/Premium tiers from rate data
                     const rates = currentService.rates || {};
                     const rateEntries = Object.entries(rates);
                     if (rateEntries.length === 0) return null;
-                    // Build 3 package tiers from the rate data
                     const sorted = rateEntries.sort(([,a],[,b]) => Number(a) - Number(b));
                     const third = Math.ceil(sorted.length / 3);
-                    const basicRates = sorted.slice(0, third);
-                    const standardRates = sorted.slice(third, third * 2);
-                    const premiumRates = sorted.slice(third * 2);
-                    const pkgs = [
-                      { name: 'Basic', rates: basicRates, color: dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50' },
-                      { name: 'Standard', rates: standardRates, color: 'border-gold-500/50 bg-gold-500/5' },
-                      { name: 'Premium', rates: premiumRates, color: dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50' },
-                    ].filter(p => p.rates.length > 0);
+                    const tiers = [
+                      { name: 'Basic',    entries: sorted.slice(0, third),          highlight: false },
+                      { name: 'Standard', entries: sorted.slice(third, third * 2),  highlight: true  },
+                      { name: 'Premium',  entries: sorted.slice(third * 2),          highlight: false },
+                    ].filter(t => t.entries.length > 0);
                     return (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {pkgs.map((pkg) => {
-                          const minPrice = Math.min(...pkg.rates.map(([,v]) => Number(v)));
+                      <div className="space-y-3">
+                        {tiers.map((tier) => {
+                          const minPrice = Math.min(...tier.entries.map(([,v]) => Number(v)));
                           return (
-                            <div key={pkg.name} className={`rounded-xl border p-4 ${pkg.color}`}>
-                              {pkg.name === 'Standard' && (
-                                <p className="text-[10px] font-bold text-gold-400 uppercase tracking-wider mb-1">Most Popular</p>
-                              )}
-                              <p className={`font-bold text-sm ${dark ? 'text-white' : 'text-gray-900'}`}>{pkg.name}</p>
-                              <p className="font-display text-xl font-bold text-gradient-gold mt-1">
-                                from ${minPrice.toLocaleString()}
-                              </p>
-                              <ul className="mt-3 space-y-1">
-                                {pkg.rates.map(([key, val]) => {
+                            <div key={tier.name} className={`rounded-xl border p-4 ${
+                              tier.highlight
+                                ? 'border-gold-500/50 bg-gold-500/5'
+                                : dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50'
+                            }`}>
+                              {tier.highlight && <p className="text-[10px] font-bold text-gold-400 uppercase tracking-wider mb-1">Most Popular</p>}
+                              <p className={`font-bold text-sm ${dark ? 'text-white' : 'text-gray-900'}`}>{tier.name}</p>
+                              <p className="font-display text-xl font-bold text-gradient-gold mt-1">from ${minPrice.toLocaleString()}</p>
+                              <ul className="mt-3 space-y-1.5">
+                                {tier.entries.map(([key, val]) => {
                                   const meta = RATES[currentService.serviceId]?.[key];
                                   return (
-                                    <li key={key} className={`text-xs flex items-center justify-between gap-2 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
-                                      <span className="truncate">{meta?.label || key}</span>
+                                    <li key={key} className={`text-xs flex items-center gap-1.5 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
+                                      <Check size={10} className="text-teal-400 shrink-0" />
+                                      <span className="flex-1">{meta?.label || key}</span>
                                       <span className={`font-semibold shrink-0 ${dark ? 'text-white' : 'text-gray-900'}`}>${Number(val).toLocaleString()}</span>
                                     </li>
                                   );
                                 })}
                               </ul>
                               <button type="button" onClick={handleQuoteClick}
-                                className="mt-3 w-full py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all">
+                                className="mt-4 w-full py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all">
                                 Get This Package
                               </button>
                             </div>
@@ -428,50 +472,6 @@ export function CreatorProfilePage({ dark }) {
                   })()}
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Packages */}
-          {(creator.packages?.length > 0) && (
-            <div className={`${cardCls} p-5`}>
-              <h2 className={`font-display font-bold text-base mb-4 flex items-center gap-2 ${dark ? 'text-white' : 'text-gray-900'}`}>
-                <Package size={16} className="text-gold-400" /> Packages
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {creator.packages.map((pkg, i) => (
-                  <div key={i} className={`rounded-xl border p-4 ${
-                    i === 1
-                      ? 'border-gold-500/50 bg-gold-500/5'
-                      : dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50'
-                  }`}>
-                    {i === 1 && <p className="text-[10px] font-bold text-gold-400 uppercase tracking-wider mb-2">Most Popular</p>}
-                    <p className={`font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>{pkg.name}</p>
-                    <p className="font-display text-2xl font-bold text-gradient-gold mt-1">${Number(pkg.price).toLocaleString()}</p>
-                    {pkg.turnaround_days && (
-                      <p className={`text-xs mt-1 ${textSub}`}>{pkg.turnaround_days} day delivery</p>
-                    )}
-                    {pkg.revisions && (
-                      <p className={`text-xs ${textSub}`}>{pkg.revisions} revision{pkg.revisions !== 1 ? 's' : ''}</p>
-                    )}
-                    {pkg.deliverables?.length > 0 && (
-                      <ul className="mt-3 space-y-1">
-                        {pkg.deliverables.map((d, di) => (
-                          <li key={di} className={`text-xs flex items-center gap-1.5 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
-                            <Check size={10} className="text-teal-400 shrink-0" /> {d}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {pkg.description && (
-                      <p className={`text-xs mt-2 ${textSub}`}>{pkg.description}</p>
-                    )}
-                    <button type="button" onClick={handleQuoteClick}
-                      className="mt-3 w-full py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all">
-                      Get This Package
-                    </button>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
