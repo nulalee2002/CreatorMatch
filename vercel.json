@@ -1,21 +1,3 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
-  "_cloudflare_dns_notes": {
-    "description": "Cloudflare DNS setup for creatormatch.studio",
-    "proxy_mode": "Set Cloudflare DNS records to Proxied (orange cloud) for DDoS protection and Turnstile CAPTCHA",
-    "records": [
-      { "type": "A",     "name": "@",   "value": "Vercel IP",              "proxy": true },
-      { "type": "CNAME", "name": "www", "value": "cname.vercel-dns.com",   "proxy": true }
-    ],
-    "security_settings": {
-      "ssl_mode": "Full (strict)",
-      "bot_fight_mode": true,
-      "turnstile": "Create widget at dash.cloudflare.com then add VITE_TURNSTILE_SITE_KEY to Vercel env vars",
-      "waf_rules": "Enable Cloudflare WAF on Pro plan for additional bot protection"
-    },
-    "env_vars_needed": [
-      "VITE_TURNSTILE_SITE_KEY - Cloudflare Turnstile site key (public, used by frontend widget)",
-      "TURNSTILE_SECRET_KEY - Cloudflare Turnstile secret key (server-side, use in edge functions for verification)"
-    ]
-  }
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
 }
