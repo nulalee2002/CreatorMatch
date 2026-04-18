@@ -4,19 +4,19 @@ import { getRate } from '../utils/pricing.js';
 
 const HEALTH_TIPS = {
   low: [
-    'Your rates are at the low end — consider a 15–20% increase for new clients.',
+    'Your rates are at the low end - consider a 15–20% increase for new clients.',
     'Add a licensing fee if clients will use the content commercially.',
     'Bundle revisions into a higher base rate rather than offering them free.',
     'Charge equipment fees separately to reflect real gear costs.',
   ],
   mid: [
-    'You\'re in a healthy range — keep refining your packages.',
+    'You\'re in a healthy range - keep refining your packages.',
     'Rush fees can add 25–50% to eligible projects.',
     'Consider tiered packages (Basic/Standard/Premium) to upsell.',
     'Premium markets support rates at the top of your range.',
   ],
   high: [
-    'You\'re charging premium rates — make sure your brand reflects it.',
+    'You\'re charging premium rates - make sure your brand reflects it.',
     'Detailed proposals and case studies help justify higher prices.',
     'Focus on value-based pricing rather than hourly justification.',
     'Referral programs protect your pipeline at these rates.',

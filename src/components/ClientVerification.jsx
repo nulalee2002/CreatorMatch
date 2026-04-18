@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Check, X, Phone, CreditCard, Mail, FileText } from 'lucide-react';
+import { Check, X, Phone, CreditCard, Mail, FileText, AlertCircle } from 'lucide-react';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
 import { recentFilterCount } from '../utils/messageFilter.js';
 
@@ -266,6 +266,14 @@ export function ClientVerification({ user, dark, onComplete, requireLevel = 'bas
           {saving ? 'Saving...' : 'Complete Verification'}
         </button>
       </form>
+
+      {/* Insurance notice */}
+      <div className={`mt-3 flex items-start gap-2 p-3 rounded-xl border ${dark ? 'border-amber-500/30 bg-amber-500/8' : 'border-amber-200 bg-amber-50'}`}>
+        <AlertCircle size={13} className="text-amber-400 shrink-0 mt-0.5" />
+        <p className={`text-[11px] leading-relaxed ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+          CreatorMatch does not verify creator insurance. For on-site projects, confirm insurance coverage directly with your creator before booking.
+        </p>
+      </div>
     </div>
   );
 }

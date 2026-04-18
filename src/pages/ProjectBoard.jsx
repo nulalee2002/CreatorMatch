@@ -4,6 +4,7 @@ import {
   Briefcase, Plus, MapPin, Clock, DollarSign, ChevronRight,
   Check, X, Filter, Search, Tag, Send, ArrowLeft, Users,
   Eye, Star, Calendar, CreditCard, Truck, ThumbsUp, RotateCcw, Zap,
+  Upload, AlertCircle, Timer,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { SERVICES } from '../data/rates.js';
@@ -12,6 +13,7 @@ import { ProjectTimeline } from '../components/ProjectTimeline.jsx';
 import { DisputeModal } from '../components/DisputeModal.jsx';
 import { CancellationModal } from '../components/CancellationModal.jsx';
 import { ClientReputationBadge, loadClientReputation, RateClientModal } from '../components/ClientReputationBadge.jsx';
+import { ReferralSection } from '../components/ReferralSection.jsx';
 
 // ── localStorage helpers ────────────────────────────────────────
 function loadProjects() {
@@ -50,6 +52,211 @@ const BUDGET_RANGES = [
   { id: '1500-5000',  label: '$1,500–$5,000',  min: 1500, max: 5000  },
   { id: 'over5000',   label: '$5,000+',         min: 5000, max: Infinity },
 ];
+
+// ── Delivery helpers ─────────────────────────────────────────────
+const STORAGE_NOTICE = 'Note: Files uploaded directly to CreatorMatch are stored for 7 days and then permanently deleted. Creators are required to retain their own copies for 6 months. Clients should download all files within 7 days of delivery.';
+
+function getRemainingHours(deliveredAt) {
+  if (!deliveredAt) return null;
+  const diff = 72 * 3600000 - (Date.now() - new Date(deliveredAt).getTime());
+  if (diff <= 0) return 0;
+  return Math.ceil(diff / 3600000);
+}
+
+function isArchived(project) {
+  if (project.status !== 'delivered' && project.status !== 'completed') return false;
+  if (!project.deliveredAt) return false;
+  return Date.now() - new Date(project.deliveredAt).getTime() > 7 * 24 * 3600000;
+}
+
+function updateProject(id, patch) {
+  const all = JSON.parse(localStorage.getItem('cm-projects') || '[]');
+  const updated = all.map(p => p.id === id ? { ...p, ...patch } : p);
+  localStorage.setItem('cm-projects', JSON.stringify(updated));
+  return updated;
+}
+
+// ── Delivery Submit Modal ────────────────────────────────────────
+function DeliverySubmitModal({ project, dark, onClose, onDelivered }) {
+  const [link, setLink]           = useState('');
+  const [notes, setNotes]         = useState('');
+  const [confirmed, setConfirmed] = useState(false);
+  const [error, setError]         = useState('');
+  const textSub  = dark ? 'text-charcoal-400' : 'text-gray-500';
+  const inputCls = `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
+    dark ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
+         : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
+  }`;
+
+  function handleSubmit() {
+    if (!link.trim()) { setError('Please add a delivery link.'); return; }
+    if (!confirmed)   { setError('Please confirm that you have kept your own copy of the delivered files.'); return; }
+    const deliveredAt = new Date().toISOString();
+    const updated = updateProject(project.id, {
+      status:      'delivered',
+      deliveredAt,
+      deliveryLink: link.trim(),
+      deliveryNotes: notes.trim(),
+    });
+    onDelivered?.(updated.find(p => p.id === project.id));
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative w-full max-w-md rounded-2xl border shadow-2xl ${dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+        <button type="button" onClick={onClose}
+          className={`absolute top-4 right-4 p-1.5 rounded-lg ${dark ? 'text-charcoal-400 hover:text-white hover:bg-charcoal-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}>
+          <X size={16} />
+        </button>
+        <div className="p-6 space-y-4">
+          <h3 className={`font-display font-bold text-lg ${dark ? 'text-white' : 'text-gray-900'}`}>Submit Delivery</h3>
+          <div>
+            <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Delivery Link *</p>
+            <input type="url" value={link} onChange={e => setLink(e.target.value)}
+              placeholder="Google Drive, Dropbox, WeTransfer, Vimeo, Frame.io, or any URL"
+              className={inputCls} />
+            <p className={`text-[10px] mt-1 ${textSub}`}>Share a link to your completed deliverables. Make sure it is set to view-only or shared properly with the client.</p>
+          </div>
+          <div>
+            <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Or upload a small file directly (PDFs, images, audio only. Max 200MB)</p>
+            <label className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition-all ${dark ? 'border-charcoal-600 text-charcoal-400 hover:border-charcoal-500' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+              <Upload size={13} />
+              <span className="text-sm">Choose file...</span>
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.gif,.mp3,.wav,.aac" className="hidden" />
+            </label>
+          </div>
+          <div>
+            <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Delivery Notes (optional)</p>
+            <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)}
+              placeholder="Any notes for the client about this delivery, file format, password if needed, etc."
+              className={`${inputCls} resize-none`} />
+          </div>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}
+              className="mt-0.5 accent-gold-500 shrink-0" />
+            <span className={`text-xs leading-relaxed ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
+              I confirm that I have kept my own copy of all delivered files and will retain them for a minimum of 6 months in case the client requests re-delivery.
+            </span>
+          </label>
+          <div className={`rounded-xl border p-3 text-[10px] leading-relaxed ${dark ? 'border-charcoal-700 bg-charcoal-800 text-charcoal-400' : 'border-gray-200 bg-gray-50 text-gray-500'}`}>
+            {STORAGE_NOTICE}
+          </div>
+          {error && <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2">{error}</p>}
+          <button type="button" onClick={handleSubmit}
+            className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2">
+            <Send size={14} /> Submit Delivery
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Revision Request Modal ───────────────────────────────────────
+function RevisionRequestModal({ project, dark, onClose, onRevisionSubmitted }) {
+  const [details, setDetails] = useState('');
+  const [error, setError]     = useState('');
+  const textSub  = dark ? 'text-charcoal-400' : 'text-gray-500';
+  const inputCls = `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
+    dark ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
+         : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
+  }`;
+
+  const revisionCount = project.revision_count || 0;
+  const isPaidRevision = revisionCount >= 2;
+
+  function handleSubmit() {
+    if (details.trim().length < 50) { setError('Please describe what needs to change (at least 50 characters).'); return; }
+    if (!isPaidRevision) {
+      const newCount = revisionCount + 1;
+      const updated = updateProject(project.id, {
+        status:         'in_progress',
+        revision_count: newCount,
+        deliveredAt:    null,
+      });
+      onRevisionSubmitted?.(updated.find(p => p.id === project.id));
+      onClose();
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative w-full max-w-md rounded-2xl border shadow-2xl ${dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+        <button type="button" onClick={onClose}
+          className={`absolute top-4 right-4 p-1.5 rounded-lg ${dark ? 'text-charcoal-400 hover:text-white hover:bg-charcoal-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}>
+          <X size={16} />
+        </button>
+        <div className="p-6 space-y-4">
+          <h3 className={`font-display font-bold text-lg ${dark ? 'text-white' : 'text-gray-900'}`}>Request a Revision</h3>
+          {isPaidRevision ? (
+            <div className={`rounded-xl border p-4 ${dark ? 'border-amber-500/40 bg-amber-500/10' : 'border-amber-200 bg-amber-50'}`}>
+              <p className={`text-sm font-semibold ${dark ? 'text-amber-400' : 'text-amber-700'}`}>Free revisions used ({revisionCount} of 2)</p>
+              <p className={`text-xs mt-1 ${dark ? 'text-amber-300/80' : 'text-amber-600'}`}>
+                You have used your 2 included free revisions. A third revision requires an additional payment. The creator will provide a quote for the additional revision work.
+              </p>
+            </div>
+          ) : (
+            <div className={`rounded-xl border p-3 text-xs ${dark ? 'border-charcoal-700 bg-charcoal-800 text-charcoal-400' : 'border-gray-200 bg-gray-50 text-gray-500'}`}>
+              Revision {revisionCount + 1} of 2 free revisions
+            </div>
+          )}
+          <div>
+            <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Describe what needs to be changed or improved. *</p>
+            <textarea rows={4} value={details} onChange={e => setDetails(e.target.value)}
+              placeholder="Be specific about what needs to change. The more detail you provide, the better the result."
+              className={`${inputCls} resize-none`} />
+          </div>
+          {error && <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2">{error}</p>}
+          {isPaidRevision ? (
+            <button type="button" onClick={onClose}
+              className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2">
+              Request Paid Revision (Contact Creator)
+            </button>
+          ) : (
+            <button type="button" onClick={handleSubmit}
+              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-all flex items-center justify-center gap-2">
+              <RotateCcw size={14} /> Submit Revision Request
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Re-Delivery Request (Archived) ───────────────────────────────
+function ArchivedProjectNotice({ project, dark, onStatusChange }) {
+  const [requested, setRequested] = useState(false);
+  const textSub = dark ? 'text-charcoal-400' : 'text-gray-500';
+
+  function requestRedelivery() {
+    // $30 charge would go through Stripe - for now record the request
+    const all = JSON.parse(localStorage.getItem('cm-redelivery-requests') || '[]');
+    all.push({ projectId: project.id, requestedAt: new Date().toISOString() });
+    localStorage.setItem('cm-redelivery-requests', JSON.stringify(all));
+    setRequested(true);
+  }
+
+  return (
+    <div className={`rounded-xl border p-4 ${dark ? 'border-charcoal-700 bg-charcoal-800' : 'border-gray-200 bg-gray-50'}`}>
+      <p className={`text-sm font-semibold mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>Files Removed</p>
+      <p className={`text-xs mb-3 ${textSub}`}>
+        The files for this project were removed from CreatorMatch storage after 7 days as per our storage policy. You can request re-delivery from the creator for a $30 retrieval fee.
+      </p>
+      {requested ? (
+        <p className="text-xs text-teal-400 font-medium">Re-delivery requested. The creator has been notified.</p>
+      ) : (
+        <button type="button" onClick={requestRedelivery}
+          className="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all">
+          Request Re-Delivery ($30)
+        </button>
+      )}
+    </div>
+  );
+}
 
 // ── Post Job Modal ───────────────────────────────────────────────
 function PostProjectModal({ dark, onClose, onPost, user }) {
@@ -110,7 +317,7 @@ function PostProjectModal({ dark, onClose, onPost, user }) {
             <div>
               <p className={`text-xs font-medium mb-1.5 ${textSub}`}>Description *</p>
               <textarea rows={4} value={form.description} onChange={e => set('description', e.target.value)}
-                placeholder="Describe the project in detail — what you need, timeline expectations, any creative direction..."
+                placeholder="Describe the project in detail - what you need, timeline expectations, any creative direction..."
                 className={`${inputCls} resize-none`} />
             </div>
 
@@ -288,12 +495,12 @@ function ApplyModal({ project, dark, onClose, onApply, creatorListing }) {
 }
 
 // ── Action buttons (context-aware by role + status) ──────────────
-function ProjectActionButtons({ project, isClient, applied, dark, onApply, onStatusChange, navigate }) {
+function ProjectActionButtons({ project, isClient, applied, dark, onApply, onStatusChange, navigate, onOpenDelivery, onOpenRevision }) {
   const { status } = project;
 
-  function changeStatus(newStatus) {
+  function changeStatus(newStatus, patch = {}) {
     const all = JSON.parse(localStorage.getItem('cm-projects') || '[]');
-    const updated = all.map(p => p.id === project.id ? { ...p, status: newStatus } : p);
+    const updated = all.map(p => p.id === project.id ? { ...p, status: newStatus, ...patch } : p);
     localStorage.setItem('cm-projects', JSON.stringify(updated));
     onStatusChange?.(project.id, newStatus);
   }
@@ -319,22 +526,37 @@ function ProjectActionButtons({ project, isClient, applied, dark, onApply, onSta
       );
     }
     if (status === 'delivered') {
+      const remainHours = getRemainingHours(project.deliveredAt);
       return (
-        <div className="flex gap-2">
-          <button type="button"
-            onClick={e => { e.stopPropagation(); changeStatus('approved'); }}
-            className="flex-1 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1">
-            <ThumbsUp size={11} /> Approve
-          </button>
-          <button type="button"
-            onClick={e => { e.stopPropagation(); changeStatus('revision'); }}
-            className={`flex-1 py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1 ${dark ? 'border-charcoal-600 text-charcoal-300 hover:text-white' : 'border-gray-200 text-gray-600 hover:text-gray-900'}`}>
-            <RotateCcw size={11} /> Revision
-          </button>
+        <div className="space-y-2">
+          {remainHours !== null && remainHours > 0 && (
+            <div className={`flex items-center gap-1.5 text-[10px] font-medium px-2 py-1 rounded-lg ${dark ? 'bg-amber-500/10 text-amber-400' : 'bg-amber-50 text-amber-600'}`}>
+              <Timer size={10} /> Auto-approves in {remainHours}h if no action taken
+            </div>
+          )}
+          <div className="flex gap-2">
+            <button type="button"
+              onClick={e => { e.stopPropagation(); changeStatus('completed', { completedAt: new Date().toISOString() }); }}
+              className="flex-1 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1">
+              <ThumbsUp size={11} /> Approve &amp; Release Payment
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button type="button"
+              onClick={e => { e.stopPropagation(); onOpenRevision?.(); }}
+              className="flex-1 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold transition-all flex items-center justify-center gap-1">
+              <RotateCcw size={11} /> Request Revision
+            </button>
+            <button type="button"
+              onClick={e => { e.stopPropagation(); onOpenRevision?.('dispute'); }}
+              className="flex-1 py-2 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-bold transition-all flex items-center justify-center gap-1">
+              <AlertCircle size={11} /> Open Dispute
+            </button>
+          </div>
         </div>
       );
     }
-    if (status === 'approved') {
+    if (status === 'approved' || status === 'completed') {
       return (
         <button type="button"
           onClick={e => { e.stopPropagation(); navigate(`/checkout/${project.id}?payment=final`); }}
@@ -364,9 +586,9 @@ function ProjectActionButtons({ project, isClient, applied, dark, onApply, onSta
   if (status === 'retainer_paid' || status === 'in_progress' || status === 'revision') {
     return (
       <button type="button"
-        onClick={e => { e.stopPropagation(); changeStatus('delivered'); }}
+        onClick={e => { e.stopPropagation(); onOpenDelivery?.(); }}
         className="w-full py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5">
-        <Truck size={11} /> Mark as Delivered
+        <Upload size={11} /> Submit Delivery
       </button>
     );
   }
@@ -482,6 +704,9 @@ function ProjectDetailModal({ project, dark, onClose, onApply, myApplications, a
   const [showDispute, setShowDispute]       = useState(false);
   const [showCancel, setShowCancel]         = useState(false);
   const [showRateClient, setShowRateClient] = useState(false);
+  const [showDelivery, setShowDelivery]     = useState(false);
+  const [showRevision, setShowRevision]     = useState(false);
+  const [localProject, setLocalProject]    = useState(project);
 
   const budgetStr = project.budgetMin && project.budgetMax
     ? `$${Number(project.budgetMin).toLocaleString()} – $${Number(project.budgetMax).toLocaleString()}`
@@ -571,31 +796,58 @@ function ProjectDetailModal({ project, dark, onClose, onApply, myApplications, a
             </div>
           )}
 
+          {/* Archived project notice */}
+          {isArchived(localProject) && (
+            <div className="mb-4">
+              <ArchivedProjectNotice project={localProject} dark={dark} onStatusChange={onStatusChange} />
+            </div>
+          )}
+
+          {/* Delivery link display */}
+          {localProject.deliveryLink && localProject.status !== 'in_progress' && !isArchived(localProject) && (
+            <div className={`mb-4 p-4 rounded-xl border ${dark ? 'border-charcoal-700 bg-charcoal-800' : 'border-gray-200 bg-gray-50'}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${textSub}`}>Delivery</p>
+              <a href={localProject.deliveryLink} target="_blank" rel="noreferrer"
+                className="text-sm text-gold-400 hover:text-gold-300 underline break-all">
+                {localProject.deliveryLink}
+              </a>
+              {localProject.deliveryNotes && (
+                <p className={`text-xs mt-2 ${textSub}`}>{localProject.deliveryNotes}</p>
+              )}
+              <p className={`text-[10px] mt-2 ${textSub}`}>{STORAGE_NOTICE}</p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <ProjectActionButtons
-              project={project}
+              project={localProject}
               isClient={isClient}
               applied={applied}
               dark={dark}
               onApply={() => { onClose(); onApply(project); }}
-              onStatusChange={onStatusChange}
+              onStatusChange={(id, st) => {
+                setLocalProject(p => ({ ...p, status: st }));
+                onStatusChange?.(id, st);
+              }}
               navigate={navigate}
+              onOpenDelivery={() => setShowDelivery(true)}
+              onOpenRevision={(mode) => mode === 'dispute' ? setShowDispute(true) : setShowRevision(true)}
             />
-            {/* Rate Client — shown for creators on completed projects */}
+            {/* Rate Client - shown for creators on completed projects */}
             {!isClient && project.status === 'completed' && (
               <button type="button" onClick={() => setShowRateClient(true)}
                 className="w-full py-2 rounded-xl bg-gold-500/15 border border-gold-500/30 text-gold-400 text-xs font-bold transition-all hover:bg-gold-500/25">
                 ⭐ Rate This Client
               </button>
             )}
-            {/* Cancel button — shown for client on open/active projects */}
+            {/* Cancel button - shown for client on open/active projects */}
             {isClient && ['open', 'accepted', 'retainer_paid', 'in_progress', 'revision'].includes(project.status) && (
               <button type="button" onClick={() => setShowCancel(true)}
                 className={`w-full py-2 rounded-xl border text-xs font-medium transition-all text-red-400 border-red-500/30 hover:bg-red-500/10`}>
                 Cancel Project
               </button>
             )}
-            {/* Dispute button — shown for active projects */}
+            {/* Dispute button - shown for active projects */}
             {isClient && ['retainer_paid', 'in_progress', 'delivered', 'revision'].includes(project.status) && (
               <button type="button" onClick={() => setShowDispute(true)}
                 className={`w-full py-2 rounded-xl border text-xs font-medium transition-all text-red-400 border-red-500/30 hover:bg-red-500/10`}>
@@ -603,12 +855,35 @@ function ProjectDetailModal({ project, dark, onClose, onApply, myApplications, a
               </button>
             )}
           </div>
+          {showDelivery && (
+            <DeliverySubmitModal
+              project={localProject}
+              dark={dark}
+              onClose={() => setShowDelivery(false)}
+              onDelivered={(updatedProject) => {
+                setLocalProject(updatedProject);
+                onStatusChange?.(project.id, 'delivered');
+              }}
+            />
+          )}
+          {showRevision && (
+            <RevisionRequestModal
+              project={localProject}
+              dark={dark}
+              onClose={() => setShowRevision(false)}
+              onRevisionSubmitted={(updatedProject) => {
+                setLocalProject(updatedProject);
+                onStatusChange?.(project.id, 'in_progress');
+                setShowRevision(false);
+              }}
+            />
+          )}
           {showDispute && (
             <DisputeModal
-              project={project}
+              project={localProject}
               dark={dark}
               onClose={() => setShowDispute(false)}
-              onSubmitted={() => { setShowDispute(false); onStatusChange?.(project.id, 'disputed'); onClose(); }}
+              onSubmitted={() => { setShowDispute(false); setLocalProject(p => ({ ...p, status: 'disputed' })); onStatusChange?.(project.id, 'disputed'); onClose(); }}
             />
           )}
           {showCancel && (
@@ -663,7 +938,21 @@ export function ProjectBoard({ dark }) {
   const textSub = dark ? 'text-charcoal-400' : 'text-gray-500';
 
   useEffect(() => {
-    setProjects(loadProjects());
+    // Auto-approval: projects delivered 72+ hours ago auto-complete
+    const raw = loadProjects();
+    const now = Date.now();
+    const autoApproved = raw.map(p => {
+      if (p.status === 'delivered' && p.deliveredAt) {
+        const elapsed = now - new Date(p.deliveredAt).getTime();
+        if (elapsed >= 72 * 3600000) {
+          return { ...p, status: 'completed', completedAt: p.completedAt || new Date().toISOString(), autoApproved: true };
+        }
+      }
+      return p;
+    });
+    const anyChanged = autoApproved.some((p, i) => p.status !== raw[i].status);
+    if (anyChanged) saveProjects(autoApproved);
+    setProjects(anyChanged ? autoApproved : raw);
     setApplications(loadApplications());
     if (user) {
       setCreatorListing(loadMyListing(user.id));
@@ -692,7 +981,7 @@ export function ProjectBoard({ dark }) {
           createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
         },
         {
-          id: 'demo-3', title: 'Social Media Content Package — Real Estate',
+          id: 'demo-3', title: 'Social Media Content Package - Real Estate',
           description: 'Boutique real estate agency needs monthly social media content: 12 Instagram posts, 4 Reels, and 8 Stories per month. Luxury properties, aspirational lifestyle aesthetic. Must have experience in real estate marketing.',
           serviceId: 'socialmedia', budgetMin: 1200, budgetMax: 2500, deadline: null,
           location: 'Los Angeles, CA', remote: true, skills: ['Instagram', 'Canva', 'real estate', 'copywriting'],
@@ -857,6 +1146,13 @@ export function ProjectBoard({ dark }) {
             ))}
           </div>
         )}
+      {/* Client Referral Section - shown on My Projects tab */}
+      {tab === 'my_projects' && user && (
+        <div className="mt-8">
+          <ReferralSection dark={dark} userType="client" />
+        </div>
+      )}
+
       </div>
 
       {/* Modals */}

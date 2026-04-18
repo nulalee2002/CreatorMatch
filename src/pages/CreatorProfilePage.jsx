@@ -4,7 +4,6 @@ import { ArrowLeft, MapPin, Star, Globe, Mail, Phone, Instagram, Heart, Share2, 
 import { VerificationBadge } from '../components/VerificationFlow.jsx';
 import { LoyaltyBadge } from '../components/LoyaltyBadge.jsx';
 import { TierBadge } from '../components/TierBadge.jsx';
-import { IntentGate } from '../components/IntentGate.jsx';
 import { SERVICES, RATES } from '../data/rates.js';
 import { REGIONS } from '../data/regions.js';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
@@ -71,7 +70,6 @@ export function CreatorProfilePage({ dark }) {
   const [activeService, setActiveService] = useState(0);
   const [quoteDate, setQuoteDate]       = useState('');
   const [contactUnlocked, setContactUnlocked] = useState(false);
-  const [showIntentGate, setShowIntentGate]   = useState(false);
   const [showVideoModal, setShowVideoModal]   = useState(false);
 
   const isOwnProfile = user && creator && creator.user_id === user.id;
@@ -83,7 +81,7 @@ export function CreatorProfilePage({ dark }) {
 
   async function loadCreator() {
     setLoading(true);
-    // Seed creators (id starts with "seed-") only exist in localStorage —
+    // Seed creators (id starts with "seed-") only exist in localStorage -
     // never query Supabase for them even when Supabase is configured.
     const isSeed = id.startsWith('seed-');
     if (supabaseConfigured && !isSeed) {
@@ -111,7 +109,7 @@ export function CreatorProfilePage({ dark }) {
         }
       }
     } else {
-      // Seed creators or no Supabase — always use localStorage
+      // Seed creators or no Supabase - always use localStorage
       const all = loadAllListings();
       const found = all.find(c => c.id === id);
       setCreator(found || null);
@@ -155,10 +153,9 @@ export function CreatorProfilePage({ dark }) {
   }
 
   function handleQuoteClick() {
-    // If user has no active project brief, show the intent gate first
-    if (!isOwnProfile && !hasActiveProject()) {
-      setShowIntentGate(true);
-    } else {
+    // Always open the direct quote form when on a creator's profile page.
+    // IntentGate/SmartMatch is only for homepage/directory, never from a profile page.
+    if (!isOwnProfile) {
       setShowQuote(true);
     }
   }
@@ -344,15 +341,15 @@ export function CreatorProfilePage({ dark }) {
             </div>
           )}
 
-          {/* Services tabs */}
+          {/* Services & Rates - max 3 services, package cards only */}
           {services.length > 0 && (
             <div className={`${cardCls} p-5`}>
               <h2 className={`font-display font-bold text-base mb-4 ${dark ? 'text-white' : 'text-gray-900'}`}>Services & Rates</h2>
 
-              {/* Service tabs */}
-              {services.length > 1 && (
+              {/* Service tabs - capped at 3 */}
+              {services.slice(0, 3).length > 1 && (
                 <div className="flex gap-2 mb-4 flex-wrap">
-                  {services.map((svc, i) => {
+                  {services.slice(0, 3).map((svc, i) => {
                     const def = SERVICES[svc.serviceId];
                     return (
                       <button key={i} type="button" onClick={() => setActiveService(i)}
@@ -378,25 +375,57 @@ export function CreatorProfilePage({ dark }) {
                   {currentService.description && (
                     <p className={`text-sm mb-4 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>{currentService.description}</p>
                   )}
-                  <div className={`rounded-xl border ${dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50'} p-4`}>
-                    <p className={`text-[10px] font-bold uppercase tracking-wider mb-3 ${textSub}`}>Rate Sheet</p>
-                    <div className="space-y-2">
-                      {Object.entries(currentService.rates || {}).map(([key, val]) => {
-                        const meta = RATES[currentService.serviceId]?.[key];
-                        return (
-                          <div key={key} className="flex items-center justify-between gap-4">
-                            <div>
-                              <span className={`text-sm ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>{meta?.label || key}</span>
-                              {meta?.unit && <span className={`text-xs ml-1 ${textSub}`}>/ {meta.unit}</span>}
+
+                  {/* Package cards: Basic, Standard, Premium */}
+                  {(() => {
+                    const rates = currentService.rates || {};
+                    const rateEntries = Object.entries(rates);
+                    if (rateEntries.length === 0) return null;
+                    // Build 3 package tiers from the rate data
+                    const sorted = rateEntries.sort(([,a],[,b]) => Number(a) - Number(b));
+                    const third = Math.ceil(sorted.length / 3);
+                    const basicRates = sorted.slice(0, third);
+                    const standardRates = sorted.slice(third, third * 2);
+                    const premiumRates = sorted.slice(third * 2);
+                    const pkgs = [
+                      { name: 'Basic', rates: basicRates, color: dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50' },
+                      { name: 'Standard', rates: standardRates, color: 'border-gold-500/50 bg-gold-500/5' },
+                      { name: 'Premium', rates: premiumRates, color: dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50' },
+                    ].filter(p => p.rates.length > 0);
+                    return (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {pkgs.map((pkg) => {
+                          const minPrice = Math.min(...pkg.rates.map(([,v]) => Number(v)));
+                          return (
+                            <div key={pkg.name} className={`rounded-xl border p-4 ${pkg.color}`}>
+                              {pkg.name === 'Standard' && (
+                                <p className="text-[10px] font-bold text-gold-400 uppercase tracking-wider mb-1">Most Popular</p>
+                              )}
+                              <p className={`font-bold text-sm ${dark ? 'text-white' : 'text-gray-900'}`}>{pkg.name}</p>
+                              <p className="font-display text-xl font-bold text-gradient-gold mt-1">
+                                from ${minPrice.toLocaleString()}
+                              </p>
+                              <ul className="mt-3 space-y-1">
+                                {pkg.rates.map(([key, val]) => {
+                                  const meta = RATES[currentService.serviceId]?.[key];
+                                  return (
+                                    <li key={key} className={`text-xs flex items-center justify-between gap-2 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
+                                      <span className="truncate">{meta?.label || key}</span>
+                                      <span className={`font-semibold shrink-0 ${dark ? 'text-white' : 'text-gray-900'}`}>${Number(val).toLocaleString()}</span>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                              <button type="button" onClick={handleQuoteClick}
+                                className="mt-3 w-full py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all">
+                                Get This Package
+                              </button>
                             </div>
-                            <span className={`text-sm font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>
-                              ${Number(val).toLocaleString()}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -504,6 +533,7 @@ export function CreatorProfilePage({ dark }) {
                 </button>
               )}
               <p className={`text-center text-[10px] ${textSub}`}>Free to request. No payment until you hire.</p>
+              <p className={`text-center text-[10px] mt-1 ${textSub}`}>CreatorMatch does not verify insurance. Confirm coverage directly with your creator.</p>
 
               {/* Contact links */}
               <div className={`mt-4 border-t pt-4 space-y-2 ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
@@ -589,30 +619,9 @@ export function CreatorProfilePage({ dark }) {
               </div>
             </div>
 
-            {/* Plan badge */}
-            {creator.plan && creator.plan !== 'free' && (
-              <div className={`${cardCls} p-3 text-center`}>
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full ${
-                  creator.plan === 'studio'
-                    ? 'bg-purple-500/20 text-purple-400'
-                    : 'bg-gold-500/20 text-gold-400'
-                }`}>
-                  {creator.plan === 'studio' ? '🏢 Studio Member' : '⭐ Pro Member'}
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </div>
-
-      {/* Intent gate — shown before quote when user has no active project */}
-      {showIntentGate && (
-        <IntentGate
-          dark={dark}
-          prefillService={creator.services?.[0]?.serviceId}
-          onClose={() => setShowIntentGate(false)}
-        />
-      )}
 
       {/* Quote modal */}
       {showQuote && <RequestQuoteModal creator={creator} dark={dark} initialDate={quoteDate} onClose={() => setShowQuote(false)} />}
@@ -624,7 +633,7 @@ export function CreatorProfilePage({ dark }) {
           <div className={`relative w-full max-w-2xl rounded-2xl border shadow-2xl overflow-hidden ${dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'}`}>
             <div className={`flex items-center justify-between px-5 py-3 border-b ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
               <p className={`text-sm font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>
-                Meet {creator.businessName || creator.name} — 1 to 2 minute intro
+                Meet {creator.businessName || creator.name} - 1 to 2 minute intro
               </p>
               <button type="button" onClick={() => setShowVideoModal(false)}
                 className={`p-1.5 rounded-lg transition-colors ${dark ? 'text-charcoal-400 hover:text-white hover:bg-charcoal-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}>

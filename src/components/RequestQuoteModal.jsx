@@ -1,170 +1,249 @@
-import { useState, useMemo } from 'react';
-import { X, Send, DollarSign, Calendar, FileText, Mail, User, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
-import { SERVICES } from '../data/rates.js';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { X, Send } from 'lucide-react';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { loadAvailability } from './AvailabilityCalendar.jsx';
+import { TurnstileWidget, turnstileConfigured } from './TurnstileWidget.jsx';
 
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DAYS   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+// ── Static option sets ───────────────────────────────────────
 
-function toKey(date) { return date.toISOString().split('T')[0]; }
-function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
-function firstDay(y, m)    { return new Date(y, m, 1).getDay(); }
+const SERVICE_TYPES = [
+  'Video Production',
+  'Photography',
+  'Drone/Aerial',
+  'Social Media Content',
+  'Post-Production',
+  'Live Event Coverage',
+];
 
-// ── Inline booking calendar ───────────────────────────────────
-function BookingCalendar({ creatorId, dark, selectedDate, onSelect }) {
-  const today = new Date();
-  const [viewYear,  setViewYear]  = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const availability = useMemo(() => loadAvailability(creatorId), [creatorId]);
-  const todayKey  = toKey(today);
-  const numDays   = daysInMonth(viewYear, viewMonth);
-  const startDay  = firstDay(viewYear, viewMonth);
-  const hasAvailability = Object.values(availability).some(v => v === 'available');
+const PROJECT_SUBTYPES = {
+  'Video Production':       ['Corporate', 'Wedding', 'Documentary', 'Music Video', 'Brand Commercial', 'Social Media Content', 'Podcast'],
+  'Photography':            ['Real Estate', 'Headshots', 'Wedding', 'Commercial', 'Event', 'Product', 'Brand'],
+  'Drone/Aerial':           ['Real Estate Aerial', 'Event Aerial', 'Mapping', 'Film/Video Support'],
+  'Social Media Content':   ['Reels/TikTok', 'YouTube', 'Brand Campaign', 'UGC'],
+  'Post-Production':        ['Video Editing', 'Color Grading', 'Audio Mixing', 'Motion Graphics'],
+  'Live Event Coverage':    ['Concert/Music', 'Sports', 'Corporate Event', 'Conference', 'Festival'],
+};
 
-  const textSub = dark ? 'text-charcoal-400' : 'text-gray-500';
+const TIME_OPTIONS = [
+  'Early Morning (before 8am)',
+  'Morning (8am to 12pm)',
+  'Afternoon (12pm to 5pm)',
+  'Evening (5pm to 9pm)',
+  'Night (after 9pm)',
+  'Flexible/TBD',
+];
 
-  function prev() {
-    if (viewMonth === 0) { setViewYear(y => y-1); setViewMonth(11); }
-    else setViewMonth(m => m-1);
-  }
-  function next() {
-    if (viewMonth === 11) { setViewYear(y => y+1); setViewMonth(0); }
-    else setViewMonth(m => m+1);
-  }
+const HOURS_OPTIONS = [
+  '1 hour', '2 hours', '3 hours', '4 hours', '5 hours',
+  '6 hours', '8 hours', '10 hours', '12 hours',
+  'Full day (8+ hrs)', 'Multi-day (contact to discuss)',
+];
 
-  return (
-    <div>
-      <p className={`text-xs font-medium mb-2 flex items-center gap-1.5 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-        <CalendarDays size={13} />
-        {hasAvailability ? 'Select a date — green = creator is available' : 'No availability set — any date works'}
-      </p>
-      <div className={`rounded-xl border p-3 ${dark ? 'border-charcoal-700 bg-charcoal-900/50' : 'border-gray-200 bg-gray-50'}`}>
-        {/* Nav */}
-        <div className="flex items-center justify-between mb-2">
-          <button type="button" onClick={prev} className={`p-1 rounded ${dark ? 'text-charcoal-400 hover:text-white' : 'text-gray-400 hover:text-gray-900'}`}>
-            <ChevronLeft size={13} />
-          </button>
-          <p className={`text-xs font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>{MONTHS[viewMonth]} {viewYear}</p>
-          <button type="button" onClick={next} className={`p-1 rounded ${dark ? 'text-charcoal-400 hover:text-white' : 'text-gray-400 hover:text-gray-900'}`}>
-            <ChevronRight size={13} />
-          </button>
-        </div>
-        {/* Day headers */}
-        <div className="grid grid-cols-7 mb-0.5">
-          {DAYS.map(d => <div key={d} className={`text-center text-[9px] font-medium py-0.5 ${textSub}`}>{d}</div>)}
-        </div>
-        {/* Days */}
-        <div className="grid grid-cols-7 gap-0.5">
-          {Array.from({ length: startDay }).map((_, i) => <div key={`e${i}`} />)}
-          {Array.from({ length: numDays }).map((_, i) => {
-            const day    = i + 1;
-            const key    = toKey(new Date(viewYear, viewMonth, day));
-            const status = availability[key];
-            const isPast = key < todayKey;
-            const isAvail  = status === 'available';
-            const isBooked = status === 'booked';
-            const isSel    = selectedDate === key;
-            return (
-              <button key={day} type="button"
-                disabled={isPast || isBooked || (hasAvailability && !isAvail)}
-                onClick={() => onSelect(isSel ? '' : key)}
-                className={`
-                  aspect-square flex items-center justify-center rounded-lg text-[11px] font-medium transition-all
-                  ${isPast || isBooked ? 'opacity-25 cursor-not-allowed ' + (dark ? 'text-charcoal-600' : 'text-gray-300')
-                    : isSel ? 'bg-gold-500 text-charcoal-900 font-bold'
-                    : isAvail ? 'bg-teal-500/20 text-teal-400 hover:bg-teal-500/40 cursor-pointer'
-                    : hasAvailability ? 'opacity-30 cursor-not-allowed ' + (dark ? 'text-charcoal-500' : 'text-gray-400')
-                    : dark ? 'text-charcoal-300 hover:bg-charcoal-700 cursor-pointer' : 'text-gray-600 hover:bg-gray-200 cursor-pointer'
-                  }
-                `}>
-                {day}
-              </button>
-            );
-          })}
-        </div>
-        {selectedDate && (
-          <p className="text-[10px] text-gold-400 text-center mt-2 font-medium">
-            Selected: {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
+const DELIVERABLE_OPTIONS = [
+  '1','2','3','4','5','6','8','10','15','20','20+',
+];
+
+const BUDGET_OPTIONS = [
+  'Under $500',
+  '$500 to $1,500',
+  '$1,500 to $5,000',
+  '$5,000 to $10,000',
+  '$10,000+',
+];
+
+const LOCATION_PREF_OPTIONS = [
+  'Local only',
+  'Remote OK',
+  'Either works',
+];
+
+const VENUE_TYPES = ['Indoor', 'Outdoor', 'Studio', 'Remote/Virtual'];
+
+const today = new Date().toISOString().split('T')[0];
+
+// ── Main component ───────────────────────────────────────────
 
 export function RequestQuoteModal({ creator, dark, onClose, initialDate = '' }) {
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
+
   const [form, setForm] = useState({
-    clientName:    profile?.full_name || '',
-    clientEmail:   user?.email || '',
-    serviceId:     creator?.services?.[0]?.serviceId || '',
-    budget:        '',
-    preferredDate: initialDate,
-    description:   '',
+    projectTitle:        '',
+    serviceType:         '',
+    projectType:         '',
+    projectDate:         initialDate,
+    projectTime:         '',
+    venueAddress:        '',
+    venueCity:           '',
+    venueState:          '',
+    venueType:           '',
+    hoursNeeded:         '',
+    deliverables:        '',
+    description:         '',
+    budgetRange:         '',
+    locationPreference:  '',
   });
+
+  const [errors, setErrors]     = useState({});
   const [loading, setLoading]   = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError]       = useState('');
+  const [quoteHp, setQuoteHp]   = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
 
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k, v) => {
+    setForm(f => {
+      const next = { ...f, [k]: v };
+      // Reset project type when service type changes
+      if (k === 'serviceType') next.projectType = '';
+      return next;
+    });
+    setErrors(e => ({ ...e, [k]: '' }));
+  };
 
-  const inputCls = `w-full px-4 py-3 text-sm rounded-xl border outline-none transition-all ${
-    dark
-      ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
-      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
+  const inputCls = (field) => `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
+    errors[field]
+      ? 'border-red-500 bg-red-500/5'
+      : dark
+        ? 'bg-charcoal-900 border-charcoal-600 text-white placeholder-charcoal-500 focus:border-gold-500'
+        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500'
   }`;
+
+  const selectCls = (field) => `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${
+    errors[field]
+      ? 'border-red-500 bg-red-500/5'
+      : dark
+        ? 'bg-charcoal-900 border-charcoal-600 text-white focus:border-gold-500'
+        : 'bg-gray-50 border-gray-300 text-gray-900 focus:border-gold-500'
+  }`;
+
+  const labelCls = `text-xs font-medium block mb-1.5 ${dark ? 'text-charcoal-400' : 'text-gray-600'}`;
+  const errorMsg = (field) => errors[field] ? (
+    <p className="text-xs text-red-400 mt-1">{errors[field]}</p>
+  ) : null;
+
+  const descLen = form.description.length;
+
+  function validate() {
+    const e = {};
+    if (!form.projectTitle.trim())       e.projectTitle       = 'Give your project a clear title so creators understand what this is.';
+    if (!form.serviceType)               e.serviceType        = 'Select the type of production service you need.';
+    if (!form.projectType)               e.projectType        = 'Select the specific type of project within your chosen service.';
+    if (!form.projectDate)               e.projectDate        = 'Creators need to know when to show up or when this is due.';
+    else if (form.projectDate <= today)  e.projectDate        = 'Project date must be in the future.';
+    if (!form.projectTime)               e.projectTime        = 'Time of day affects lighting, crew scheduling, and availability.';
+    if (!form.venueAddress.trim())       e.venueAddress       = 'Creators need to know exactly where to show up.';
+    if (!form.venueCity.trim())          e.venueCity          = 'Please enter the city.';
+    if (!form.venueState.trim())         e.venueState         = 'Please enter the state.';
+    if (!form.venueType)                 e.venueType          = 'Select Indoor, Outdoor, Studio, or Remote/Virtual.';
+    if (!form.hoursNeeded)               e.hoursNeeded        = 'How long do you need the creator on site or working on your project?';
+    if (!form.deliverables)              e.deliverables       = 'This helps creators estimate the editing time and scope.';
+    if (descLen < 100)                   e.description        = 'Please provide at least 100 characters so creators understand your vision.';
+    if (!form.budgetRange)               e.budgetRange        = 'Selecting a budget range helps match you with creators who fit your project.';
+    if (!form.locationPreference)        e.locationPreference = 'Let creators know if they need to be in your area.';
+    return e;
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError('');
+    // Honeypot: silently drop submissions from bots
+    if (quoteHp) return;
+    // Turnstile check
+    if (turnstileConfigured() && !turnstileToken) {
+      setErrors(er => ({ ...er, _turnstile: 'Please complete the security check.' }));
+      return;
+    }
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      // Scroll to top of modal
+      document.getElementById('quote-modal-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setLoading(true);
 
+    const project = {
+      id:                 Date.now().toString() + Math.random(),
+      title:              form.projectTitle.trim(),
+      serviceType:        form.serviceType,
+      projectType:        form.projectType,
+      projectDate:        form.projectDate,
+      projectTime:        form.projectTime,
+      location: {
+        address:          form.venueAddress.trim(),
+        city:             form.venueCity.trim(),
+        state:            form.venueState.trim(),
+        venueType:        form.venueType,
+      },
+      hoursNeeded:        form.hoursNeeded,
+      deliverables:       form.deliverables,
+      description:        form.description.trim(),
+      budgetRange:        form.budgetRange,
+      locationPreference: form.locationPreference,
+      creatorId:          creator?.id || null,
+      creatorName:        creator ? (creator.businessName || creator.name) : null,
+      clientId:           user?.id || 'guest-' + Date.now(),
+      clientName:         profile?.full_name || 'Client',
+      status:             'open',
+      createdAt:          new Date().toISOString(),
+    };
+
+    // Save to localStorage
     try {
-      if (supabaseConfigured) {
-        const { error: dbError } = await supabase.from('quote_requests').insert({
-          listing_id:   creator.id,
-          client_id:    user?.id || null,
-          client_name:  form.clientName,
-          client_email: form.clientEmail,
-          service_id:   form.serviceId,
-          budget:       parseFloat(form.budget) || null,
-          description:  form.description,
-          timeline:     form.preferredDate || null,
+      const all = JSON.parse(localStorage.getItem('cm-projects') || '[]');
+      localStorage.setItem('cm-projects', JSON.stringify([project, ...all]));
+    } catch {}
+
+    // Save to Supabase if configured
+    if (supabaseConfigured && user) {
+      try {
+        await supabase.from('quote_requests').insert({
+          listing_id:          creator?.id || null,
+          client_id:           user.id,
+          client_name:         profile?.full_name || '',
+          client_email:        user.email || '',
+          service_id:          form.serviceType,
+          description:         form.description.trim(),
+          timeline:            form.projectDate,
+          budget:              null,
+          project_title:       form.projectTitle.trim(),
+          project_type:        form.projectType,
+          project_time:        form.projectTime,
+          venue_address:       form.venueAddress.trim(),
+          venue_city:          form.venueCity.trim(),
+          venue_state:         form.venueState.trim(),
+          venue_type:          form.venueType,
+          hours_needed:        form.hoursNeeded,
+          deliverables:        form.deliverables,
+          budget_range:        form.budgetRange,
+          location_preference: form.locationPreference,
         });
-        if (dbError) throw dbError;
-      } else {
-        const requests = JSON.parse(localStorage.getItem('quote-requests') || '[]');
-        requests.push({ ...form, creatorId: creator.id, creatorName: creator.businessName || creator.name, id: Date.now().toString(), createdAt: new Date().toISOString() });
-        localStorage.setItem('quote-requests', JSON.stringify(requests));
-      }
-      setSubmitted(true);
-    } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
+      } catch {}
     }
+
+    setSubmitted(true);
     setLoading(false);
+
+    // Redirect to Smart Match results after short delay
+    setTimeout(() => {
+      onClose?.();
+      navigate(`/matches/${project.id}`);
+    }, 1500);
   }
 
   if (submitted) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        <div className={`relative w-full max-w-md rounded-2xl border shadow-2xl p-8 text-center ${dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'}`}>
-          <div className="text-5xl mb-4">✅</div>
-          <h3 className={`font-display font-bold text-xl mb-2 ${dark ? 'text-white' : 'text-gray-900'}`}>Quote Request Sent!</h3>
-          <p className={`text-sm mb-2 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-            Your request has been sent to <strong>{creator.businessName || creator.name}</strong>. They'll respond to <strong>{form.clientEmail}</strong> within 24–48 hours.
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div className={`relative w-full max-w-sm rounded-2xl border shadow-2xl p-8 text-center ${dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+          <div className="text-4xl mb-4 animate-pulse">🔍</div>
+          <h3 className={`font-display font-bold text-lg mb-2 ${dark ? 'text-white' : 'text-gray-900'}`}>
+            Finding your best matches...
+          </h3>
+          <p className={`text-sm ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+            Analyzing your project brief and matching with available creators.
           </p>
-          {form.preferredDate && (
-            <p className="text-xs text-gold-400 bg-gold-500/10 rounded-xl px-3 py-2 mb-4 font-medium">
-              Requested date: {new Date(form.preferredDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </p>
-          )}
-          <button type="button" onClick={onClose}
-            className="px-6 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold transition-all">
-            Done
-          </button>
         </div>
       </div>
     );
@@ -173,109 +252,264 @@ export function RequestQuoteModal({ creator, dark, onClose, initialDate = '' }) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full max-w-lg rounded-2xl border shadow-2xl max-h-[90vh] overflow-y-auto ${dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'}`}>
-        <button type="button" onClick={onClose}
-          className={`absolute top-4 right-4 p-1.5 rounded-lg transition-colors z-10 ${dark ? 'text-charcoal-400 hover:text-white hover:bg-charcoal-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}>
-          <X size={16} />
-        </button>
-
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${dark ? 'bg-charcoal-700' : 'bg-gray-100'}`}>
-              {creator.avatar || '🎬'}
-            </div>
-            <div>
-              <h3 className={`font-display font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>
-                Request a Quote
-              </h3>
-              <p className={`text-xs ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-                from {creator.businessName || creator.name}
+      <div className={`relative w-full max-w-xl rounded-2xl border shadow-2xl flex flex-col max-h-[90vh] ${dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+        {/* Header */}
+        <div className={`flex items-center justify-between px-6 py-4 border-b shrink-0 ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
+          <div>
+            {creator && (
+              <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                Requesting from {creator.businessName || creator.name}
               </p>
-            </div>
+            )}
+            <h3 className={`font-display font-bold text-lg ${dark ? 'text-white' : 'text-gray-900'}`}>
+              Request a Quote
+            </h3>
           </div>
+          <button type="button" onClick={onClose}
+            className={`p-1.5 rounded-lg transition-colors ${dark ? 'text-charcoal-400 hover:text-white hover:bg-charcoal-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}>
+            <X size={16} />
+          </button>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Contact info */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <p className={`text-xs font-medium mb-1.5 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>Your Name *</p>
-                <div className="relative">
-                  <User size={13} className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${dark ? 'text-charcoal-500' : 'text-gray-400'}`} />
-                  <input type="text" required value={form.clientName} onChange={e => set('clientName', e.target.value)}
-                    placeholder="Jane Smith" className={`${inputCls} pl-9`} />
-                </div>
-              </div>
-              <div>
-                <p className={`text-xs font-medium mb-1.5 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>Your Email *</p>
-                <div className="relative">
-                  <Mail size={13} className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${dark ? 'text-charcoal-500' : 'text-gray-400'}`} />
-                  <input type="email" required value={form.clientEmail} onChange={e => set('clientEmail', e.target.value)}
-                    placeholder="jane@example.com" className={`${inputCls} pl-9`} />
-                </div>
-              </div>
+        {/* Scrollable form */}
+        <div id="quote-modal-scroll" className="flex-1 overflow-y-auto px-6 py-5">
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+
+            {/* 1. Project Title */}
+            <div>
+              <label className={labelCls}>Project Title *</label>
+              <input
+                type="text"
+                value={form.projectTitle}
+                onChange={e => set('projectTitle', e.target.value)}
+                placeholder="e.g. Brand video for product launch, Real estate listing at 123 Main St."
+                className={inputCls('projectTitle')}
+              />
+              {errorMsg('projectTitle')}
             </div>
 
-            {/* Service type */}
+            {/* 2. Service Type */}
             <div>
-              <p className={`text-xs font-medium mb-1.5 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>Service Needed</p>
+              <label className={labelCls}>Service Type *</label>
               <div className="flex flex-wrap gap-2">
-                {creator.services?.map(svc => {
-                  const def = SERVICES[svc.serviceId];
-                  return (
-                    <button key={svc.serviceId} type="button" onClick={() => set('serviceId', svc.serviceId)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
-                        form.serviceId === svc.serviceId
-                          ? 'border-gold-500 bg-gold-500/10 text-gold-400'
+                {SERVICE_TYPES.map(svc => (
+                  <button key={svc} type="button" onClick={() => set('serviceType', svc)}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
+                      form.serviceType === svc
+                        ? 'border-gold-500 bg-gold-500/10 text-gold-400'
+                        : errors.serviceType
+                          ? 'border-red-500/50 ' + (dark ? 'text-charcoal-400' : 'text-gray-500')
                           : dark ? 'border-charcoal-700 text-charcoal-400 hover:border-charcoal-500' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    }`}>
+                    {svc}
+                  </button>
+                ))}
+              </div>
+              {errorMsg('serviceType')}
+            </div>
+
+            {/* 3. Project Type (conditional) */}
+            {form.serviceType && (
+              <div>
+                <label className={labelCls}>Project Type *</label>
+                <select value={form.projectType} onChange={e => set('projectType', e.target.value)} className={selectCls('projectType')}>
+                  <option value="">Select project type...</option>
+                  {(PROJECT_SUBTYPES[form.serviceType] || []).map(pt => (
+                    <option key={pt} value={pt}>{pt}</option>
+                  ))}
+                </select>
+                {errorMsg('projectType')}
+              </div>
+            )}
+
+            {/* 4. Project Date */}
+            <div>
+              <label className={labelCls}>Event or Project Date *</label>
+              <input
+                type="date"
+                value={form.projectDate}
+                min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+                onChange={e => set('projectDate', e.target.value)}
+                className={inputCls('projectDate')}
+              />
+              {errorMsg('projectDate')}
+            </div>
+
+            {/* 5. Project Time */}
+            <div>
+              <label className={labelCls}>Project Time *</label>
+              <select value={form.projectTime} onChange={e => set('projectTime', e.target.value)} className={selectCls('projectTime')}>
+                <option value="">Select time of day...</option>
+                {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              {errorMsg('projectTime')}
+            </div>
+
+            {/* 6. Location */}
+            <div>
+              <label className={labelCls}>Location *</label>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={form.venueAddress}
+                  onChange={e => set('venueAddress', e.target.value)}
+                  placeholder="Street address or venue name"
+                  className={inputCls('venueAddress')}
+                />
+                {errorMsg('venueAddress')}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <input
+                      type="text"
+                      value={form.venueCity}
+                      onChange={e => set('venueCity', e.target.value)}
+                      placeholder="City"
+                      className={inputCls('venueCity')}
+                    />
+                    {errorMsg('venueCity')}
+                  </div>
+                  <div>
+                    <input
+                      type="text"
+                      value={form.venueState}
+                      onChange={e => set('venueState', e.target.value)}
+                      placeholder="State"
+                      className={inputCls('venueState')}
+                    />
+                    {errorMsg('venueState')}
+                  </div>
+                </div>
+                {/* Venue type toggle */}
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {VENUE_TYPES.map(vt => (
+                    <button key={vt} type="button" onClick={() => set('venueType', vt)}
+                      className={`px-3 py-1 rounded-xl border text-xs font-medium transition-all ${
+                        form.venueType === vt
+                          ? 'border-gold-500 bg-gold-500/10 text-gold-400'
+                          : errors.venueType
+                            ? 'border-red-500/50 ' + (dark ? 'text-charcoal-400' : 'text-gray-500')
+                            : dark ? 'border-charcoal-700 text-charcoal-400 hover:border-charcoal-500' : 'border-gray-200 text-gray-500 hover:border-gray-300'
                       }`}>
-                      <span>{def?.icon}</span> {def?.name}
+                      {vt}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+                {errorMsg('venueType')}
               </div>
             </div>
 
-            {/* Budget */}
+            {/* 7. Hours Needed */}
             <div>
-              <p className={`text-xs font-medium mb-1.5 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>Your Budget</p>
-              <div className="relative">
-                <DollarSign size={13} className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${dark ? 'text-charcoal-500' : 'text-gray-400'}`} />
-                <input type="number" min={0} value={form.budget} onChange={e => set('budget', e.target.value)}
-                  placeholder="e.g. 1500" className={`${inputCls} pl-9`} />
-              </div>
+              <label className={labelCls}>Hours Needed *</label>
+              <select value={form.hoursNeeded} onChange={e => set('hoursNeeded', e.target.value)} className={selectCls('hoursNeeded')}>
+                <option value="">Select duration...</option>
+                {HOURS_OPTIONS.map(h => <option key={h} value={h}>{h}</option>)}
+              </select>
+              {errorMsg('hoursNeeded')}
             </div>
 
-            {/* Booking calendar */}
-            <BookingCalendar
-              creatorId={creator.id}
-              dark={dark}
-              selectedDate={form.preferredDate}
-              onSelect={date => set('preferredDate', date)}
-            />
-
-            {/* Description */}
+            {/* 8. Number of Deliverables */}
             <div>
-              <p className={`text-xs font-medium mb-1.5 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>Project Description *</p>
-              <div className="relative">
-                <FileText size={13} className={`absolute left-3 top-3 pointer-events-none ${dark ? 'text-charcoal-500' : 'text-gray-400'}`} />
-                <textarea required value={form.description} onChange={e => set('description', e.target.value)}
-                  rows={4} placeholder="Describe your project, what you need, when it's needed, and any other details..."
-                  className={`${inputCls} pl-9 resize-none`} />
-              </div>
+              <label className={labelCls}>How many final edited photos, videos, or deliverables do you expect? *</label>
+              <select value={form.deliverables} onChange={e => set('deliverables', e.target.value)} className={selectCls('deliverables')}>
+                <option value="">Select quantity...</option>
+                {DELIVERABLE_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+              {errorMsg('deliverables')}
             </div>
 
-            {error && <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2">{error}</p>}
+            {/* 9. Project Description */}
+            <div>
+              <label className={labelCls}>
+                Describe your project *
+                <span className={`ml-2 font-normal ${descLen >= 100 ? 'text-teal-400' : dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                  ({descLen}/100 min)
+                </span>
+              </label>
+              <textarea
+                rows={5}
+                value={form.description}
+                onChange={e => set('description', e.target.value)}
+                placeholder="Describe what needs to be filmed or created. Include the style or mood you want, any specific shots or deliverables, important details the creator needs to know, and anything that makes this project unique."
+                className={`${inputCls('description')} resize-none`}
+              />
+              {errorMsg('description')}
+            </div>
 
-            <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-              <Send size={14} /> {loading ? 'Sending...' : 'Send Quote Request'}
-            </button>
+            {/* 10. Budget Range */}
+            <div>
+              <label className={labelCls}>Budget Range *</label>
+              <div className="flex flex-wrap gap-2">
+                {BUDGET_OPTIONS.map(b => (
+                  <button key={b} type="button" onClick={() => set('budgetRange', b)}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
+                      form.budgetRange === b
+                        ? 'border-gold-500 bg-gold-500/10 text-gold-400'
+                        : errors.budgetRange
+                          ? 'border-red-500/50 ' + (dark ? 'text-charcoal-400' : 'text-gray-500')
+                          : dark ? 'border-charcoal-700 text-charcoal-400 hover:border-charcoal-500' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    }`}>
+                    {b}
+                  </button>
+                ))}
+              </div>
+              {errorMsg('budgetRange')}
+            </div>
 
-            <p className={`text-center text-[10px] ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
-              The creator will reply directly to your email. No payment required to request a quote.
-            </p>
+            {/* 11. Location Preference */}
+            <div>
+              <label className={labelCls}>Location Preference *</label>
+              <div className="flex flex-wrap gap-2">
+                {LOCATION_PREF_OPTIONS.map(lp => (
+                  <button key={lp} type="button" onClick={() => set('locationPreference', lp)}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
+                      form.locationPreference === lp
+                        ? 'border-gold-500 bg-gold-500/10 text-gold-400'
+                        : errors.locationPreference
+                          ? 'border-red-500/50 ' + (dark ? 'text-charcoal-400' : 'text-gray-500')
+                          : dark ? 'border-charcoal-700 text-charcoal-400 hover:border-charcoal-500' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    }`}>
+                    {lp}
+                  </button>
+                ))}
+              </div>
+              {errorMsg('locationPreference')}
+            </div>
+
+          {/* Honeypot field */}
+          <input
+            type="text"
+            name="website_url"
+            value={quoteHp}
+            onChange={e => setQuoteHp(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
+          />
           </form>
+        </div>
+
+        {/* Footer */}
+        <div className={`px-6 py-4 border-t shrink-0 ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
+          <TurnstileWidget
+            dark={dark}
+            onVerify={token => setTurnstileToken(token)}
+            onExpire={() => setTurnstileToken('')}
+          />
+          {errors._turnstile && (
+            <p className="text-xs text-red-400 mt-1 mb-2">{errors._turnstile}</p>
+          )}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 disabled:opacity-50 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2 mt-2">
+            <Send size={14} /> {loading ? 'Submitting...' : 'Submit Quote Request'}
+          </button>
+          <p className={`text-center text-[10px] mt-2 ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
+            No payment required to request a quote. The creator will review your brief and respond.
+          </p>
         </div>
       </div>
     </div>

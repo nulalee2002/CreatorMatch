@@ -181,7 +181,7 @@ function QuoteSimple({ quote, state, dark }) {
         <div className="grid grid-cols-3 gap-2">
           {[
             { label: 'Services',  value: fmt(quote.servicesSubtotal) },
-            { label: 'Tax',       value: quote.taxAmount > 0 ? fmt(quote.taxAmount) : '—' },
+            { label: 'Tax',       value: quote.taxAmount > 0 ? fmt(quote.taxAmount) : '-' },
             { label: 'Total Due', value: fmt(quote.grandTotal), highlight: true },
           ].map(item => (
             <div key={item.label} className={`rounded-xl px-3 py-3 text-center border ${
@@ -380,7 +380,7 @@ function QuoteItemized({ quote, state, dark, creatorMode }) {
               />
             </div>
             <p className={`text-[10px] mt-1 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
-              {quote.profitMargin >= 60 ? 'Excellent margin — well-priced for your costs.' :
+              {quote.profitMargin >= 60 ? 'Excellent margin - well-priced for your costs.' :
                quote.profitMargin >= 40 ? 'Healthy margin. Room to absorb unexpected expenses.' :
                quote.profitMargin >= 20 ? 'Slim margin. Consider adjusting rates or reducing costs.' :
                'Low margin. You may be undercharging relative to your costs.'}

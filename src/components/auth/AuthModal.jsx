@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Mail, Lock, User, Building2, Users, Eye, EyeOff, Chrome, Phone } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { supabase, supabaseConfigured } from '../../lib/supabase.js';
+import { TurnstileWidget, turnstileConfigured } from '../TurnstileWidget.jsx';
 
 export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = 'client', onOpenTerms }) {
   const { signIn, signUp, signInWithGoogle } = useAuth();
@@ -10,7 +11,8 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
-  const [form, setForm]         = useState({ fullName: '', email: '', password: '', phone: '', tosAccepted: false });
+  const [form, setForm]         = useState({ fullName: '', email: '', password: '', phone: '', tosAccepted: false, _hp: '' });
+  const [turnstileToken, setTurnstileToken] = useState('');
   // SMS verification state (creator signup only, when Supabase configured)
   const [smsStep, setSmsStep]   = useState(false); // true = show code entry
   const [smsCode, setSmsCode]   = useState('');
@@ -37,6 +39,14 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
     setLoading(true);
 
     if (tab === 'signup') {
+      // Honeypot check: real users never fill this field
+      if (form._hp) { setLoading(false); return; }
+      // Turnstile check
+      if (turnstileConfigured() && !turnstileToken) {
+        setError('Please complete the security check.');
+        setLoading(false);
+        return;
+      }
       if (!form.tosAccepted) { setError('You must agree to the Terms of Service to create an account.'); setLoading(false); return; }
 
       // Creator phone verification
@@ -211,6 +221,17 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
           ) : (
           <>
           <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Honeypot field — hidden from real users, bots will fill this */}
+            <input
+              type="text"
+              name="website_url"
+              value={form._hp}
+              onChange={e => set('_hp', e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
+            />
             {tab === 'signup' && (
               <div className="relative">
                 <User size={14} className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${dark ? 'text-charcoal-400' : 'text-gray-400'}`} />
@@ -271,6 +292,14 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
                   and Platform Policies
                 </span>
               </label>
+            )}
+
+            {tab === 'signup' && (
+              <TurnstileWidget
+                dark={dark}
+                onVerify={token => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken('')}
+              />
             )}
 
             {error && (

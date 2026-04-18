@@ -144,7 +144,7 @@ export function AvailabilityMini({ creatorId, dark, onSelectDate, selectedDate }
 
       {Object.keys(availability).filter(k => availability[k] === 'available' && k >= todayKey).length === 0 && (
         <p className={`text-[10px] text-center mt-2 ${textSub}`}>
-          No availability set yet — contact directly to schedule
+          No availability set yet - contact directly to schedule
         </p>
       )}
     </div>

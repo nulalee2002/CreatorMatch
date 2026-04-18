@@ -2,7 +2,7 @@ export const PLATFORM_FEES = {
   creatorFeePct:     10,   // 10% taken from creator's earnings (Standard tier)
   clientFeePct:       5,   // 5% added on top of client's payment
   retainerPct:       50,   // 50% retainer upfront, 50% on delivery
-  autoApproveDays:    7,   // Days before auto-approval if client does not respond
+  autoApproveDays:    3,   // 72 hours (3 days) before auto-approval if client does not respond
   cancellationFeePct: 10,  // Creator keeps 10% if client cancels after retainer paid
 };
 

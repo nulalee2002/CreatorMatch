@@ -22,7 +22,8 @@ export function ViolationBanner({ violations = [], dark }) {
           <p className="text-xs text-red-300 mt-1 leading-snug">
             Your account has been suspended due to repeated violations of our platform policies.
             Your profile is not visible to clients and you cannot send messages or accept projects.
-            To appeal, contact <a href="mailto:support@creatormatch.studio" className="underline">support@creatormatch.studio</a>.
+            {/* TODO: Update to support@creatormatch.studio once domain email is active */}
+            To appeal, contact <a href="mailto:Nulalee2002@gmail.com" className="underline">Nulalee2002@gmail.com</a>.
           </p>
           <p className="text-[10px] text-red-400/70 mt-2">Strike 3 of 3 active</p>
         </div>

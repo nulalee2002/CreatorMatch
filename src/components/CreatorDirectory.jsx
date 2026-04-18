@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
+import { getNewCreatorSpotlight } from '../utils/matchingAlgorithm.js';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Star, ChevronDown, ChevronUp, X, Globe, Mail, Phone, Instagram, Plus, Trash2, ArrowRight, Filter, UserPlus, Heart, ExternalLink, BadgeCheck, AlertCircle } from 'lucide-react';
+import { Search, MapPin, Star, ChevronDown, ChevronUp, X, Plus, Trash2, ArrowRight, Filter, UserPlus, Heart, ExternalLink, BadgeCheck, AlertCircle } from 'lucide-react';
 import { SERVICES, RATES } from '../data/rates.js';
 import { REGIONS } from '../data/regions.js';
 import { SEED_CREATORS, initSeedData, SHOW_DEMO_CREATORS } from '../data/seedCreators.js';
@@ -243,46 +244,12 @@ function CreatorCard({ creator, dark, searchServiceId, budget, onDelete }) {
           {expanded ? <><ChevronUp size={11} /> Show less</> : <><ChevronDown size={11} /> View full profile</>}
         </button>
 
-        {/* Action buttons */}
+        {/* Action buttons — contact info never shown in directory cards */}
         <div className="flex gap-2 mt-3 flex-wrap">
           <button type="button" onClick={() => navigate(`/creator/${creator.id}`)}
             className="flex-1 flex items-center justify-center gap-1.5 text-xs py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 font-bold transition-all">
             <ExternalLink size={12} /> View Profile
           </button>
-          {contact.email && (
-            <a href={`mailto:${contact.email}`}
-              className={`flex items-center justify-center gap-1.5 text-xs py-2 px-3 rounded-xl border font-semibold transition-all ${
-                dark ? 'border-charcoal-600 text-charcoal-300 hover:border-charcoal-500 hover:text-white' : 'border-gray-200 text-gray-600 hover:text-gray-900'
-              }`} title="Send email">
-              <Mail size={12} />
-            </a>
-          )}
-          {contact.phone && (
-            <a href={`tel:${contact.phone}`}
-              className={`flex items-center justify-center gap-1.5 text-xs py-2 px-3 rounded-xl border font-semibold transition-all ${
-                dark ? 'border-charcoal-600 text-charcoal-300 hover:border-charcoal-500 hover:text-white' : 'border-gray-200 text-gray-600 hover:text-gray-900'
-              }`} title="Call">
-              <Phone size={12} />
-            </a>
-          )}
-          {contact.website && (
-            <a href={contact.website.startsWith('http') ? contact.website : `https://${contact.website}`}
-              target="_blank" rel="noreferrer"
-              className={`flex items-center justify-center gap-1.5 text-xs py-2 px-3 rounded-xl border font-semibold transition-all ${
-                dark ? 'border-charcoal-600 text-charcoal-300 hover:border-charcoal-500 hover:text-white' : 'border-gray-200 text-gray-600 hover:text-gray-900'
-              }`} title="Website">
-              <Globe size={12} />
-            </a>
-          )}
-          {contact.instagram && (
-            <a href={`https://instagram.com/${contact.instagram.replace('@','')}`}
-              target="_blank" rel="noreferrer"
-              className={`flex items-center justify-center gap-1.5 text-xs py-2 px-3 rounded-xl border font-semibold transition-all ${
-                dark ? 'border-charcoal-600 text-charcoal-300 hover:border-charcoal-500 hover:text-white' : 'border-gray-200 text-gray-600 hover:text-gray-900'
-              }`} title="Instagram">
-              <Instagram size={12} />
-            </a>
-          )}
         </div>
 
         {/* Delete for user-added listings */}
@@ -317,6 +284,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
     portfolio: [],
     contact: { email: '', phone: '', website: '', instagram: '' },
     rating: '', reviewCount: '',
+    insuranceAck: false,
   });
   const [step, setStep] = useState(1);
 
@@ -664,6 +632,25 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
                 className={`w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`} />
             </div>
           </div>
+
+          {/* Insurance and liability acknowledgment */}
+          <div className={`rounded-xl border p-3 ${dark ? 'border-amber-500/30 bg-amber-500/8' : 'border-amber-200 bg-amber-50'}`}>
+            <p className={`text-xs font-semibold mb-2 ${dark ? 'text-amber-300' : 'text-amber-700'}`}>Insurance and Liability</p>
+            <p className={`text-xs mb-3 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+              CreatorMatch does not require insurance, but many clients -- especially for on-site work -- will ask about your coverage. We recommend carrying general liability insurance for in-person projects.
+            </p>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.insuranceAck}
+                onChange={e => set('insuranceAck', e.target.checked)}
+                className="mt-0.5 accent-gold-500"
+              />
+              <span className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
+                I understand that CreatorMatch does not verify or require insurance. I am responsible for disclosing my coverage to clients who ask, and I acknowledge I may be required to show proof of insurance before some bookings.
+              </span>
+            </label>
+          </div>
         </div>
       )}
 
@@ -683,7 +670,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
           </button>
         ) : (
           <button type="button" onClick={handleSubmit}
-            disabled={!form.name || !form.contact.email}
+            disabled={!form.name || !form.contact.email || !form.insuranceAck}
             className="flex-1 py-2.5 rounded-xl bg-teal-400 hover:bg-teal-500 text-charcoal-900 text-xs font-bold disabled:opacity-40 transition-all">
             Publish My Profile
           </button>
@@ -815,6 +802,9 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
     return list;
   }, [listings, serviceFilter, searchQuery, budgetNum, zipRegion, sortBy]);
 
+  // 5D. New creator spotlight — recently verified with no bookings, rotated weekly
+  const spotlightCreators = useMemo(() => getNewCreatorSpotlight(listings, 3), [listings]);
+
   const handleSaveListing = (listing) => {
     // Attach user_id to the listing if a user is logged in
     const enriched = { ...listing, user_id: user?.id || null };
@@ -873,8 +863,8 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
   // ── Search mode (default) ──
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      {/* Hero search */}
-      <div className="text-center mb-6">
+      {/* Hero section - two-sided messaging */}
+      <div className="text-center mb-8">
         <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
           Media production and digital content services
         </p>
@@ -882,9 +872,55 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
           Where creators meet<br className="hidden sm:block" />
           <span className="text-gradient-gold">brands and clients.</span>
         </h1>
-        <p className={`text-sm ${textSub} max-w-xl mx-auto mb-4`}>
+        <p className={`text-sm ${textSub} max-w-xl mx-auto mb-6`}>
           CreatorMatch connects videographers, photographers, podcast producers, drone operators, and digital content specialists with brands and clients who need their work.
         </p>
+
+        {/* Two-sided value prop cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
+          <div className={`rounded-2xl border p-4 text-left ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+            <p className="text-gold-400 text-lg mb-2">🎬</p>
+            <p className={`font-display font-bold text-sm mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>For Creators</p>
+            <p className={`text-xs ${textSub} mb-3`}>List your services, set your own rates, and get matched with clients looking for your exact skills. Free to join.</p>
+            <ul className={`text-xs space-y-1 ${textSub}`}>
+              <li>- Keep 90% of every project</li>
+              <li>- Earn more as you grow: fee drops at 10 and 25 projects</li>
+              <li>- No cold pitching -- clients come to you</li>
+            </ul>
+          </div>
+          <div className={`rounded-2xl border p-4 text-left ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+            <p className="text-teal-400 text-lg mb-2">💼</p>
+            <p className={`font-display font-bold text-sm mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>For Clients</p>
+            <p className={`text-xs ${textSub} mb-3`}>Browse verified creators, compare packages, and book in minutes. Protected by structured payments and dispute resolution.</p>
+            <ul className={`text-xs space-y-1 ${textSub}`}>
+              <li>- Only 5% booking fee, no monthly subscription</li>
+              <li>- 50% retainer, 50% on approval</li>
+              <li>- Smart match finds your best fits instantly</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Fee comparison table */}
+        <div className={`max-w-xl mx-auto rounded-2xl border mb-6 overflow-hidden ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+          <div className={`px-4 py-2.5 border-b ${dark ? 'bg-charcoal-900/60 border-charcoal-700' : 'bg-gray-50 border-gray-200'}`}>
+            <p className={`text-xs font-bold uppercase tracking-wider ${textSub}`}>How Fees Compare</p>
+          </div>
+          <div className="divide-y divide-charcoal-700/30">
+            {[
+              { platform: 'CreatorMatch (creator)', fee: '10% - drops to 6%', highlight: true },
+              { platform: 'CreatorMatch (client)',  fee: '5% booking fee',    highlight: true },
+              { platform: 'Fiverr',                 fee: '20% creator fee',   highlight: false },
+              { platform: 'Upwork',                 fee: '10-20% creator fee',highlight: false },
+              { platform: 'Thumbtack',              fee: 'Pay to bid',         highlight: false },
+            ].map(({ platform, fee, highlight }) => (
+              <div key={platform} className={`flex items-center justify-between px-4 py-2.5 ${highlight ? (dark ? 'bg-gold-500/8' : 'bg-gold-50') : ''}`}>
+                <span className={`text-xs ${highlight ? (dark ? 'text-gold-300 font-semibold' : 'text-gold-700 font-semibold') : textSub}`}>{platform}</span>
+                <span className={`text-xs font-bold ${highlight ? 'text-gold-400' : (dark ? 'text-charcoal-400' : 'text-gray-400')}`}>{fee}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="flex justify-center mb-5">
           <FastMatch dark={dark} onViewProfile={id => navigate(`/creator/${id}`)} />
         </div>
@@ -968,6 +1004,30 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
           </button>
         ))}
       </div>
+
+      {/* 5D. Recently Verified Creators spotlight */}
+      {spotlightCreators.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-1">
+            <BadgeCheck size={16} className="text-teal-400" />
+            <h2 className={`font-display font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>
+              Recently Verified Creators
+            </h2>
+          </div>
+          <p className={`text-xs mb-4 ${textSub}`}>Fresh talent, verified and ready to work.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {spotlightCreators.map(creator => (
+              <CreatorCard
+                key={creator.id}
+                creator={creator}
+                dark={dark}
+                searchServiceId={null}
+                budget={0}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Results count */}
       <div className="flex items-center justify-between mb-4">

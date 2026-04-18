@@ -3,10 +3,10 @@ import { Tooltip } from './Tooltip.jsx';
 
 const HEALTH_CONFIG = {
   green:   { label: 'In Range',    bar: 'bg-teal-400',   text: 'text-teal-400',   tip: 'Your rate is within the standard market range for this region.' },
-  yellow:  { label: 'Below Low',   bar: 'bg-yellow-400', text: 'text-yellow-400', tip: 'You may be undercharging — this rate is below the low end for your region.' },
+  yellow:  { label: 'Below Low',   bar: 'bg-yellow-400', text: 'text-yellow-400', tip: 'You may be undercharging - this rate is below the low end for your region.' },
   red:     { label: 'Too Low',     bar: 'bg-red-400',    text: 'text-red-400',    tip: 'You may be undervaluing your services. Consider raising this rate.' },
-  blue:    { label: 'Premium',     bar: 'bg-blue-400',   text: 'text-blue-400',   tip: 'Above the high end — you\'re charging premium rates. Make sure clients understand your value.' },
-  neutral: { label: '—',           bar: 'bg-charcoal-600', text: 'text-charcoal-400', tip: 'No range data available for this rate.' },
+  blue:    { label: 'Premium',     bar: 'bg-blue-400',   text: 'text-blue-400',   tip: 'Above the high end - you\'re charging premium rates. Make sure clients understand your value.' },
+  neutral: { label: '-',           bar: 'bg-charcoal-600', text: 'text-charcoal-400', tip: 'No range data available for this rate.' },
 };
 
 export function RateHealthBadge({ value, range, showLabel = false }) {

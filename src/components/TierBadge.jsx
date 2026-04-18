@@ -1,16 +1,16 @@
 import { CREATOR_TIERS, tierBadgeClass, calculateTier } from '../config/tiers.js';
 
 /**
- * Compact tier badge — shown on cards, profile headers, match results.
+ * Compact tier badge - shown on cards, profile headers, match results.
  * Props:
- *   tierId  — 'launch' | 'proven' | 'elite' | 'signature'
- *   size    — 'sm' | 'md' (default 'sm')
+ *   tierId  - 'launch' | 'proven' | 'elite' | 'signature'
+ *   size    - 'sm' | 'md' (default 'sm')
  */
 export function TierBadge({ tierId = 'launch', size = 'sm' }) {
   const tier = CREATOR_TIERS[tierId];
   if (!tier) return null;
 
-  // Don't show a badge for launch tier — it's the default, no noise
+  // Don't show a badge for launch tier - it's the default, no noise
   if (tierId === 'launch') return null;
 
   const cls = tierBadgeClass(tierId);
@@ -124,7 +124,7 @@ export function TierUpBanner({ newTierId, dark, onDismiss }) {
           Congratulations! You have reached {tier.name} status on CreatorMatch.
         </p>
         <p className={`text-xs mt-0.5 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-          {tier.label} — {tier.name === 'Proven' ? 'Clients can now see your Trusted Creator badge.' : tier.name === 'Elite' ? 'Your profile is now boosted in search results.' : 'You have reached the highest creator tier.'}
+          {tier.label} - {tier.name === 'Proven' ? 'Clients can now see your Trusted Creator badge.' : tier.name === 'Elite' ? 'Your profile is now boosted in search results.' : 'You have reached the highest creator tier.'}
         </p>
       </div>
       {onDismiss && (

@@ -104,7 +104,7 @@ export function TermsPage({ dark }) {
               <p>
                 All financial transactions are processed through CreatorMatch using Stripe, a licensed payment processor.
                 CreatorMatch never holds funds indefinitely: payment is split into a 50% retainer at booking and 50% upon
-                project completion and approval. Funds are released to the creator after client approval or after 7 days
+                project completion and approval. Funds are released to the creator after client approval or after 72 hours
                 with no response.
               </p>
               <p>
@@ -236,7 +236,7 @@ export function TermsPage({ dark }) {
                 <li>
                   <strong className={dark ? 'text-white' : 'text-gray-900'}>Strike 3:</strong> Your account is suspended.
                   Your profile is removed from the directory. You cannot send messages or accept projects.
-                  You must contact <a href="mailto:support@creatormatch.studio" className={linkCls}>support@creatormatch.studio</a> to appeal.
+                  You must contact <a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a> to appeal.
                 </li>
               </ul>
               <p>
@@ -310,7 +310,7 @@ export function TermsPage({ dark }) {
               </p>
               <p>
                 You may request deletion of your account and associated data at any time by contacting
-                {' '}<a href="mailto:support@creatormatch.studio" className={linkCls}>support@creatormatch.studio</a>.
+                {' '}<a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a>.
                 Note that transaction records may be retained for legal and accounting purposes.
               </p>
             </Section>
@@ -333,7 +333,7 @@ export function TermsPage({ dark }) {
             </Section>
 
             <div className={`mt-8 pt-6 border-t text-xs ${dark ? 'border-charcoal-700 text-charcoal-500' : 'border-gray-200 text-gray-400'}`}>
-              <p>CreatorMatch Inc. Questions? Contact <a href="mailto:support@creatormatch.studio" className={linkCls}>support@creatormatch.studio</a></p>
+              <p>CreatorMatch Inc. Questions? Contact <a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a></p>
             </div>
 
           </div>

@@ -17,7 +17,7 @@ function markFreeUsed() {
 }
 
 /**
- * FastMatch — lightning-bolt button that instantly surfaces the single best creator
+ * FastMatch - lightning-bolt button that instantly surfaces the single best creator
  * for a given service and optional budget.
  *
  * Props: dark, serviceId (optional pre-filter), onViewProfile(creatorId)
@@ -64,7 +64,7 @@ export function FastMatch({ dark, serviceId, onViewProfile }) {
       <button
         type="button"
         onClick={handleOpen}
-        title="Fast Match — find your best creator instantly"
+        title="Fast Match - find your best creator instantly"
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all shadow-sm"
       >
         <Zap size={12} className="fill-charcoal-900" /> Fast Match

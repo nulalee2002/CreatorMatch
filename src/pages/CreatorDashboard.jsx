@@ -10,6 +10,7 @@ import { supabase, supabaseConfigured } from '../lib/supabase.js';
 import { SERVICES } from '../data/rates.js';
 import { PackageBuilder } from '../components/PackageBuilder.jsx';
 import { AvailabilityEditor } from '../components/AvailabilityCalendar.jsx';
+import { GoogleCalendarConnect } from '../components/GoogleCalendarConnect.jsx';
 import { StripeOnboarding } from '../components/StripeOnboarding.jsx';
 import { EarningsTab } from '../components/EarningsTab.jsx';
 import { ViolationBanner, loadViolations } from '../components/ViolationBanner.jsx';
@@ -18,6 +19,7 @@ import { VerificationFlow } from '../components/VerificationFlow.jsx';
 import { TierBadge, TierProgress, TierUpBanner } from '../components/TierBadge.jsx';
 import { calculateTier } from '../config/tiers.js';
 import { dollarsToDisplay, statusBadgeClass, PROJECT_STATUSES } from '../config/fees.js';
+import { ReferralSection } from '../components/ReferralSection.jsx';
 
 // ── Data helpers ────────────────────────────────────────────────
 function loadMyListing(userId) {
@@ -224,6 +226,7 @@ export function CreatorDashboard({ dark }) {
     { id: 'packages',      label: 'Packages',     icon: Package },
     { id: 'availability',  label: 'Availability', icon: Calendar },
     { id: 'earnings',      label: 'Earnings',     icon: DollarSign },
+    { id: 'referral',      label: 'Referrals',    icon: Link },
     { id: 'verification',  label: 'Verification', icon: BadgeCheck },
     { id: 'video',         label: 'Video Intro',  icon: Video },
   ];
@@ -307,10 +310,10 @@ export function CreatorDashboard({ dark }) {
 
             {/* Stats grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard icon={Eye}          label="Profile Views"   value={viewCount || '—'}  sub="All time"              color="text-teal-400"   dark={dark} />
+              <StatCard icon={Eye}          label="Profile Views"   value={viewCount || '-'}  sub="All time"              color="text-teal-400"   dark={dark} />
               <StatCard icon={MessageSquare} label="Quote Requests"  value={quotes.length}      sub={`${unreadCount} unread`} color="text-gold-400"   dark={dark} />
-              <StatCard icon={Heart}         label="Saved by Clients" value={favCount || '—'}  sub="In shortlists"          color="text-red-400"    dark={dark} />
-              <StatCard icon={Star}          label="Avg Rating"      value={avgRating || '—'}   sub={`${creator.review_count || 0} reviews`} color="text-purple-400" dark={dark} />
+              <StatCard icon={Heart}         label="Saved by Clients" value={favCount || '-'}  sub="In shortlists"          color="text-red-400"    dark={dark} />
+              <StatCard icon={Star}          label="Avg Rating"      value={avgRating || '-'}   sub={`${creator.review_count || 0} reviews`} color="text-purple-400" dark={dark} />
             </div>
 
             {/* Tier progress */}
@@ -419,12 +422,24 @@ export function CreatorDashboard({ dark }) {
 
         {/* ── Availability Tab ── */}
         {activeTab === 'availability' && (
-          <AvailabilityEditor creatorId={creator.id} dark={dark} />
+          <div className="space-y-4">
+            <GoogleCalendarConnect
+              creatorId={creator.id}
+              dark={dark}
+              onSync={() => { /* AvailabilityEditor reads localStorage directly on render */ }}
+            />
+            <AvailabilityEditor creatorId={creator.id} dark={dark} />
+          </div>
         )}
 
         {/* ── Earnings Tab ── */}
         {activeTab === 'earnings' && (
           <EarningsTab creator={creator} dark={dark} />
+        )}
+
+        {/* ── Referral Tab ── */}
+        {activeTab === 'referral' && (
+          <ReferralSection dark={dark} userType="creator" />
         )}
 
         {/* ── Verification Tab ── */}
@@ -614,7 +629,7 @@ function VideoIntroTab({ creator, dark, onUpdate }) {
         <p className={`text-[10px] font-bold uppercase tracking-wider mb-3 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>Tips for a great intro</p>
         <ul className={`space-y-1.5 text-xs ${textSub}`}>
           {[
-            'Keep it under 90 seconds — clients watch short intros more often',
+            'Keep it under 90 seconds - clients watch short intros more often',
             'Introduce yourself, your specialty, and your style',
             'Show examples of your work or a behind-the-scenes clip',
             'Record in a well-lit space with good audio',

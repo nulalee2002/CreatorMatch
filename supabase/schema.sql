@@ -515,3 +515,23 @@ CREATE POLICY IF NOT EXISTS "Anyone can view client reviews"
   USING (true);
 
 CREATE INDEX IF NOT EXISTS idx_client_reviews_client ON client_reviews(client_id);
+
+-- ── REFERRALS ─────────────────────────────────────────────────
+-- Section 4: Referral Program
+CREATE TABLE IF NOT EXISTS referrals (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  referrer_id uuid REFERENCES auth.users(id) NOT NULL,
+  referred_user_id uuid REFERENCES auth.users(id),
+  referral_code text NOT NULL,
+  referrer_type text NOT NULL,              -- 'creator' | 'client'
+  referred_user_type text,                   -- 'creator' | 'client'
+  status text DEFAULT 'pending',             -- 'pending' | 'signed_up' | 'completed'
+  reward_type text,                          -- 'fee_reduction' | 'booking_fee_waived' | 'tier_boost'
+  reward_issued boolean DEFAULT false,
+  reward_issued_at timestamptz,
+  created_at timestamptz DEFAULT now(),
+  completed_at timestamptz
+);
+
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(referral_code);

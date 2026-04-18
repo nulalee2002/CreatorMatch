@@ -5,11 +5,10 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { PLATFORM_FEES } from '../config/fees.js';
 
 const DISPUTE_REASONS = [
-  { id: 'not_delivered',    label: 'Work was not delivered'            },
-  { id: 'wrong_scope',      label: 'Work does not match agreed scope'  },
-  { id: 'quality_issue',    label: 'Quality is unacceptable'          },
-  { id: 'no_communication', label: 'Creator stopped responding'        },
-  { id: 'other',            label: 'Other reason'                      },
+  { id: 'not_as_described',  label: 'Work not as described'               },
+  { id: 'brief_not_followed',label: 'Creator did not follow brief'         },
+  { id: 'quality_issue',     label: 'Technical quality issues'            },
+  { id: 'other',             label: 'Other'                               },
 ];
 
 /**
@@ -35,7 +34,10 @@ export function DisputeModal({ project, dark, onClose, onSubmitted }) {
   }`;
 
   async function handleSubmit() {
-    if (!reason || !details.trim()) return;
+    if (!reason || details.trim().length < 100) {
+      setError(!reason ? 'Please select a reason.' : 'Please provide at least 100 characters describing the issue.');
+      return;
+    }
     setLoading(true);
     setError('');
 

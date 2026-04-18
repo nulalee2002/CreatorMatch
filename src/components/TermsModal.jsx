@@ -30,17 +30,10 @@ function Section({ id, title, dark, children }) {
   );
 }
 
-export function TermsModal({ dark, onClose, scrollToPrivacy = false }) {
+export function TermsModal({ dark, onClose }) {
   const scrollRef = useRef(null);
   const linkCls = 'text-gold-400 hover:text-gold-300 underline';
   const textSub = dark ? 'text-charcoal-400' : 'text-gray-500';
-
-  useEffect(() => {
-    if (scrollToPrivacy && scrollRef.current) {
-      const el = scrollRef.current.querySelector('#terms-privacy');
-      if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-    }
-  }, [scrollToPrivacy]);
 
   // Close on Escape key
   useEffect(() => {
@@ -113,7 +106,7 @@ export function TermsModal({ dark, onClose, scrollToPrivacy = false }) {
             <p>
               All financial transactions are processed through CreatorMatch using Stripe, a licensed payment processor.
               CreatorMatch never holds funds indefinitely: payment is split into a 50% retainer at booking and 50% upon
-              project completion and approval. Funds are released to the creator after client approval or after 7 days
+              project completion and approval. Funds are released to the creator after client approval or after 72 hours
               with no response.
             </p>
             <p>
@@ -129,13 +122,18 @@ export function TermsModal({ dark, onClose, scrollToPrivacy = false }) {
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Be at least 18 years of age</li>
               <li>Provide accurate, truthful registration information</li>
-              <li>Verify your email address</li>
+              <li>Verify your phone number via SMS during signup</li>
               <li>Agree to these Terms of Service</li>
-              <li>Maintain a valid email address on your account at all times</li>
             </ul>
             <p>
-              Creators must additionally connect a Stripe payment account to receive payments. Identity verification
-              is handled automatically through Stripe's Know Your Customer (KYC) process.
+              Creators must additionally:
+            </p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>Complete identity verification through Stripe Connect (required for all creators before receiving payments)</li>
+              <li>Carry their own business insurance and professional liability coverage</li>
+            </ul>
+            <p>
+              Identity verification for creators is handled automatically through Stripe's Know Your Customer (KYC) process.
             </p>
             <p>
               Each creator may only maintain one active profile on CreatorMatch. Creating multiple profiles
@@ -190,15 +188,15 @@ export function TermsModal({ dark, onClose, scrollToPrivacy = false }) {
             </p>
             <ul className="list-disc list-inside space-y-2 ml-2">
               <li>
-                <strong className={dark ? 'text-white' : 'text-gray-900'}>Rule 1 — Before work begins:</strong> Creator keeps 25% as a cancellation fee. Client receives a 75% refund.
+                <strong className={dark ? 'text-white' : 'text-gray-900'}>Rule 1 - Before work begins:</strong> Creator keeps 25% as a cancellation fee. Client receives a 75% refund.
                 This applies when the project has been accepted but the creator has not yet started production.
               </li>
               <li>
-                <strong className={dark ? 'text-white' : 'text-gray-900'}>Rule 2 — After work begins:</strong> Creator keeps 50% of the total project value.
+                <strong className={dark ? 'text-white' : 'text-gray-900'}>Rule 2 - After work begins:</strong> Creator keeps 50% of the total project value.
                 Client receives a 50% refund. This applies once the creator has actively started production.
               </li>
               <li>
-                <strong className={dark ? 'text-white' : 'text-gray-900'}>Rule 3 — After delivery:</strong> No refund. Creator retains 100% of the project payment once work has been delivered.
+                <strong className={dark ? 'text-white' : 'text-gray-900'}>Rule 3 - After delivery:</strong> No refund. Creator retains 100% of the project payment once work has been delivered.
               </li>
             </ul>
             <p>
@@ -236,7 +234,8 @@ export function TermsModal({ dark, onClose, scrollToPrivacy = false }) {
               </li>
               <li>
                 <strong className={dark ? 'text-white' : 'text-gray-900'}>Strike 3:</strong> Your account is suspended.
-                You must contact <a href="mailto:support@creatormatch.studio" className={linkCls}>support@creatormatch.studio</a> to appeal.
+                {/* TODO: Update to support@creatormatch.studio once domain email is active */}
+                You must contact <a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a> to appeal.
               </li>
             </ul>
           </Section>
@@ -277,8 +276,9 @@ export function TermsModal({ dark, onClose, scrollToPrivacy = false }) {
               and fulfill legal obligations.
             </p>
             <p>
+              {/* TODO: Update to support@creatormatch.studio once domain email is active */}
               You may request deletion of your account and associated data at any time by contacting
-              {' '}<a href="mailto:support@creatormatch.studio" className={linkCls}>support@creatormatch.studio</a>.
+              {' '}<a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a>.
               Note that transaction records may be retained for legal and accounting purposes.
             </p>
           </Section>
@@ -296,7 +296,8 @@ export function TermsModal({ dark, onClose, scrollToPrivacy = false }) {
           </Section>
 
           <div className={`pt-4 border-t text-xs ${dark ? 'border-charcoal-700 text-charcoal-500' : 'border-gray-200 text-gray-400'}`}>
-            <p>CreatorMatch Inc. Questions? Contact <a href="mailto:support@creatormatch.studio" className={linkCls}>support@creatormatch.studio</a></p>
+            {/* TODO: Update to support@creatormatch.studio once domain email is active */}
+            <p>CreatorMatch Inc. Questions? Contact <a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a></p>
           </div>
         </div>
 

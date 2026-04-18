@@ -12,6 +12,9 @@ import { ProjectBoard } from './pages/ProjectBoard.jsx';
 import { CheckoutPage } from './pages/CheckoutPage.jsx';
 import { MatchResultsPage } from './pages/MatchResultsPage.jsx';
 import { TermsModal } from './components/TermsModal.jsx';
+import { PrivacyModal } from './components/PrivacyModal.jsx';
+import { captureReferralCode } from './components/ReferralSection.jsx';
+import { SupportChatbot } from './components/SupportChatbot.jsx';
 
 import { SERVICES, RATES, PACKAGE_TIERS } from './data/rates.js';
 import { DEFAULT_EXCHANGE_RATES } from './data/regions.js';
@@ -243,7 +246,7 @@ export default function App() {
   const [authTab, setAuthTab]     = useState('login');
   const [quickMode, setQuickMode] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const [termsPrivacy, setTermsPrivacy] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const [calcLocation, setCalcLocation] = useState(null); // { state, city, regionKey }
   const [profile, setProfile] = useState(() => {
     try { return JSON.parse(localStorage.getItem('creator-calc-profile') || '{}'); } catch { return {}; }
@@ -272,6 +275,9 @@ export default function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
   }, [dark]);
+
+  // Capture referral code from URL on first load
+  useEffect(() => { captureReferralCode(); }, []);
 
   function openAuth(tab = 'login') { setAuthTab(tab); setShowAuth(true); }
 
@@ -644,6 +650,26 @@ export default function App() {
               creatorMode={true}
             />
 
+            {/* Post-calculator signup prompt for guests */}
+            {!user && quote.grandTotal > 0 && (
+              <div className={`${cardCls} p-5 text-center`}>
+                <p className={`font-display font-bold text-sm mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>
+                  Ready to put these rates to work?
+                </p>
+                <p className={`text-xs mb-4 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+                  Create a free profile and start getting matched with clients looking for your services.
+                </p>
+                <button type="button"
+                  onClick={() => setShowAuth(true)}
+                  className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold transition-all">
+                  Join as a Creator - It's Free
+                </button>
+                <p className={`text-[10px] mt-2 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                  No subscription. Creators keep 90% of every project.
+                </p>
+              </div>
+            )}
+
             {state.serviceId && (
               <HealthWidget
                 serviceId={state.serviceId}
@@ -662,20 +688,21 @@ export default function App() {
         <footer className={`mt-12 border-t ${dark ? 'border-charcoal-800' : 'border-gray-200'} py-6`}>
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className={`text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
-              CreatorMatch — connecting content creators with brands and clients seeking media production and digital content services
+              CreatorMatch - connecting content creators with brands and clients seeking media production and digital content services
             </p>
             <div className={`flex items-center gap-4 text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
-              <button type="button" onClick={() => { setTermsPrivacy(false); setShowTerms(true); }}
+              <button type="button" onClick={() => setShowTerms(true)}
                 className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
                 Terms of Service
               </button>
               <span className={dark ? 'text-charcoal-700' : 'text-gray-300'}>|</span>
-              <button type="button" onClick={() => { setTermsPrivacy(true); setShowTerms(true); }}
+              <button type="button" onClick={() => setShowPrivacy(true)}
                 className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
                 Privacy
               </button>
               <span className={dark ? 'text-charcoal-700' : 'text-gray-300'}>|</span>
-              <a href="mailto:support@creatormatch.studio" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+              <a href="mailto:Nulalee2002@gmail.com" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                {/* TODO: Update to support@creatormatch.studio once domain email is active */}
                 Support
               </a>
             </div>
@@ -685,13 +712,21 @@ export default function App() {
 
       {/* Auth modal */}
       {showAuth && (
-        <AuthModal dark={dark} defaultTab={authTab} onClose={() => setShowAuth(false)} onOpenTerms={() => { setShowAuth(false); setTermsPrivacy(false); setShowTerms(true); }} />
+        <AuthModal dark={dark} defaultTab={authTab} onClose={() => setShowAuth(false)} onOpenTerms={() => { setShowAuth(false); setShowTerms(true); }} />
       )}
 
       {/* Terms modal */}
       {showTerms && (
-        <TermsModal dark={dark} onClose={() => setShowTerms(false)} scrollToPrivacy={termsPrivacy} />
+        <TermsModal dark={dark} onClose={() => setShowTerms(false)} />
       )}
+
+      {/* Privacy modal */}
+      {showPrivacy && (
+        <PrivacyModal dark={dark} onClose={() => setShowPrivacy(false)} />
+      )}
+
+      {/* Global support chatbot */}
+      <SupportChatbot dark={dark} />
     </div>
   );
 }

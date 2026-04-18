@@ -95,6 +95,15 @@ function ReviewStep({ project, creator, fees, dark, onNext }) {
       {/* Fee breakdown */}
       <FeeBreakdown projectAmount={(project?.budgetMax || project?.budgetMin || 0)} viewMode="client" dark={dark} />
 
+      {/* Insurance disclaimer */}
+      <div className={`${cardCls} p-4 flex items-start gap-3`}>
+        <AlertCircle size={16} className="text-amber-400 shrink-0 mt-0.5" />
+        <p className={`text-xs leading-relaxed ${textSub}`}>
+          <span className={`font-semibold ${dark ? 'text-amber-300' : 'text-amber-700'}`}>Insurance notice: </span>
+          CreatorMatch does not verify creator insurance coverage. If your project requires on-site work, confirm insurance details directly with your creator before this booking is confirmed.
+        </p>
+      </div>
+
       {/* Consent */}
       <div className={`${cardCls} p-4 flex items-start gap-3`}>
         <Shield size={16} className="text-teal-400 shrink-0 mt-0.5" />

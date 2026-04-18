@@ -202,7 +202,7 @@ export function MatchResultsPage({ dark }) {
             We found your best matches
           </h1>
           <p className={`text-sm ${textSub}`}>
-            Based on your project needs, budget, and timeline — curated for {serviceLabel}
+            Based on your project needs, budget, and timeline - curated for {serviceLabel}
           </p>
           {project?.title && (
             <p className={`text-xs mt-1 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
