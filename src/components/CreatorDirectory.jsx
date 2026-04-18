@@ -606,18 +606,15 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
       {step === 4 && (
         <div className="space-y-3">
           {[
-            { key: 'email',     label: 'Email *',          placeholder: 'hello@yourstudio.com',    icon: Mail },
-            { key: 'phone',     label: 'Phone',            placeholder: '(555) 000-0000',          icon: Phone },
-            { key: 'website',   label: 'Website',          placeholder: 'yourstudio.com',          icon: Globe },
-            { key: 'instagram', label: 'Instagram Handle', placeholder: '@yourstudio',             icon: Instagram },
-          ].map(({ key, label, placeholder, icon: Icon }) => (
+            { key: 'email',     label: 'Email *',          placeholder: 'hello@yourstudio.com',  type: 'email' },
+            { key: 'phone',     label: 'Phone',            placeholder: '(555) 000-0000',        type: 'tel' },
+            { key: 'website',   label: 'Website',          placeholder: 'yourstudio.com',        type: 'text' },
+            { key: 'instagram', label: 'Instagram Handle', placeholder: '@yourstudio',           type: 'text' },
+          ].map(({ key, label, placeholder, type }) => (
             <div key={key}>
               <p className={labelCls}>{label}</p>
-              <div className="relative flex items-center">
-                <Icon size={14} className={`absolute left-3 pointer-events-none ${dark ? 'text-charcoal-400' : 'text-gray-400'}`} />
-                <input type="text" value={form.contact[key]} onChange={e => setContact(key, e.target.value)} placeholder={placeholder}
-                  className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`} />
-              </div>
+              <input type={type} value={form.contact[key]} onChange={e => setContact(key, e.target.value)} placeholder={placeholder}
+                className={`w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`} />
             </div>
           ))}
           <div className="grid grid-cols-2 gap-3">
@@ -865,6 +862,28 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Hero section - two-sided messaging */}
       <div className="text-center mb-8">
+        {/* Fix 4: Two-sided hero panels */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
+          <div className={`rounded-2xl border p-5 text-left ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+            <p className="text-gold-400 text-xl mb-2">🎬</p>
+            <p className={`font-display font-bold text-base mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>
+              Stop losing to lowballers. Get paid what you're worth.
+            </p>
+            <p className={`text-xs leading-relaxed ${textSub}`}>
+              We charge you 10%, not 20%. And your fee drops the more you work.
+            </p>
+          </div>
+          <div className={`rounded-2xl border p-5 text-left ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+            <p className="text-teal-400 text-xl mb-2">💼</p>
+            <p className={`font-display font-bold text-base mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>
+              Find verified creators. Pay once. Own the work.
+            </p>
+            <p className={`text-xs leading-relaxed ${textSub}`}>
+              Curated matches, protected payments, no chasing invoices.
+            </p>
+          </div>
+        </div>
+
         <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
           Media production and digital content services
         </p>
@@ -876,46 +895,63 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
           CreatorMatch connects videographers, photographers, podcast producers, drone operators, and digital content specialists with brands and clients who need their work.
         </p>
 
-        {/* Two-sided value prop cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-6">
-          <div className={`rounded-2xl border p-4 text-left ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
-            <p className="text-gold-400 text-lg mb-2">🎬</p>
-            <p className={`font-display font-bold text-sm mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>For Creators</p>
-            <p className={`text-xs ${textSub} mb-3`}>List your services, set your own rates, and get matched with clients looking for your exact skills. Free to join.</p>
-            <ul className={`text-xs space-y-1 ${textSub}`}>
-              <li>- Keep 90% of every project</li>
-              <li>- Earn more as you grow: fee drops at 10 and 25 projects</li>
-              <li>- No cold pitching -- clients come to you</li>
-            </ul>
-          </div>
-          <div className={`rounded-2xl border p-4 text-left ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
-            <p className="text-teal-400 text-lg mb-2">💼</p>
-            <p className={`font-display font-bold text-sm mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>For Clients</p>
-            <p className={`text-xs ${textSub} mb-3`}>Browse verified creators, compare packages, and book in minutes. Protected by structured payments and dispute resolution.</p>
-            <ul className={`text-xs space-y-1 ${textSub}`}>
-              <li>- Only 5% booking fee, no monthly subscription</li>
-              <li>- 50% retainer, 50% on approval</li>
-              <li>- Smart match finds your best fits instantly</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Fee comparison table */}
-        <div className={`max-w-xl mx-auto rounded-2xl border mb-6 overflow-hidden ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
-          <div className={`px-4 py-2.5 border-b ${dark ? 'bg-charcoal-900/60 border-charcoal-700' : 'bg-gray-50 border-gray-200'}`}>
-            <p className={`text-xs font-bold uppercase tracking-wider ${textSub}`}>How Fees Compare</p>
-          </div>
-          <div className="divide-y divide-charcoal-700/30">
+        {/* Fix 5: Fee comparison table - 4 columns */}
+        <div className="max-w-2xl mx-auto mb-6">
+          <p className={`font-display font-bold text-lg mb-4 ${dark ? 'text-white' : 'text-gray-900'}`}>
+            Transparent Pricing. No Surprises.
+          </p>
+          <div className={`rounded-2xl border overflow-hidden ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+            {/* Header row */}
+            <div className={`grid grid-cols-5 text-xs font-bold border-b ${dark ? 'border-charcoal-700 bg-charcoal-900/60' : 'border-gray-200 bg-gray-50'}`}>
+              <div className={`px-3 py-2.5 ${textSub}`}>Feature</div>
+              <div className="px-3 py-2.5 text-center text-gold-400 bg-gold-500/10">CreatorMatch</div>
+              <div className={`px-3 py-2.5 text-center ${textSub}`}>Fiverr</div>
+              <div className={`px-3 py-2.5 text-center ${textSub}`}>Upwork</div>
+              <div className={`px-3 py-2.5 text-center ${textSub}`}>Thumbtack</div>
+            </div>
             {[
-              { platform: 'CreatorMatch (creator)', fee: '10% - drops to 6%', highlight: true },
-              { platform: 'CreatorMatch (client)',  fee: '5% booking fee',    highlight: true },
-              { platform: 'Fiverr',                 fee: '20% creator fee',   highlight: false },
-              { platform: 'Upwork',                 fee: '10-20% creator fee',highlight: false },
-              { platform: 'Thumbtack',              fee: 'Pay to bid',         highlight: false },
-            ].map(({ platform, fee, highlight }) => (
-              <div key={platform} className={`flex items-center justify-between px-4 py-2.5 ${highlight ? (dark ? 'bg-gold-500/8' : 'bg-gold-50') : ''}`}>
-                <span className={`text-xs ${highlight ? (dark ? 'text-gold-300 font-semibold' : 'text-gold-700 font-semibold') : textSub}`}>{platform}</span>
-                <span className={`text-xs font-bold ${highlight ? 'text-gold-400' : (dark ? 'text-charcoal-400' : 'text-gray-400')}`}>{fee}</span>
+              {
+                label:  'Creator fee',
+                cm:     '10% (drops to 6%)',
+                fiv:    '20%',
+                up:     '10-20%',
+                tt:     'Pay to bid',
+              },
+              {
+                label:  'Client fee',
+                cm:     '5% booking fee',
+                fiv:    '5.5%+',
+                up:     '3-5%',
+                tt:     'Free',
+              },
+              {
+                label:  'Payment protection',
+                cm:     'Yes',
+                fiv:    'Yes',
+                up:     'Yes',
+                tt:     'No',
+              },
+              {
+                label:  'Verified creators',
+                cm:     'Yes',
+                fiv:    'Partial',
+                up:     'Partial',
+                tt:     'No',
+              },
+              {
+                label:  'Fee drops with loyalty',
+                cm:     'Yes',
+                fiv:    'No',
+                up:     'No',
+                tt:     'No',
+              },
+            ].map((row, i) => (
+              <div key={row.label} className={`grid grid-cols-5 text-xs border-b last:border-0 ${dark ? 'border-charcoal-700' : 'border-gray-100'} ${i % 2 === 0 ? (dark ? 'bg-charcoal-800' : 'bg-white') : (dark ? 'bg-charcoal-900/30' : 'bg-gray-50/50')}`}>
+                <div className={`px-3 py-2.5 font-medium ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>{row.label}</div>
+                <div className="px-3 py-2.5 text-center font-bold text-gold-400 bg-gold-500/5">{row.cm}</div>
+                <div className={`px-3 py-2.5 text-center ${textSub}`}>{row.fiv}</div>
+                <div className={`px-3 py-2.5 text-center ${textSub}`}>{row.up}</div>
+                <div className={`px-3 py-2.5 text-center ${textSub}`}>{row.tt}</div>
               </div>
             ))}
           </div>
