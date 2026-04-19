@@ -16,6 +16,7 @@ import { TermsModal } from './components/TermsModal.jsx';
 import { PrivacyModal } from './components/PrivacyModal.jsx';
 import { captureReferralCode } from './components/ReferralSection.jsx';
 import { SupportChatbot } from './components/SupportChatbot.jsx';
+import { CircuitBackground } from './components/CircuitBackground.jsx';
 
 import { SERVICES, RATES, PACKAGE_TIERS } from './data/rates.js';
 import { DEFAULT_EXCHANGE_RATES } from './data/regions.js';
@@ -305,7 +306,8 @@ export default function App() {
   const cardCls = `rounded-2xl border ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`;
 
   return (
-    <div className={`min-h-screen ${bgMain} font-body transition-colors duration-200`}>
+    <div className={`min-h-screen ${bgMain} font-body transition-colors duration-200`} style={{ position: 'relative', zIndex: 1 }}>
+      <CircuitBackground />
 
       {/* ── Top Nav ── */}
       <header className={`sticky top-0 z-20 ${dark ? 'bg-charcoal-900/95 border-charcoal-700' : 'bg-white/95 border-gray-200'} border-b backdrop-blur-sm`}>
