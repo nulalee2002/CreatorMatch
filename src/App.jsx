@@ -300,7 +300,7 @@ export default function App() {
     return <QuickQuoteMode dark={dark} onFullMode={() => setQuickMode(false)} />;
   }
 
-  const bgMain = dark ? 'bg-charcoal-950' : 'bg-gray-50';
+  const bgMain = dark ? '' : 'bg-gray-50';
   const textMain = dark ? 'text-white' : 'text-gray-900';
   const cardCls = `rounded-2xl border ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`;
 

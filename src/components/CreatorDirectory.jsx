@@ -916,7 +916,7 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
       </div>
 
       {/* Page content wrapper */}
-      <div className="max-w-[1200px] mx-auto px-6 sm:px-10">
+      <div className="max-w-7xl mx-auto px-6">
 
         {/* 2. Two-column hero */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 py-10 sm:py-14">
@@ -1097,7 +1097,7 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
 
         {/* 6. Creator cards grid */}
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map(creator => (
               <CreatorCard
                 key={creator.id}
@@ -1144,9 +1144,9 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
 
       </div>
 
-      {/* 8. Fee comparison band — full width, after CTA */}
+      {/* 8. Fee comparison band — compact footnote after CTA */}
       <div
-        className="mt-8 mb-4 px-6 sm:px-10 py-10"
+        className="mt-6 mb-4 px-6 py-5"
         style={{
           background: dark ? 'rgba(212,169,65,0.04)' : 'rgba(212,169,65,0.03)',
           borderTop: '1px solid rgba(212,169,65,0.15)',
@@ -1154,8 +1154,8 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
         }}
       >
         <div
-          className="mx-auto"
-          style={{ maxWidth: '1200px', display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '40px', alignItems: 'start' }}
+          className="mx-auto max-w-4xl"
+          style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '24px', alignItems: 'start' }}
         >
           {/* Left label */}
           <div className="pt-1">
@@ -1187,13 +1187,13 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
             ].map(({ name, vals, isUs }) => (
               <div
                 key={name}
-                style={{ background: dark ? '#0d0d14' : '#ffffff', padding: '16px 14px' }}
+                style={{ background: dark ? '#0d0d14' : '#ffffff', padding: '10px 10px' }}
               >
-                <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: isUs ? '#d4a941' : '#6b6b8a', marginBottom: '14px', fontWeight: 700 }}>
+                <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: isUs ? '#d4a941' : '#6b6b8a', marginBottom: '8px', fontWeight: 700 }}>
                   {name}
                 </p>
                 {FEE_ROWS.map((row, i) => (
-                  <div key={row.label} style={{ marginBottom: '10px' }}>
+                  <div key={row.label} style={{ marginBottom: '5px' }}>
                     <p style={{ fontSize: '9px', color: '#6b6b8a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '1px' }}>
                       {row.label}
                     </p>
