@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { getNewCreatorSpotlight } from '../utils/matchingAlgorithm.js';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Star, ChevronDown, ChevronUp, X, Plus, Trash2, ArrowRight, Filter, UserPlus, Heart, ExternalLink, BadgeCheck, AlertCircle } from 'lucide-react';
+import { Search, MapPin, Star, X, Plus, Trash2, ArrowRight, Filter, UserPlus, Heart, ExternalLink, BadgeCheck, AlertCircle } from 'lucide-react';
 import { SERVICES, RATES } from '../data/rates.js';
 import { REGIONS } from '../data/regions.js';
 import { SEED_CREATORS, initSeedData, SHOW_DEMO_CREATORS } from '../data/seedCreators.js';
@@ -25,11 +25,9 @@ function saveListings(list) {
 }
 
 // ── Creator Profile Card ─────────────────────────────────────
-function CreatorCard({ creator, dark, searchServiceId, budget, onDelete }) {
+function CreatorCard({ creator, dark, onDelete }) {
   const navigate = useNavigate();
-  const [expanded, setExpanded] = useState(false);
 
-  // Favorites
   const [isFav, setIsFav] = useState(() => {
     const favs = JSON.parse(localStorage.getItem('creator-favorites') || '[]');
     return favs.includes(creator.id);
@@ -42,52 +40,22 @@ function CreatorCard({ creator, dark, searchServiceId, budget, onDelete }) {
     setIsFav(f => !f);
   }
 
-  // Find matching service for the current search
-  const matchingService = searchServiceId
-    ? creator.services?.find(s => s.serviceId === searchServiceId)
-    : creator.services?.[0];
-
-  const allServices = creator.services || [];
   const location = creator.location || {};
-  const contact = creator.contact || {};
-  const portfolio = creator.portfolio || [];
   const expLabel = { entry: '0-2 yrs', mid: '3-6 yrs', senior: '7+ yrs' }[creator.experience] || '';
-
-  // Location display
   const locationStr = [location.city, location.state, location.country].filter(Boolean).join(', ');
-
-  // Budget match indicator
-  const budgetMatch = useMemo(() => {
-    if (!budget || !matchingService?.rates) return null;
-    const rates = Object.values(matchingService.rates).filter(Boolean);
-    if (rates.length === 0) return null;
-    const min = Math.min(...rates);
-    const max = Math.max(...rates);
-    if (budget >= min && budget <= max) return 'perfect';
-    if (budget >= min * 0.7 && budget <= max * 1.5) return 'close';
-    if (budget < min) return 'below';
-    return 'above';
-  }, [budget, matchingService]);
-
-  const budgetColors = {
-    perfect: 'text-teal-400 bg-teal-500/10 border-teal-500/30',
-    close: 'text-gold-400 bg-gold-500/10 border-gold-500/30',
-    below: 'text-charcoal-400 bg-charcoal-700/30 border-charcoal-600',
-    above: 'text-teal-300 bg-teal-500/5 border-teal-500/20',
-  };
 
   return (
     <div className={`rounded-2xl border overflow-hidden transition-all ${
       dark ? 'bg-charcoal-800 border-charcoal-700 hover:border-charcoal-500' : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
     }`}>
       <div className="p-5">
-        {/* Header: Avatar + Name + Rating */}
+        {/* Top row: Avatar + Name/Badges + Fav */}
         <div className="flex items-start gap-3 mb-3">
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 ${dark ? 'bg-charcoal-700' : 'bg-gray-100'}`}>
             {creator.avatar || '🎬'}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-start gap-2">
+            <div className="flex items-start gap-2 flex-wrap">
               <h3 className={`font-display font-bold text-base leading-tight ${dark ? 'text-white' : 'text-gray-900'}`}>
                 {creator.businessName || creator.name}
               </h3>
@@ -96,28 +64,23 @@ function CreatorCard({ creator, dark, searchServiceId, budget, onDelete }) {
               ) : creator.verified ? (
                 <BadgeCheck size={14} className="text-teal-400 shrink-0 mt-0.5" title="Verified creator" />
               ) : null}
-              {creator.tier && creator.tier !== 'launch' && (
-                <TierBadge tierId={creator.tier} />
-              )}
-              {creator.completed_projects > 0 && (
-                <LoyaltyBadge completedProjects={creator.completed_projects} />
-              )}
-              {creator.video_intro_url && (
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[9px] font-bold ring-1 ring-purple-500/20">
-                  🎬 Intro
-                </span>
-              )}
+              {creator.tier && creator.tier !== 'launch' && <TierBadge tierId={creator.tier} />}
+              {creator.completed_projects > 0 && <LoyaltyBadge completedProjects={creator.completed_projects} />}
             </div>
             {creator.businessName && creator.name && (
               <p className={`text-xs ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>{creator.name}</p>
             )}
             <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className={`text-xs flex items-center gap-1 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-                <MapPin size={10} /> {locationStr}
-              </span>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${dark ? 'bg-charcoal-700 text-charcoal-400' : 'bg-gray-100 text-gray-500'}`}>
-                {expLabel}
-              </span>
+              {locationStr && (
+                <span className={`text-xs flex items-center gap-1 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+                  <MapPin size={10} /> {locationStr}
+                </span>
+              )}
+              {expLabel && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${dark ? 'bg-charcoal-700 text-charcoal-400' : 'bg-gray-100 text-gray-500'}`}>
+                  {expLabel}
+                </span>
+              )}
               {creator.availability === 'available' && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-teal-500/15 text-teal-400 font-medium">
                   Available
@@ -125,130 +88,48 @@ function CreatorCard({ creator, dark, searchServiceId, budget, onDelete }) {
               )}
             </div>
           </div>
-          <div className="text-right shrink-0 flex flex-col items-end gap-1">
-            <button type="button" onClick={toggleFav}
-              className={`p-1.5 rounded-lg transition-all ${isFav ? 'text-red-400' : dark ? 'text-charcoal-600 hover:text-red-400' : 'text-gray-300 hover:text-red-400'}`}
-              title={isFav ? 'Remove from favorites' : 'Save to favorites'}>
-              <Heart size={14} className={isFav ? 'fill-current' : ''} />
-            </button>
-            {creator.rating && (
-              <div className="flex items-center gap-1 justify-end">
+          <button type="button" onClick={toggleFav}
+            className={`p-1.5 rounded-lg transition-all shrink-0 ${isFav ? 'text-red-400' : dark ? 'text-charcoal-600 hover:text-red-400' : 'text-gray-300 hover:text-red-400'}`}
+            title={isFav ? 'Remove from favorites' : 'Save to favorites'}>
+            <Heart size={14} className={isFav ? 'fill-current' : ''} />
+          </button>
+        </div>
+
+        {/* Bio: always 2 lines max */}
+        <p className={`text-xs leading-relaxed line-clamp-2 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
+          {creator.bio}
+        </p>
+
+        {/* Tags: max 4, no expand */}
+        {creator.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {creator.tags.slice(0, 4).map(tag => (
+              <span key={tag} className={`text-[10px] px-2 py-0.5 rounded-full ${dark ? 'bg-charcoal-700 text-charcoal-300' : 'bg-gray-100 text-gray-600'}`}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Bottom row: rating left, View Profile right */}
+        <div className="flex items-center justify-between mt-3">
+          <div>
+            {creator.rating ? (
+              <div className="flex items-center gap-1">
                 <Star size={12} className="text-gold-400 fill-gold-400" />
                 <span className={`text-sm font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>{creator.rating}</span>
                 {creator.reviewCount && (
                   <span className={`text-[10px] ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>({creator.reviewCount})</span>
                 )}
               </div>
-            )}
-            {budgetMatch && budget > 0 && (
-              <div className={`text-[10px] px-2 py-0.5 rounded-full border ${budgetColors[budgetMatch]}`}>
-                {budgetMatch === 'perfect' ? 'In budget' : budgetMatch === 'close' ? 'Near budget' : budgetMatch === 'below' ? 'Above budget' : 'Under budget'}
-              </div>
-            )}
+            ) : <span />}
           </div>
-        </div>
-
-        {/* Bio */}
-        <p className={`text-xs leading-relaxed ${expanded ? '' : 'line-clamp-2'} ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
-          {creator.bio}
-        </p>
-
-        {/* Tags */}
-        {creator.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {creator.tags.slice(0, expanded ? undefined : 5).map(tag => (
-              <span key={tag} className={`text-[10px] px-2 py-0.5 rounded-full ${dark ? 'bg-charcoal-700 text-charcoal-300' : 'bg-gray-100 text-gray-600'}`}>
-                {tag}
-              </span>
-            ))}
-            {!expanded && creator.tags.length > 5 && (
-              <span className={`text-[10px] px-2 py-0.5 rounded-full ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
-                +{creator.tags.length - 5}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Services + Rates */}
-        <div className={`mt-3 space-y-2`}>
-          {(expanded ? allServices : [matchingService].filter(Boolean)).map((svc, i) => {
-            const serviceDef = SERVICES[svc.serviceId];
-            const rates = Object.entries(svc.rates || {});
-            const serviceRates = RATES[svc.serviceId] || {};
-            return (
-              <div key={i} className={`rounded-xl border px-3 py-2.5 ${dark ? 'bg-charcoal-900/60 border-charcoal-700' : 'bg-gray-50 border-gray-200'}`}>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-sm">{serviceDef?.icon || '🎬'}</span>
-                  <span className={`text-xs font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>{serviceDef?.name || svc.serviceId}</span>
-                  {svc.subtypes?.length > 0 && (
-                    <span className={`text-[10px] ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
-                      {svc.subtypes.join(' / ')}
-                    </span>
-                  )}
-                </div>
-                {svc.description && expanded && (
-                  <p className={`text-[11px] mb-2 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>{svc.description}</p>
-                )}
-                <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                  {rates.slice(0, expanded ? undefined : 3).map(([rateKey, rateVal]) => {
-                    const meta = serviceRates[rateKey];
-                    const isBudgetMatch = budget > 0 && Math.abs(rateVal - budget) / budget < 0.3;
-                    return (
-                      <div key={rateKey} className={`flex justify-between items-baseline gap-2 py-0.5 rounded px-1 ${
-                        isBudgetMatch ? (dark ? 'bg-teal-500/10' : 'bg-teal-50') : ''
-                      }`}>
-                        <span className={`text-[11px] truncate ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-                          {meta?.label || rateKey}
-                        </span>
-                        <span className={`text-xs font-semibold shrink-0 ${isBudgetMatch ? 'text-teal-400' : dark ? 'text-white' : 'text-gray-900'}`}>
-                          ${rateVal?.toLocaleString()}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                {!expanded && rates.length > 3 && (
-                  <p className={`text-[10px] mt-1 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>+{rates.length - 3} more rates</p>
-                )}
-              </div>
-            );
-          })}
-          {!expanded && allServices.length > 1 && (
-            <p className={`text-[10px] ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
-              +{allServices.length - 1} more service{allServices.length > 2 ? 's' : ''}
-            </p>
-          )}
-        </div>
-
-        {/* Portfolio (expanded) */}
-        {expanded && portfolio.length > 0 && (
-          <div className={`mt-3 border-t pt-3 ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
-            <p className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>Portfolio</p>
-            <div className="space-y-1.5">
-              {portfolio.map((item, i) => (
-                <div key={i} className={`flex items-start gap-2 px-2 py-1.5 rounded-lg ${dark ? 'bg-charcoal-900/40' : 'bg-gray-50'}`}>
-                  <span className="text-xs">{SERVICES[item.serviceId]?.icon || '🎬'}</span>
-                  <div>
-                    <p className={`text-xs font-medium ${dark ? 'text-white' : 'text-gray-900'}`}>{item.title}</p>
-                    <p className={`text-[10px] ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>{item.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Expand toggle */}
-        <button type="button" onClick={() => setExpanded(e => !e)}
-          className={`mt-2 text-[11px] flex items-center gap-1 ${dark ? 'text-charcoal-400 hover:text-gold-400' : 'text-gray-400 hover:text-gold-500'} transition-colors`}>
-          {expanded ? <><ChevronUp size={11} /> Show less</> : <><ChevronDown size={11} /> View full profile</>}
-        </button>
-
-        {/* Action buttons — contact info never shown in directory cards */}
-        <div className="flex gap-2 mt-3 flex-wrap">
-          <button type="button" onClick={() => navigate(`/creator/${creator.id}`)}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 font-bold transition-all">
-            <ExternalLink size={12} /> View Profile
+          <button
+            type="button"
+            onClick={() => navigate(`/creator/${creator.id}`)}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-600 text-charcoal-900 font-bold transition-all"
+          >
+            <ExternalLink size={11} /> View Profile
           </button>
         </div>
 
@@ -1078,9 +959,9 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
               </h2>
             </div>
             <p className={`text-xs mb-3 ${textSub}`}>Fresh talent, verified and ready to work.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-start">
               {spotlightCreators.map(creator => (
-                <CreatorCard key={creator.id} creator={creator} dark={dark} searchServiceId={null} budget={0} />
+                <CreatorCard key={creator.id} creator={creator} dark={dark} />
               ))}
             </div>
           </div>
@@ -1097,14 +978,12 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
 
         {/* 6. Creator cards grid */}
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
             {filtered.map(creator => (
               <CreatorCard
                 key={creator.id}
                 creator={creator}
                 dark={dark}
-                searchServiceId={serviceFilter !== 'all' ? serviceFilter : null}
-                budget={budgetNum}
                 onDelete={!creator.id.startsWith('seed-') ? () => handleDelete(creator.id) : undefined}
               />
             ))}

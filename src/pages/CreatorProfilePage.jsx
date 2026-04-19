@@ -67,7 +67,7 @@ export function CreatorProfilePage({ dark }) {
   const [isFav, setIsFav]               = useState(false);
   const [showQuote, setShowQuote]       = useState(false);
   const [copied, setCopied]             = useState(false);
-  const [activeService, setActiveService] = useState(0);
+  const [activeServiceTab, setActiveServiceTab] = useState(0);
   const [quoteDate, setQuoteDate]       = useState('');
   const [contactUnlocked, setContactUnlocked] = useState(false);
   const [showVideoModal, setShowVideoModal]   = useState(false);
@@ -191,8 +191,27 @@ export function CreatorProfilePage({ dark }) {
   const contact  = creator.contact || {};
   const services = creator.services || [];
   const portfolio = creator.portfolio || [];
-  const currentService = services[activeService];
+  const displayServices = services.slice(0, 3);
+  const currentService = displayServices[activeServiceTab] || displayServices[0];
   const locationStr = [location.city, location.state, location.country].filter(Boolean).join(', ');
+
+  function getServiceDisplayName(serviceId) {
+    const names = {
+      video:            'Video Production',
+      video_production: 'Video Production',
+      photography:      'Photography',
+      drone:            'Drone / Aerial',
+      drone_aerial:     'Drone / Aerial',
+      podcast:          'Podcast Production',
+      social:           'Social Media',
+      social_media:     'Social Media',
+      post:             'Post-Production',
+      post_production:  'Post-Production',
+      events:           'Live Events',
+      live_events:      'Live Events',
+    };
+    return names[serviceId] || serviceId || 'Services';
+  }
   const region = REGIONS[location.regionKey];
   const expLabel = { entry: '0–2 yrs', mid: '3–6 yrs', senior: '7+ yrs' }[creator.experience] || '';
 
@@ -350,14 +369,14 @@ export function CreatorProfilePage({ dark }) {
                   Services and Packages
                 </h2>
                 <div className="flex">
-                  {services.slice(0, 3).map((svc, i) => {
-                    const def = SERVICES[svc.serviceId];
-                    const isActive = activeService === i;
+                  {displayServices.map((svc, i) => {
+                    const sid = svc.serviceId || svc.service_id;
+                    const isActive = activeServiceTab === i;
                     return (
                       <button
                         key={i}
                         type="button"
-                        onClick={() => setActiveService(i)}
+                        onClick={() => setActiveServiceTab(i)}
                         style={{
                           padding: '12px 20px',
                           fontSize: '11px',
@@ -374,7 +393,7 @@ export function CreatorProfilePage({ dark }) {
                           marginBottom: '-1px',
                         }}
                       >
-                        {def?.name || svc.serviceId}
+                        {getServiceDisplayName(sid)}
                       </button>
                     );
                   })}
