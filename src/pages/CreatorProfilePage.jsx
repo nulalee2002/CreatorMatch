@@ -341,36 +341,50 @@ export function CreatorProfilePage({ dark }) {
             </div>
           )}
 
-          {/* Services and Packages - unified section */}
+          {/* Services and Packages - tabbed accordion */}
           {services.length > 0 && (
-            <div className={`${cardCls} p-5`}>
-              <h2 className={`font-display font-bold text-base mb-4 ${dark ? 'text-white' : 'text-gray-900'}`}>
-                Services and Packages
-              </h2>
-
-              {/* Service tab buttons - capped at 3 */}
-              {services.slice(0, 3).length > 1 && (
-                <div className="flex gap-2 mb-4 flex-wrap">
+            <div className={`${cardCls} overflow-hidden`}>
+              {/* Section header + tabs */}
+              <div className={`px-5 pt-5 border-b ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
+                <h2 className={`font-display font-bold text-base mb-4 ${dark ? 'text-white' : 'text-gray-900'}`}>
+                  Services and Packages
+                </h2>
+                <div className="flex">
                   {services.slice(0, 3).map((svc, i) => {
                     const def = SERVICES[svc.serviceId];
+                    const isActive = activeService === i;
                     return (
-                      <button key={i} type="button" onClick={() => setActiveService(i)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
-                          activeService === i
-                            ? 'bg-gold-500 text-charcoal-900 border-gold-500'
-                            : dark ? 'border-charcoal-700 text-charcoal-400 hover:border-charcoal-500' : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                        }`}>
-                        <span>{def?.icon}</span> {def?.name || svc.serviceId}
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setActiveService(i)}
+                        style={{
+                          padding: '12px 20px',
+                          fontSize: '11px',
+                          letterSpacing: '1.5px',
+                          textTransform: 'uppercase',
+                          fontFamily: 'inherit',
+                          background: 'none',
+                          border: 'none',
+                          borderBottom: isActive ? '2px solid #d4a941' : dark ? '1px solid #2a2a45' : '1px solid #e5e7eb',
+                          color: isActive ? '#d4a941' : dark ? '#6b6b8a' : '#9ca3af',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          borderRadius: 0,
+                          marginBottom: '-1px',
+                        }}
+                      >
+                        {def?.name || svc.serviceId}
                       </button>
                     );
                   })}
                 </div>
-              )}
+              </div>
 
               {currentService && (
-                <div>
+                <div className="p-5">
                   {currentService.subtypes?.length > 0 && (
-                    <p className={`text-xs mb-2 ${textSub}`}>
+                    <p className={`text-xs mb-3 ${textSub}`}>
                       <span className="font-medium">Specialties:</span> {currentService.subtypes.join(' · ')}
                     </p>
                   )}
@@ -380,6 +394,7 @@ export function CreatorProfilePage({ dark }) {
 
                   {/* Packages: prefer creator.packages filtered by service, fallback to rate tiers */}
                   {(() => {
+                    const TIER_LABELS = ['Basic', 'Standard', 'Premium'];
                     const allPkgs = creator.packages || [];
                     const pkgList = allPkgs.filter(pkg => {
                       const sid = pkg.service_id || pkg.serviceId;
@@ -389,37 +404,53 @@ export function CreatorProfilePage({ dark }) {
                     if (pkgList.length > 0) {
                       return (
                         <div className="space-y-3">
-                          {pkgList.map((pkg, i) => (
-                            <div key={i} className={`rounded-xl border p-4 ${
-                              i === 1
-                                ? 'border-gold-500/50 bg-gold-500/5'
-                                : dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50'
-                            }`}>
-                              {i === 1 && <p className="text-[10px] font-bold text-gold-400 uppercase tracking-wider mb-1">Most Popular</p>}
-                              <p className={`font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>{pkg.name}</p>
-                              <p className="font-display text-2xl font-bold text-gradient-gold mt-1">${Number(pkg.price).toLocaleString()}</p>
-                              <div className={`flex flex-wrap gap-3 mt-1 text-xs ${textSub}`}>
-                                {pkg.turnaround_days && <span>{pkg.turnaround_days} day delivery</span>}
-                                {pkg.revisions && <span>{pkg.revisions} revision{pkg.revisions !== 1 ? 's' : ''} included</span>}
+                          {pkgList.map((pkg, i) => {
+                            const isHighlight = i === 1;
+                            return (
+                              <div
+                                key={i}
+                                style={{
+                                  border: isHighlight ? '1px solid rgba(212,169,65,0.35)' : dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
+                                  borderLeft: isHighlight ? '3px solid #d4a941' : dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
+                                  background: isHighlight ? 'rgba(212,169,65,0.05)' : dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+                                  padding: '16px 18px',
+                                  borderRadius: '4px',
+                                }}
+                              >
+                                <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: isHighlight ? '#d4a941' : '#6b6b8a', marginBottom: '4px' }}>
+                                  {TIER_LABELS[i] || 'Package'}
+                                </p>
+                                <p className={`font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>{pkg.name}</p>
+                                <p className="text-gold-400 font-bold mt-1" style={{ fontSize: '26px', lineHeight: 1 }}>
+                                  ${Number(pkg.price).toLocaleString()}
+                                </p>
+                                <div className={`flex flex-wrap gap-3 mt-1.5 text-xs ${textSub}`}>
+                                  {pkg.turnaround_days && <span>{pkg.turnaround_days} day delivery</span>}
+                                  {pkg.revisions && <span>{pkg.revisions} revision{pkg.revisions !== 1 ? 's' : ''} included</span>}
+                                </div>
+                                {pkg.deliverables?.length > 0 && (
+                                  <ul className="mt-3 space-y-1.5">
+                                    {pkg.deliverables.map((d, di) => (
+                                      <li key={di} className={`text-xs flex items-center gap-1.5 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
+                                        <Check size={10} className="text-teal-400 shrink-0" /> {d}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                                {pkg.description && (
+                                  <p className={`text-xs mt-2 ${textSub}`}>{pkg.description}</p>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={handleQuoteClick}
+                                  className="mt-4 w-full bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all"
+                                  style={{ padding: '10px', borderRadius: 0, border: 'none', cursor: 'pointer' }}
+                                >
+                                  Get This Package
+                                </button>
                               </div>
-                              {pkg.deliverables?.length > 0 && (
-                                <ul className="mt-3 space-y-1.5">
-                                  {pkg.deliverables.map((d, di) => (
-                                    <li key={di} className={`text-xs flex items-center gap-1.5 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
-                                      <Check size={10} className="text-teal-400 shrink-0" /> {d}
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                              {pkg.description && (
-                                <p className={`text-xs mt-2 ${textSub}`}>{pkg.description}</p>
-                              )}
-                              <button type="button" onClick={handleQuoteClick}
-                                className="mt-4 w-full py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all">
-                                Get This Package
-                              </button>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       );
                     }
@@ -437,17 +468,25 @@ export function CreatorProfilePage({ dark }) {
                     ].filter(t => t.entries.length > 0);
                     return (
                       <div className="space-y-3">
-                        {tiers.map((tier) => {
+                        {tiers.map(tier => {
                           const minPrice = Math.min(...tier.entries.map(([,v]) => Number(v)));
                           return (
-                            <div key={tier.name} className={`rounded-xl border p-4 ${
-                              tier.highlight
-                                ? 'border-gold-500/50 bg-gold-500/5'
-                                : dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50'
-                            }`}>
-                              {tier.highlight && <p className="text-[10px] font-bold text-gold-400 uppercase tracking-wider mb-1">Most Popular</p>}
-                              <p className={`font-bold text-sm ${dark ? 'text-white' : 'text-gray-900'}`}>{tier.name}</p>
-                              <p className="font-display text-xl font-bold text-gradient-gold mt-1">from ${minPrice.toLocaleString()}</p>
+                            <div
+                              key={tier.name}
+                              style={{
+                                border: tier.highlight ? '1px solid rgba(212,169,65,0.35)' : dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
+                                borderLeft: tier.highlight ? '3px solid #d4a941' : dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
+                                background: tier.highlight ? 'rgba(212,169,65,0.05)' : dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+                                padding: '16px 18px',
+                                borderRadius: '4px',
+                              }}
+                            >
+                              <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: tier.highlight ? '#d4a941' : '#6b6b8a', marginBottom: '4px' }}>
+                                {tier.name}
+                              </p>
+                              <p className="text-gold-400 font-bold mt-1" style={{ fontSize: '26px', lineHeight: 1 }}>
+                                from ${minPrice.toLocaleString()}
+                              </p>
                               <ul className="mt-3 space-y-1.5">
                                 {tier.entries.map(([key, val]) => {
                                   const meta = RATES[currentService.serviceId]?.[key];
@@ -460,8 +499,12 @@ export function CreatorProfilePage({ dark }) {
                                   );
                                 })}
                               </ul>
-                              <button type="button" onClick={handleQuoteClick}
-                                className="mt-4 w-full py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all">
+                              <button
+                                type="button"
+                                onClick={handleQuoteClick}
+                                className="mt-4 w-full bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all"
+                                style={{ padding: '10px', borderRadius: 0, border: 'none', cursor: 'pointer' }}
+                              >
                                 Get This Package
                               </button>
                             </div>
