@@ -1144,67 +1144,94 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
 
       </div>
 
-      {/* 8. Fee comparison band — compact footnote after CTA */}
+      {/* 8. Two-column bottom: fee table + value props */}
       <div
-        className="mt-6 mb-4 px-6 py-5"
-        style={{
-          background: dark ? 'rgba(212,169,65,0.04)' : 'rgba(212,169,65,0.03)',
-          borderTop: '1px solid rgba(212,169,65,0.15)',
-          borderBottom: '1px solid rgba(212,169,65,0.15)',
-        }}
+        className="max-w-7xl mx-auto px-6 py-12"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
       >
-        <div
-          className="mx-auto max-w-4xl"
-          style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '24px', alignItems: 'start' }}
-        >
-          {/* Left label */}
-          <div className="pt-1">
-            <p style={{ fontSize: '10px', letterSpacing: '2px', textTransform: 'uppercase', color: '#6b6b8a', marginBottom: '10px' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-12 items-start">
+
+          {/* Left: compact fee comparison table */}
+          <div>
+            <p className="text-gold-400 mb-2" style={{ fontSize: '10px', letterSpacing: '3px', textTransform: 'uppercase' }}>
               Transparent Pricing
             </p>
             <p
-              className={dark ? 'text-white' : 'text-gray-900'}
-              style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: '18px', fontStyle: 'italic', fontWeight: 400, lineHeight: 1.4 }}
+              className={`mb-6 ${dark ? 'text-white' : 'text-gray-900'}`}
+              style={{ fontFamily: "'Georgia','Times New Roman',serif", fontSize: '18px', fontStyle: 'italic', fontWeight: 400 }}
             >
               How our fees compare
             </p>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  {[
+                    { label: 'Feature',       gold: false },
+                    { label: 'CreatorMatch',  gold: true  },
+                    { label: 'Fiverr',        gold: false },
+                    { label: 'Upwork',        gold: false },
+                    { label: 'Thumbtack',     gold: false },
+                  ].map(({ label, gold }, i) => (
+                    <th
+                      key={label}
+                      style={{
+                        fontSize: '10px',
+                        letterSpacing: '1.5px',
+                        textTransform: 'uppercase',
+                        color: gold ? '#d4a941' : '#6b6b8a',
+                        fontWeight: 700,
+                        textAlign: i === 0 ? 'left' : 'center',
+                        paddingBottom: '10px',
+                        paddingTop: 0,
+                      }}
+                    >
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {FEE_ROWS.map(row => (
+                  <tr key={row.label} style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <td style={{ fontSize: '12px', color: dark ? '#a0a0b8' : '#555', padding: '8px 0', textAlign: 'left' }}>{row.label}</td>
+                    <td style={{ fontSize: '12px', color: '#d4a941', fontWeight: 600, padding: '8px 4px', textAlign: 'center' }}>{row.cm}</td>
+                    <td style={{ fontSize: '12px', color: dark ? '#6b6b8a' : '#888', padding: '8px 4px', textAlign: 'center' }}>{row.fiv}</td>
+                    <td style={{ fontSize: '12px', color: dark ? '#6b6b8a' : '#888', padding: '8px 4px', textAlign: 'center' }}>{row.up}</td>
+                    <td style={{ fontSize: '12px', color: dark ? '#6b6b8a' : '#888', padding: '8px 4px', textAlign: 'center' }}>{row.tt}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          {/* Right — 4-column fee grid */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '1px',
-              background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-            }}
-          >
-            {[
-              { name: 'CreatorMatch', vals: FEE_ROWS.map(r => r.cm), isUs: true },
-              { name: 'Fiverr',       vals: FEE_ROWS.map(r => r.fiv), isUs: false },
-              { name: 'Upwork',       vals: FEE_ROWS.map(r => r.up),  isUs: false },
-              { name: 'Thumbtack',    vals: FEE_ROWS.map(r => r.tt),  isUs: false },
-            ].map(({ name, vals, isUs }) => (
-              <div
-                key={name}
-                style={{ background: dark ? '#0d0d14' : '#ffffff', padding: '10px 10px' }}
-              >
-                <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: isUs ? '#d4a941' : '#6b6b8a', marginBottom: '8px', fontWeight: 700 }}>
-                  {name}
-                </p>
-                {FEE_ROWS.map((row, i) => (
-                  <div key={row.label} style={{ marginBottom: '5px' }}>
-                    <p style={{ fontSize: '9px', color: '#6b6b8a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '1px' }}>
-                      {row.label}
-                    </p>
-                    <p style={{ fontSize: '11px', color: isUs ? '#d4a941' : dark ? '#888' : '#666', fontWeight: isUs ? 600 : 400 }}>
-                      {vals[i]}
-                    </p>
+          {/* Right: value props */}
+          <div>
+            <div className="space-y-6">
+              {[
+                { headline: 'Built for media professionals',    desc: 'Not a general gig platform. Every creator is a verified media specialist.' },
+                { headline: 'Your fee drops the more you work', desc: 'Start at 10%, earn down to 6% as your completed projects grow.' },
+                { headline: 'Protected payments, every time',   desc: '50% retainer upfront, 50% on delivery approval. Never chase an invoice again.' },
+                { headline: 'Curated matches, not a crowd',     desc: 'Smart Match finds your top 3 to 5 fits. No scrolling through hundreds of unqualified profiles.' },
+              ].map(({ headline, desc }) => (
+                <div key={headline} className="flex gap-3">
+                  <span className="text-gold-400 shrink-0 mt-0.5" style={{ fontSize: '14px', lineHeight: 1 }}>&#8212;</span>
+                  <div>
+                    <p className={`text-sm font-bold mb-0.5 ${dark ? 'text-white' : 'text-gray-900'}`}>{headline}</p>
+                    <p style={{ fontSize: '12px', color: '#6b6b8a', lineHeight: 1.55 }}>{desc}</p>
                   </div>
-                ))}
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className={`mt-8 font-bold transition-all ${dark ? 'text-white hover:text-gold-400' : 'text-gray-900 hover:text-gold-500'}`}
+              style={{ padding: '12px 24px', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', background: 'none', border: dark ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.15)', borderRadius: 0, cursor: 'pointer' }}
+            >
+              See How It Works
+            </button>
           </div>
+
         </div>
       </div>
 
