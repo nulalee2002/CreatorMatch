@@ -1,7 +1,7 @@
 import { useReducer, useEffect, useMemo, useState, useCallback } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { formatCurrency } from './utils/pricing.js';
-import { Moon, Sun, Zap, RotateCcw, Search, UserPlus, LogIn, LogOut, User, MessageSquare, Briefcase, LayoutDashboard } from 'lucide-react';
+import { Moon, Sun, Zap, RotateCcw, Search, UserPlus, LogIn, LogOut, User, MessageSquare, Briefcase, LayoutDashboard, Users } from 'lucide-react';
 import { v4 as uuid } from 'uuid';
 import { useAuth } from './contexts/AuthContext.jsx';
 import { AuthModal } from './components/auth/AuthModal.jsx';
@@ -12,6 +12,7 @@ import { ProjectBoard } from './pages/ProjectBoard.jsx';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { CheckoutPage } from './pages/CheckoutPage.jsx';
 import { MatchResultsPage } from './pages/MatchResultsPage.jsx';
+import { NetworkingPage } from './pages/NetworkingPage.jsx';
 import { TermsModal } from './components/TermsModal.jsx';
 import { PrivacyModal } from './components/PrivacyModal.jsx';
 import { captureReferralCode } from './components/ReferralSection.jsx';
@@ -260,6 +261,7 @@ export default function App() {
     : location.pathname.startsWith('/dashboard')  ? 'dashboard'
     : location.pathname.startsWith('/messages')   ? 'messages'
     : location.pathname.startsWith('/projects')   ? 'projects'
+    : location.pathname.startsWith('/network')    ? 'network'
     : 'directory';
 
   // Persist state
@@ -328,6 +330,7 @@ export default function App() {
             {[
               { path: '/',           id: 'directory',  icon: Search,   label: 'Find Creators' },
               { path: '/projects',   id: 'projects',   icon: Briefcase, label: 'Projects' },
+              { path: '/network',    id: 'network',    icon: Users,     label: 'Network' },
               { path: '/register',   id: 'register',   icon: UserPlus, label: 'Join' },
               { path: '/calculator', id: 'calculator', icon: Zap,      label: 'Rate Calculator' },
             ].map(({ path, id, icon: Icon, label }) => (
@@ -427,6 +430,7 @@ export default function App() {
         <Route path="/projects" element={<ErrorBoundary dark={dark} fallbackMessage="Could not load the Project Board"><ProjectBoard dark={dark} /></ErrorBoundary>} />
         <Route path="/checkout/:projectId" element={<CheckoutPage dark={dark} />} />
         <Route path="/matches/:projectId" element={<MatchResultsPage dark={dark} />} />
+        <Route path="/network" element={<NetworkingPage dark={dark} user={user} />} />
         <Route path="/calculator" element={null} />
       </Routes>
 

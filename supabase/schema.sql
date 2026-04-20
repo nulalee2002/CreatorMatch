@@ -535,3 +535,98 @@ CREATE TABLE IF NOT EXISTS referrals (
 
 CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
 CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals(referral_code);
+
+-- ── NETWORKING ────────────────────────────────────────────────
+-- Networking posts
+CREATE TABLE IF NOT EXISTS network_posts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) NOT NULL,
+  state_code text NOT NULL,
+  content text NOT NULL CHECK (char_length(content) <= 500),
+  post_type text NOT NULL DEFAULT 'general',
+  likes_count integer DEFAULT 0,
+  reply_count integer DEFAULT 0,
+  is_flagged boolean DEFAULT false,
+  strike_count integer DEFAULT 0,
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz DEFAULT now() + interval '30 days'
+);
+
+-- Post likes
+CREATE TABLE IF NOT EXISTS network_post_likes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id uuid REFERENCES network_posts(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES auth.users(id),
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(post_id, user_id)
+);
+
+-- Post replies
+CREATE TABLE IF NOT EXISTS network_replies (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id uuid REFERENCES network_posts(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES auth.users(id) NOT NULL,
+  content text NOT NULL CHECK (char_length(content) <= 280),
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz DEFAULT now() + interval '30 days'
+);
+
+-- State chat messages (real-time)
+CREATE TABLE IF NOT EXISTS state_chat_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) NOT NULL,
+  state_code text NOT NULL,
+  message text NOT NULL CHECK (char_length(message) <= 300),
+  user_display_name text,
+  user_verification_status text,
+  user_primary_service text,
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz DEFAULT now() + interval '30 days'
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_network_posts_state
+  ON network_posts(state_code, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_network_posts_expires
+  ON network_posts(expires_at);
+CREATE INDEX IF NOT EXISTS idx_state_chat_state
+  ON state_chat_messages(state_code, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_state_chat_expires
+  ON state_chat_messages(expires_at);
+
+-- RLS policies
+ALTER TABLE network_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE network_post_likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE network_replies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE state_chat_messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view network posts"
+  ON network_posts FOR SELECT USING (
+    expires_at > now() AND is_flagged = false
+  );
+
+CREATE POLICY "Verified members can post"
+  ON network_posts FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Anyone can view chat messages"
+  ON state_chat_messages FOR SELECT USING (
+    expires_at > now()
+  );
+
+CREATE POLICY "Verified members can send messages"
+  ON state_chat_messages FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Anyone can view replies"
+  ON network_replies FOR SELECT USING (
+    expires_at > now()
+  );
+
+CREATE POLICY "Verified members can reply"
+  ON network_replies FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Anyone can like posts"
+  ON network_post_likes FOR INSERT
+  WITH CHECK (auth.uid() = user_id);

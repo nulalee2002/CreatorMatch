@@ -67,7 +67,7 @@ export function CreatorProfilePage({ dark }) {
   const [isFav, setIsFav]               = useState(false);
   const [showQuote, setShowQuote]       = useState(false);
   const [copied, setCopied]             = useState(false);
-  const [activeServiceTab, setActiveServiceTab] = useState(0);
+  const [activeNiche, setActiveNiche] = useState(0);
   const [quoteDate, setQuoteDate]       = useState('');
   const [contactUnlocked, setContactUnlocked] = useState(false);
   const [showVideoModal, setShowVideoModal]   = useState(false);
@@ -191,8 +191,6 @@ export function CreatorProfilePage({ dark }) {
   const contact  = creator.contact || {};
   const services = creator.services || [];
   const portfolio = creator.portfolio || [];
-  const displayServices = services.slice(0, 3);
-  const currentService = displayServices[activeServiceTab] || displayServices[0];
   const locationStr = [location.city, location.state, location.country].filter(Boolean).join(', ');
 
   function getServiceDisplayName(serviceId) {
@@ -360,180 +358,240 @@ export function CreatorProfilePage({ dark }) {
             </div>
           )}
 
-          {/* Services and Packages - tabbed accordion */}
-          {services.length > 0 && (
-            <div className={`${cardCls} overflow-hidden`}>
-              {/* Section header + tabs */}
-              <div className={`px-5 pt-5 border-b ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
-                <h2 className={`font-display font-bold text-base mb-4 ${dark ? 'text-white' : 'text-gray-900'}`}>
-                  Services and Packages
-                </h2>
-                <div className="flex">
-                  {displayServices.map((svc, i) => {
-                    const sid = svc.serviceId || svc.service_id;
-                    const isActive = activeServiceTab === i;
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setActiveServiceTab(i)}
-                        style={{
-                          padding: '12px 20px',
-                          fontSize: '11px',
-                          letterSpacing: '1.5px',
-                          textTransform: 'uppercase',
-                          fontFamily: 'inherit',
-                          background: 'none',
-                          border: 'none',
-                          borderBottom: isActive ? '2px solid #d4a941' : dark ? '1px solid #2a2a45' : '1px solid #e5e7eb',
-                          color: isActive ? '#d4a941' : dark ? '#6b6b8a' : '#9ca3af',
-                          cursor: 'pointer',
-                          transition: 'all 0.15s',
-                          borderRadius: 0,
-                          marginBottom: '-1px',
-                        }}
-                      >
-                        {getServiceDisplayName(sid)}
-                      </button>
-                    );
-                  })}
-                </div>
+          {/* Services and Packages */}
+          {(creator.services || []).length > 0 && (
+            <div className={`${cardCls} p-5`}>
+              <h2 className={`font-display font-bold text-base mb-4
+                ${dark ? 'text-white' : 'text-gray-900'}`}>
+                Services and Packages
+              </h2>
+
+              {/* Niche tab buttons - service names only */}
+              <div className={`flex border-b mb-6
+                ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
+                {(creator.services || []).slice(0, 3).map((svc, i) => {
+                  const sid = svc.serviceId || svc.service_id || '';
+                  const name = getServiceDisplayName(sid);
+                  const isActive = activeNiche === i;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setActiveNiche(i)}
+                      className={`px-4 py-3 text-xs font-bold uppercase
+                        tracking-widest transition-all border-b-2 -mb-px
+                        ${isActive
+                          ? 'border-gold-500 text-gold-400'
+                          : `border-transparent
+                            ${dark
+                              ? 'text-charcoal-500 hover:text-charcoal-300'
+                              : 'text-gray-400 hover:text-gray-600'
+                            }`
+                        }`}
+                    >
+                      {name}
+                    </button>
+                  );
+                })}
               </div>
 
-              {currentService && (
-                <div className="p-5">
-                  {currentService.subtypes?.length > 0 && (
-                    <p className={`text-xs mb-3 ${textSub}`}>
-                      <span className="font-medium">Specialties:</span> {currentService.subtypes.join(' · ')}
-                    </p>
-                  )}
-                  {currentService.description && (
-                    <p className={`text-sm mb-4 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>{currentService.description}</p>
-                  )}
+              {/* Package cards for active niche only */}
+              {(() => {
+                const svcList = (creator.services || []).slice(0, 3);
+                const activeSvc = svcList[activeNiche];
+                if (!activeSvc) return null;
 
-                  {/* Packages: prefer creator.packages filtered by service, fallback to rate tiers */}
-                  {(() => {
-                    const TIER_LABELS = ['Basic', 'Standard', 'Premium'];
-                    const allPkgs = creator.packages || [];
-                    const pkgList = allPkgs.filter(pkg => {
-                      const sid = pkg.service_id || pkg.serviceId;
-                      return !sid || sid === currentService.serviceId;
-                    });
+                const sid = activeSvc.serviceId || activeSvc.service_id;
 
-                    if (pkgList.length > 0) {
+                // Try structured packages first
+                const pkgs = (creator.packages || []).filter(
+                  p => (p.serviceId || p.service_id) === sid
+                );
+
+                if (pkgs.length > 0) {
+                  return (
+                    <div className="space-y-4">
+                      {pkgs.map((pkg, pi) => {
+                        const isStandard = pkg.tier === 'standard'
+                          || pkg.name?.toLowerCase().includes('standard')
+                          || pi === 1;
+                        return (
+                          <div key={pi} className={`rounded-xl border p-5
+                            ${isStandard
+                              ? 'border-l-2 border-l-gold-500 border-t border-r border-b '
+                                + (dark
+                                  ? 'border-charcoal-700 bg-gold-500/5'
+                                  : 'border-gray-200 bg-gold-50')
+                              : dark
+                                ? 'border-charcoal-700 bg-charcoal-900/40'
+                                : 'border-gray-200 bg-gray-50'
+                            }`}>
+                            {isStandard && (
+                              <p className="text-[10px] font-bold text-gold-400
+                                uppercase tracking-wider mb-1">
+                                Most Popular
+                              </p>
+                            )}
+                            <p className={`text-[10px] font-bold uppercase
+                              tracking-wider mb-1
+                              ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                              {pkg.tier || pkg.name || `Package ${pi + 1}`}
+                            </p>
+                            <p className="font-display text-2xl font-bold
+                              text-gold-400 mb-1">
+                              ${Number(pkg.price || 0).toLocaleString()}
+                            </p>
+                            <p className={`text-xs mb-3
+                              ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+                              {pkg.deliveryDays && `${pkg.deliveryDays} day delivery`}
+                              {pkg.revisions && ` · ${pkg.revisions} revision${
+                                pkg.revisions !== 1 ? 's' : ''} included`}
+                            </p>
+                            {(pkg.features || pkg.deliverables || []).length > 0 && (
+                              <ul className="space-y-1.5 mb-4">
+                                {(pkg.features || pkg.deliverables || [])
+                                  .map((f, fi) => (
+                                  <li key={fi} className={`flex items-start
+                                    gap-2 text-xs
+                                    ${dark
+                                      ? 'text-charcoal-300'
+                                      : 'text-gray-600'}`}>
+                                    <span className="text-teal-400 mt-0.5
+                                      shrink-0">
+                                      ✓
+                                    </span>
+                                    {f}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                            {pkg.description && (
+                              <p className={`text-xs italic mb-4
+                                ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                                {pkg.description}
+                              </p>
+                            )}
+                            <button
+                              type="button"
+                              onClick={handleQuoteClick}
+                              className="w-full py-2.5 rounded-xl bg-gold-500
+                                hover:bg-gold-600 text-charcoal-900 text-xs
+                                font-bold transition-all">
+                              Get This Package
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
+                // Fallback: build Basic/Standard/Premium from rates
+                const rates = Object.entries(activeSvc.rates || {});
+                if (rates.length === 0) return (
+                  <p className={`text-sm ${dark
+                    ? 'text-charcoal-400' : 'text-gray-500'}`}>
+                    Contact creator for pricing details.
+                  </p>
+                );
+
+                const sorted = rates.sort(([,a],[,b]) => Number(a) - Number(b));
+                const third = Math.ceil(sorted.length / 3);
+                const tiers = [
+                  {
+                    name: 'Basic',
+                    rates: sorted.slice(0, third),
+                    isStandard: false,
+                  },
+                  {
+                    name: 'Standard',
+                    rates: sorted.slice(third, third * 2),
+                    isStandard: true,
+                  },
+                  {
+                    name: 'Premium',
+                    rates: sorted.slice(third * 2),
+                    isStandard: false,
+                  },
+                ].filter(t => t.rates.length > 0);
+
+                return (
+                  <div className="space-y-4">
+                    {tiers.map((tier) => {
+                      const minPrice = Math.min(
+                        ...tier.rates.map(([,v]) => Number(v))
+                      );
                       return (
-                        <div className="space-y-3">
-                          {pkgList.map((pkg, i) => {
-                            const isHighlight = i === 1;
-                            return (
-                              <div
-                                key={i}
-                                style={{
-                                  border: isHighlight ? '1px solid rgba(212,169,65,0.35)' : dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
-                                  borderLeft: isHighlight ? '3px solid #d4a941' : dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
-                                  background: isHighlight ? 'rgba(212,169,65,0.05)' : dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
-                                  padding: '16px 18px',
-                                  borderRadius: '4px',
-                                }}
-                              >
-                                <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: isHighlight ? '#d4a941' : '#6b6b8a', marginBottom: '4px' }}>
-                                  {TIER_LABELS[i] || 'Package'}
-                                </p>
-                                <p className={`font-bold text-base ${dark ? 'text-white' : 'text-gray-900'}`}>{pkg.name}</p>
-                                <p className="text-gold-400 font-bold mt-1" style={{ fontSize: '26px', lineHeight: 1 }}>
-                                  ${Number(pkg.price).toLocaleString()}
-                                </p>
-                                <div className={`flex flex-wrap gap-3 mt-1.5 text-xs ${textSub}`}>
-                                  {pkg.turnaround_days && <span>{pkg.turnaround_days} day delivery</span>}
-                                  {pkg.revisions && <span>{pkg.revisions} revision{pkg.revisions !== 1 ? 's' : ''} included</span>}
-                                </div>
-                                {pkg.deliverables?.length > 0 && (
-                                  <ul className="mt-3 space-y-1.5">
-                                    {pkg.deliverables.map((d, di) => (
-                                      <li key={di} className={`text-xs flex items-center gap-1.5 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
-                                        <Check size={10} className="text-teal-400 shrink-0" /> {d}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
-                                {pkg.description && (
-                                  <p className={`text-xs mt-2 ${textSub}`}>{pkg.description}</p>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={handleQuoteClick}
-                                  className="mt-4 w-full bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all"
-                                  style={{ padding: '10px', borderRadius: 0, border: 'none', cursor: 'pointer' }}
-                                >
-                                  Get This Package
-                                </button>
-                              </div>
-                            );
-                          })}
+                        <div key={tier.name}
+                          className={`rounded-xl border p-5
+                          ${tier.isStandard
+                            ? 'border-l-2 border-l-gold-500 border-t '
+                              + 'border-r border-b '
+                              + (dark
+                                ? 'border-charcoal-700 bg-gold-500/5'
+                                : 'border-gray-200 bg-gold-50')
+                            : dark
+                              ? 'border-charcoal-700 bg-charcoal-900/40'
+                              : 'border-gray-200 bg-gray-50'
+                          }`}>
+                          {tier.isStandard && (
+                            <p className="text-[10px] font-bold text-gold-400
+                              uppercase tracking-wider mb-1">
+                              Most Popular
+                            </p>
+                          )}
+                          <p className={`text-[10px] font-bold uppercase
+                            tracking-wider mb-1
+                            ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                            {tier.name}
+                          </p>
+                          <p className="font-display text-2xl font-bold
+                            text-gold-400 mb-3">
+                            from ${minPrice.toLocaleString()}
+                          </p>
+                          <ul className="space-y-1.5 mb-4">
+                            {tier.rates.map(([key, val]) => {
+                              const meta = RATES[sid]?.[key];
+                              return (
+                                <li key={key}
+                                  className={`flex items-center justify-between
+                                  gap-4 text-xs
+                                  ${dark
+                                    ? 'text-charcoal-300'
+                                    : 'text-gray-600'}`}>
+                                  <span className="flex items-center gap-1.5">
+                                    <span className="text-teal-400">✓</span>
+                                    {meta?.label || key}
+                                    {meta?.unit && (
+                                      <span className={dark
+                                        ? 'text-charcoal-500'
+                                        : 'text-gray-400'}>
+                                        / {meta.unit}
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className={`font-semibold shrink-0
+                                    ${dark ? 'text-white' : 'text-gray-900'}`}>
+                                    ${Number(val).toLocaleString()}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                          <button
+                            type="button"
+                            onClick={handleQuoteClick}
+                            className="w-full py-2.5 rounded-xl bg-gold-500
+                              hover:bg-gold-600 text-charcoal-900 text-xs
+                              font-bold transition-all">
+                            Get This Package
+                          </button>
                         </div>
                       );
-                    }
-
-                    // Fallback: build Basic/Standard/Premium tiers from rate data
-                    const rates = currentService.rates || {};
-                    const rateEntries = Object.entries(rates);
-                    if (rateEntries.length === 0) return null;
-                    const sorted = rateEntries.sort(([,a],[,b]) => Number(a) - Number(b));
-                    const third = Math.ceil(sorted.length / 3);
-                    const tiers = [
-                      { name: 'Basic',    entries: sorted.slice(0, third),          highlight: false },
-                      { name: 'Standard', entries: sorted.slice(third, third * 2),  highlight: true  },
-                      { name: 'Premium',  entries: sorted.slice(third * 2),          highlight: false },
-                    ].filter(t => t.entries.length > 0);
-                    return (
-                      <div className="space-y-3">
-                        {tiers.map(tier => {
-                          const minPrice = Math.min(...tier.entries.map(([,v]) => Number(v)));
-                          return (
-                            <div
-                              key={tier.name}
-                              style={{
-                                border: tier.highlight ? '1px solid rgba(212,169,65,0.35)' : dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
-                                borderLeft: tier.highlight ? '3px solid #d4a941' : dark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.08)',
-                                background: tier.highlight ? 'rgba(212,169,65,0.05)' : dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
-                                padding: '16px 18px',
-                                borderRadius: '4px',
-                              }}
-                            >
-                              <p style={{ fontSize: '10px', letterSpacing: '1.5px', textTransform: 'uppercase', color: tier.highlight ? '#d4a941' : '#6b6b8a', marginBottom: '4px' }}>
-                                {tier.name}
-                              </p>
-                              <p className="text-gold-400 font-bold mt-1" style={{ fontSize: '26px', lineHeight: 1 }}>
-                                from ${minPrice.toLocaleString()}
-                              </p>
-                              <ul className="mt-3 space-y-1.5">
-                                {tier.entries.map(([key, val]) => {
-                                  const meta = RATES[currentService.serviceId]?.[key];
-                                  return (
-                                    <li key={key} className={`text-xs flex items-center gap-1.5 ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
-                                      <Check size={10} className="text-teal-400 shrink-0" />
-                                      <span className="flex-1">{meta?.label || key}</span>
-                                      <span className={`font-semibold shrink-0 ${dark ? 'text-white' : 'text-gray-900'}`}>${Number(val).toLocaleString()}</span>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                              <button
-                                type="button"
-                                onClick={handleQuoteClick}
-                                className="mt-4 w-full bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold transition-all"
-                                style={{ padding: '10px', borderRadius: 0, border: 'none', cursor: 'pointer' }}
-                              >
-                                Get This Package
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
