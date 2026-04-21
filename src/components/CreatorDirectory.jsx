@@ -199,9 +199,18 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
     portfolio: [],
     contact: { email: '', phone: '', website: '', instagram: '' },
     rating: '', reviewCount: '',
+    yearsExperience: '',
+    usBasedConfirm: false,
+    ageConfirm: false,
+    videoIntroUrl: '',
     insuranceAck: false,
+    lockConfirm: false,
+    reviewNoticeConfirm: false,
   });
   const [step, setStep] = useState(1);
+
+  const TOTAL_STEPS = 5;
+  const BLOCKED_EXPERIENCE = ['Less than 1 year', '1 year'];
 
   const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
   const setLocation = (field, val) => setForm(f => ({ ...f, location: { ...f.location, [field]: val } }));
@@ -258,8 +267,26 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
     : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gold-500';
   const labelCls = `text-xs font-medium ${dark ? 'text-charcoal-400' : 'text-gray-500'} mb-1`;
 
+  // Derived validation state
+  const bioLen = form.bio.length;
+  const expBlocked = BLOCKED_EXPERIENCE.includes(form.yearsExperience);
+  const portfolioMet = form.portfolio.length >= 3;
+  const videoIntroMet = form.videoIntroUrl.trim().length > 0;
+
+  const nextDisabled =
+    (step === 1 && (!form.name || bioLen < 100)) ||
+    (step === 2 && (!form.yearsExperience || expBlocked || !form.usBasedConfirm || !form.ageConfirm)) ||
+    (step === 4 && (!portfolioMet || !videoIntroMet));
+
+  const canPublish =
+    !!(form.name && form.contact.email &&
+    form.yearsExperience && !expBlocked &&
+    form.usBasedConfirm && form.ageConfirm &&
+    videoIntroMet && bioLen >= 100 && portfolioMet &&
+    form.insuranceAck && form.lockConfirm && form.reviewNoticeConfirm);
+
   const handleSubmit = () => {
-    if (!form.name || !form.contact.email) return;
+    if (!canPublish) return;
     const regionKey = zipToRegion(form.location.zip) || 'us-tier2';
     const city = zipToCity(form.location.zip) || form.location.city;
     const listing = {
@@ -300,33 +327,45 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
 
   return (
     <div className="space-y-5">
-      {/* Platform info */}
-      <div className={`rounded-xl border p-3 text-xs ${dark ? 'border-charcoal-600 bg-charcoal-900/40 text-charcoal-400' : 'border-gray-200 bg-gray-50 text-gray-500'}`}>
-        CreatorMatch is a curated platform. Each creator has one profile showcasing their best work.
+      {/* Creator Standards notice box */}
+      <div className="rounded-xl border border-gold-500/40 bg-gold-500/8 p-5 mb-6">
+        <h3 className="font-bold text-gold-400 text-sm mb-2">CreatorMatch Creator Standards</h3>
+        <p className="text-xs text-charcoal-300 leading-relaxed mb-3">
+          CreatorMatch is a verified professional marketplace. Every creator is manually reviewed before their profile goes live. To be approved you must meet ALL of the following requirements:
+        </p>
+        <ul className="text-xs text-charcoal-400 space-y-1">
+          <li>• Based in the US with 2 or more years of paid professional experience</li>
+          <li>• Minimum 3 portfolio samples showing real client work</li>
+          <li>• Complete service packages with real pricing</li>
+          <li>• A 60 to 90 second professional video intro</li>
+          <li>• Stripe identity verification with a government ID</li>
+          <li>• Profile information is locked for 90 days after submission</li>
+        </ul>
       </div>
 
       {/* Step indicator */}
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         {[
           { n: 1, label: 'About You' },
-          { n: 2, label: 'Services & Rates' },
-          { n: 3, label: 'Portfolio' },
-          { n: 4, label: 'Contact' },
+          { n: 2, label: 'Standards' },
+          { n: 3, label: 'Services' },
+          { n: 4, label: 'Portfolio' },
+          { n: 5, label: 'Submit' },
         ].map(({ n, label }) => (
-          <div key={n} className="flex items-center gap-1.5 flex-1">
-            <button type="button" onClick={() => setStep(n)}
-              className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center transition-all ${
+          <div key={n} className="flex items-center gap-1 flex-1">
+            <button type="button" onClick={() => n < step && setStep(n)}
+              className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center transition-all shrink-0 ${
                 n <= step ? 'bg-gold-500 text-charcoal-900' : dark ? 'bg-charcoal-700 text-charcoal-500' : 'bg-gray-200 text-gray-400'
               }`}>{n}</button>
             <span className={`text-[10px] hidden sm:inline ${n === step ? 'text-gold-400 font-medium' : dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
               {label}
             </span>
-            {n < 4 && <div className={`flex-1 h-px ${n < step ? 'bg-gold-500/50' : dark ? 'bg-charcoal-700' : 'bg-gray-200'}`} />}
+            {n < TOTAL_STEPS && <div className={`flex-1 h-px ${n < step ? 'bg-gold-500/50' : dark ? 'bg-charcoal-700' : 'bg-gray-200'}`} />}
           </div>
         ))}
       </div>
 
-      {/* Step 1: About */}
+      {/* Step 1: About You */}
       {step === 1 && (
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -342,10 +381,16 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
             </div>
           </div>
           <div>
-            <p className={labelCls}>Bio *</p>
-            <textarea value={form.bio} onChange={e => set('bio', e.target.value)} rows={3}
+            <p className={labelCls}>Professional Bio *</p>
+            <textarea value={form.bio} onChange={e => set('bio', e.target.value)} rows={4}
               placeholder="Tell clients what you specialize in, your style, and what makes you stand out..."
               className={`w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all resize-none ${inputCls}`} />
+            <p className={`text-xs mt-1 ${bioLen >= 100 ? 'text-teal-400' : dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+              {bioLen} / 100 characters minimum
+            </p>
+            {bioLen > 0 && bioLen < 100 && (
+              <p className="text-xs text-red-400 mt-0.5">Your bio must be at least 100 characters.</p>
+            )}
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
@@ -405,8 +450,58 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
         </div>
       )}
 
-      {/* Step 2: Services & Rates */}
+      {/* Step 2: Professional Standards */}
       {step === 2 && (
+        <div className="space-y-4">
+          <div>
+            <p className={labelCls}>Years of Experience *</p>
+            <select value={form.yearsExperience} onChange={e => set('yearsExperience', e.target.value)}
+              className={`w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`}>
+              <option value="">Select your experience level...</option>
+              <option value="Less than 1 year">Less than 1 year</option>
+              <option value="1 year">1 year</option>
+              <option value="2 years">2 years</option>
+              <option value="3 to 5 years">3 to 5 years</option>
+              <option value="5 to 10 years">5 to 10 years</option>
+              <option value="10+ years">10+ years</option>
+            </select>
+            {expBlocked && (
+              <p className="text-xs text-red-400 mt-1">
+                CreatorMatch requires a minimum of 2 years of paid professional experience.
+              </p>
+            )}
+          </div>
+
+          <div className={`rounded-xl border p-4 space-y-3 ${dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50'}`}>
+            <p className={`text-xs font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>Confirmations Required *</p>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.usBasedConfirm}
+                onChange={e => set('usBasedConfirm', e.target.checked)}
+                className="mt-0.5 accent-gold-500"
+              />
+              <span className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
+                I confirm I am based in the United States
+              </span>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.ageConfirm}
+                onChange={e => set('ageConfirm', e.target.checked)}
+                className="mt-0.5 accent-gold-500"
+              />
+              <span className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
+                I confirm I am 18 years of age or older
+              </span>
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Services & Rates */}
+      {step === 3 && (
         <div className="space-y-4">
           {form.services.map((svc, sIdx) => {
             const serviceDef = SERVICES[svc.serviceId];
@@ -483,11 +578,32 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
         </div>
       )}
 
-      {/* Step 3: Portfolio */}
-      {step === 3 && (
+      {/* Step 4: Portfolio + Video Intro */}
+      {step === 4 && (
         <div className="space-y-3">
+          {/* Video intro URL */}
+          <div>
+            <p className={labelCls}>Professional Video Intro *</p>
+            <input
+              type="url"
+              value={form.videoIntroUrl}
+              onChange={e => set('videoIntroUrl', e.target.value)}
+              placeholder="Paste your 60 to 90 second intro video link (YouTube, Vimeo, or Loom)"
+              className={`w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`}
+            />
+            <p className={`text-xs mt-1 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+              A professional video intro is required. Keep it between 60 and 90 seconds. Introduce yourself, your specialty, and show examples of your work.
+            </p>
+          </div>
+
+          {/* Portfolio items */}
+          <div className="flex items-center justify-between mt-1">
+            <p className={`text-xs font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>
+              Portfolio Samples ({form.portfolio.length}/3 minimum) *
+            </p>
+          </div>
           <p className={`text-xs ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-            Show off your best work. These help clients understand what you can deliver.
+            Show off your best work. Minimum 3 portfolio items required.
           </p>
           {form.portfolio.map((item, i) => (
             <div key={i} className={`rounded-xl border p-3 ${dark ? 'border-charcoal-700 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50'}`}>
@@ -514,11 +630,16 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
             }`}>
             <Plus size={14} /> Add Portfolio Item
           </button>
+          {form.portfolio.length < 3 && (
+            <p className="text-xs text-amber-400 mt-1">
+              Please add at least 3 portfolio samples showing real client work before submitting.
+            </p>
+          )}
         </div>
       )}
 
-      {/* Step 4: Contact */}
-      {step === 4 && (
+      {/* Step 5: Contact + Acknowledgments */}
+      {step === 5 && (
         <div className="space-y-3">
           {[
             { key: 'email',     label: 'Email *',          placeholder: 'hello@yourstudio.com',  type: 'email' },
@@ -545,21 +666,28 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
             </div>
           </div>
 
-          {/* Insurance and liability acknowledgment */}
-          <div className={`rounded-xl border p-3 ${dark ? 'border-amber-500/30 bg-amber-500/8' : 'border-amber-200 bg-amber-50'}`}>
-            <p className={`text-xs font-semibold mb-2 ${dark ? 'text-amber-300' : 'text-amber-700'}`}>Insurance and Liability</p>
-            <p className={`text-xs mb-3 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-              CreatorMatch does not require insurance, but many clients -- especially for on-site work -- will ask about your coverage. We recommend carrying general liability insurance for in-person projects.
+          {/* Insurance and liability */}
+          <div className={`rounded-xl border p-3 space-y-3 ${dark ? 'border-amber-500/30 bg-amber-500/8' : 'border-amber-200 bg-amber-50'}`}>
+            <p className={`text-xs font-semibold ${dark ? 'text-amber-300' : 'text-amber-700'}`}>Acknowledgments Required</p>
+            <p className={`text-xs ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+              CreatorMatch does not require insurance, but many clients -- especially for on-site work -- will ask about your coverage.
             </p>
             <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.insuranceAck}
-                onChange={e => set('insuranceAck', e.target.checked)}
-                className="mt-0.5 accent-gold-500"
-              />
+              <input type="checkbox" checked={form.insuranceAck} onChange={e => set('insuranceAck', e.target.checked)} className="mt-0.5 accent-gold-500" />
               <span className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
                 I understand that CreatorMatch does not verify or require insurance. I am responsible for disclosing my coverage to clients who ask, and I acknowledge I may be required to show proof of insurance before some bookings.
+              </span>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.lockConfirm} onChange={e => set('lockConfirm', e.target.checked)} className="mt-0.5 accent-gold-500" />
+              <span className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
+                I understand that my profile information cannot be changed for 90 days after submission. I have reviewed all details and confirm everything is accurate.
+              </span>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.reviewNoticeConfirm} onChange={e => set('reviewNoticeConfirm', e.target.checked)} className="mt-0.5 accent-gold-500" />
+              <span className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
+                I understand my profile will be reviewed by the CreatorMatch team before going live. I will receive an email with the decision within 3 to 5 business days.
               </span>
             </label>
           </div>
@@ -574,15 +702,15 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
             Back
           </button>
         )}
-        {step < 4 ? (
+        {step < TOTAL_STEPS ? (
           <button type="button" onClick={() => setStep(s => s + 1)}
-            disabled={step === 1 && !form.name}
+            disabled={nextDisabled}
             className="flex-1 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold disabled:opacity-40 transition-all flex items-center justify-center gap-1.5">
             Next <ArrowRight size={12} />
           </button>
         ) : (
           <button type="button" onClick={handleSubmit}
-            disabled={!form.name || !form.contact.email || !form.insuranceAck}
+            disabled={!canPublish}
             className="flex-1 py-2.5 rounded-xl bg-teal-400 hover:bg-teal-500 text-charcoal-900 text-xs font-bold disabled:opacity-40 transition-all">
             Publish My Profile
           </button>
