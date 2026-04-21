@@ -706,7 +706,7 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
   // ── Register mode ──
   if (mode === 'register') {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Hero */}
         <div className="text-center mb-8">
           <h1 className={`font-display text-3xl font-bold mb-2 ${dark ? 'text-white' : 'text-gray-900'}`}>

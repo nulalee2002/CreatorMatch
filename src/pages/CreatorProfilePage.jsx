@@ -168,7 +168,7 @@ export function CreatorProfilePage({ dark }) {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${dark ? 'bg-charcoal-950' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen flex items-center justify-center ${dark ? 'bg-transparent' : 'bg-gray-50'}`}>
         <div className="animate-spin w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full" />
       </div>
     );
@@ -176,7 +176,7 @@ export function CreatorProfilePage({ dark }) {
 
   if (!creator) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center ${dark ? 'bg-charcoal-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className={`min-h-screen flex flex-col items-center justify-center ${dark ? 'bg-transparent text-white' : 'bg-gray-50 text-gray-900'}`}>
         <p className="text-4xl mb-4">😕</p>
         <h2 className="font-display text-xl font-bold mb-2">Creator not found</h2>
         <button type="button" onClick={() => navigate('/')}
@@ -217,16 +217,16 @@ export function CreatorProfilePage({ dark }) {
   const cardCls = `rounded-2xl border ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`;
 
   return (
-    <div className={`min-h-screen ${dark ? 'bg-charcoal-950' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen ${dark ? 'bg-transparent' : 'bg-gray-50'}`}>
       {/* Back button */}
-      <div className="max-w-5xl mx-auto px-4 pt-4">
+      <div className="max-w-7xl mx-auto px-6 pt-4">
         <button type="button" onClick={() => navigate(-1)}
           className={`flex items-center gap-2 text-sm font-medium transition-colors ${dark ? 'text-charcoal-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
           <ArrowLeft size={16} /> Back to directory
         </button>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+      <div className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
 
         {/* ── LEFT COLUMN ── */}
         <div className="space-y-5">

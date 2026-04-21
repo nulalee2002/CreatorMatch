@@ -9,7 +9,7 @@ export const SHOW_DEMO_CREATORS = true;
 // and forces a full re-write when the version is out of date.
 // This is what guarantees the profile-page "Creator not found" bug
 // cannot happen from stale localStorage.
-const SEED_VERSION = 6;
+const SEED_VERSION = 7;
 
 // ── Three demo creators: filmmaker, photographer, podcast producer ─
 export const SEED_CREATORS = [
@@ -59,6 +59,24 @@ export const SEED_CREATORS = [
           corporateProject: 8500,
           musicVideoProject: 6000,
           editHourly:       125,
+        },
+      },
+      {
+        serviceId: 'photography',
+        description: 'Commercial and editorial photography for brands, events, and corporate clients.',
+        rates: {
+          halfDayRate: 800,
+          fullDayRate: 1500,
+          eventRate: 600,
+        },
+      },
+      {
+        serviceId: 'drone',
+        description: 'FAA Part 107 certified aerial cinematography for real estate, events, and film.',
+        rates: {
+          halfDayAerial: 600,
+          fullDayAerial: 1100,
+          realEstatePackage: 350,
         },
       },
     ],
@@ -182,6 +200,23 @@ export const SEED_CREATORS = [
           productPerImage:     120,
         },
       },
+      {
+        serviceId: 'video',
+        description: 'Brand films, corporate videos, and social media content for businesses.',
+        rates: {
+          halfDayShoot: 1200,
+          fullDayShoot: 2200,
+          socialMediaPackage: 800,
+        },
+      },
+      {
+        serviceId: 'drone',
+        description: 'Aerial photography for real estate listings and commercial properties.',
+        rates: {
+          realEstateAerial: 400,
+          commercialAerial: 700,
+        },
+      },
     ],
     portfolio: [
       {
@@ -298,6 +333,24 @@ export const SEED_CREATORS = [
           monthlyRetainer4Eps:  4200,
           recordingSession:      500,
           showNotesClipsPerEp:   125,
+        },
+      },
+      {
+        serviceId: 'video',
+        description: 'Video podcast production including recording, editing, and YouTube optimization.',
+        rates: {
+          episodeEdit: 300,
+          fullProductionPerEp: 1400,
+          monthlyRetainer4Eps: 4200,
+        },
+      },
+      {
+        serviceId: 'social',
+        description: 'Audiogram clips, social media cuts, and podcast promotional content.',
+        rates: {
+          audiogramPerEp: 150,
+          socialPackage5Clips: 600,
+          monthlyContent: 1200,
         },
       },
     ],

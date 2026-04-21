@@ -184,7 +184,7 @@ export function CreatorDashboard({ dark }) {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${dark ? 'bg-charcoal-950' : 'bg-gray-50'}`}>
+      <div className={`min-h-screen flex items-center justify-center ${dark ? 'bg-transparent' : 'bg-gray-50'}`}>
         <div className="animate-spin w-8 h-8 border-2 border-gold-500 border-t-transparent rounded-full" />
       </div>
     );
@@ -192,7 +192,7 @@ export function CreatorDashboard({ dark }) {
 
   if (!user) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${dark ? 'bg-charcoal-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${dark ? 'bg-transparent text-white' : 'bg-gray-50 text-gray-900'}`}>
         <LayoutDashboard size={40} className="text-gold-400" />
         <h2 className="font-display text-xl font-bold">Sign in to access your Dashboard</h2>
         <p className={`text-sm ${textSub}`}>You need to be logged in to manage your creator profile.</p>
@@ -206,7 +206,7 @@ export function CreatorDashboard({ dark }) {
 
   if (!creator) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${dark ? 'bg-charcoal-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className={`min-h-screen flex flex-col items-center justify-center gap-4 ${dark ? 'bg-transparent text-white' : 'bg-gray-50 text-gray-900'}`}>
         <Package size={40} className="text-gold-400" />
         <h2 className="font-display text-xl font-bold">No Listing Found</h2>
         <p className={`text-sm ${textSub} text-center max-w-xs`}>
@@ -234,8 +234,8 @@ export function CreatorDashboard({ dark }) {
   const serviceIds = (creator.services || []).map(s => s.serviceId || s.service_id).filter(Boolean);
 
   return (
-    <div className={`min-h-screen ${dark ? 'bg-charcoal-950' : 'bg-gray-50'}`}>
-      <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className={`min-h-screen ${dark ? 'bg-transparent' : 'bg-gray-50'}`}>
+      <div className="max-w-7xl mx-auto px-6 py-6">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">

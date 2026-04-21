@@ -508,13 +508,13 @@ export function NetworkingPage({ dark, user }) {
     }
   }
 
-  const bg = dark ? 'bg-charcoal-950' : 'bg-gray-50';
+  const bg = dark ? 'bg-transparent' : 'bg-gray-50';
   const cardCls = `rounded-2xl border ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`;
   const textSub = dark ? 'text-charcoal-400' : 'text-gray-500';
 
   return (
     <div className={`min-h-screen ${bg}`}>
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
 
         {/* Page header */}
         <div className="mb-8">
@@ -574,10 +574,10 @@ export function NetworkingPage({ dark, user }) {
             <p className={`text-sm mt-1 ${textSub}`}>Browse posts and join live chat from creators in your area.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* Feed column */}
-            <div className="space-y-4">
+            <div className="space-y-4 lg:col-span-2">
 
               {/* Post composer */}
               <div className={`${cardCls} p-5`}>
@@ -669,7 +669,7 @@ export function NetworkingPage({ dark, user }) {
             </div>
 
             {/* Chat sidebar */}
-            <div className="space-y-4">
+            <div className="space-y-4 lg:col-span-1">
               <div className={`${cardCls} flex flex-col`} style={{ height: '520px' }}>
                 {/* Chat header */}
                 <div className={`p-4 border-b flex items-center gap-2 ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>

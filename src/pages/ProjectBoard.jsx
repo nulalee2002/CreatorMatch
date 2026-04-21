@@ -1054,8 +1054,8 @@ export function ProjectBoard({ dark }) {
   ];
 
   return (
-    <div className={`min-h-screen ${dark ? 'bg-charcoal-950' : 'bg-gray-50'}`}>
-      <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className={`min-h-screen ${dark ? 'bg-transparent' : 'bg-gray-50'}`}>
+      <div className="max-w-7xl mx-auto px-6 py-6">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">

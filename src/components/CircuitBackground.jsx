@@ -12,6 +12,8 @@ export function CircuitBackground() {
     function resize() {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
     }
     resize();
     window.addEventListener('resize', resize);
