@@ -308,6 +308,53 @@ export function CreatorDashboard({ dark }) {
               Your CreatorMatch profile is your professional identity on the platform. Keep it focused and up to date.
             </div>
 
+            {/* 90-day profile lock notice */}
+            {(creator.submitted_at ||
+              ['verified', 'pro_verified', 'pending'].includes(creator.verification_status)) && (
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/8 p-5">
+                <div className="flex items-start gap-3 mb-4">
+                  <span className="text-lg shrink-0">🔒</span>
+                  <div>
+                    <p className="text-sm font-bold text-amber-400 mb-1">Profile Locked for 90 Days</p>
+                    <p className="text-xs text-charcoal-400 leading-relaxed">
+                      Your profile information is locked for 90 days from your submission date. This protects the integrity of creator profiles on CreatorMatch. If you need to make a correction, email support at Nulalee2002@gmail.com with the subject line "Profile Correction Request".
+                    </p>
+                  </div>
+                </div>
+                {/* Read-only profile summary */}
+                <div className={`rounded-xl border p-4 ${dark ? 'bg-charcoal-900/60 border-charcoal-700' : 'bg-white border-gray-200'}`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-wider mb-3 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>Submitted Profile Summary</p>
+                  <div className="space-y-0">
+                    {[
+                      { label: 'Business Name', value: creator.businessName || creator.business_name || creator.name || '—' },
+                      {
+                        label: 'Primary Niche',
+                        value: (() => {
+                          const svcId = creator.services?.[0]?.serviceId || creator.services?.[0]?.service_id;
+                          return SERVICES[svcId]?.name || svcId || '—';
+                        })(),
+                      },
+                      {
+                        label: 'Bio',
+                        value: creator.bio
+                          ? creator.bio.length > 120 ? creator.bio.slice(0, 120) + '…' : creator.bio
+                          : '—',
+                      },
+                      ...(creator.video_intro_url || creator.videoIntroUrl
+                        ? [{ label: 'Video Intro', value: creator.video_intro_url || creator.videoIntroUrl }]
+                        : []),
+                      { label: 'Portfolio Items', value: `${creator.portfolio?.length || 0} item${(creator.portfolio?.length || 0) !== 1 ? 's' : ''}` },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="flex items-start justify-between gap-4 py-2 border-b border-charcoal-800 last:border-0">
+                        <span className="text-xs text-charcoal-500 shrink-0 w-32">{label}</span>
+                        <span className="text-xs text-charcoal-300 text-right break-all">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Stats grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard icon={Eye}          label="Profile Views"   value={viewCount || '-'}  sub="All time"              color="text-teal-400"   dark={dark} />
