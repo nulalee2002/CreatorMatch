@@ -41,6 +41,38 @@ function loadFavCount(creatorId) {
   } catch { return 0; }
 }
 
+// ── Creator fee tiers ────────────────────────────────────────────
+const CREATOR_TIERS = [
+  {
+    id: 'launch', label: 'Launch', icon: '🚀',
+    color: 'text-charcoal-400', borderColor: 'border-charcoal-600', bgColor: 'bg-charcoal-800',
+    feePercent: 10, requirement: 0, description: 'New creators. 10% platform fee.',
+  },
+  {
+    id: 'proven', label: 'Proven', icon: '⭐',
+    color: 'text-teal-400', borderColor: 'border-teal-500/50', bgColor: 'bg-teal-500/10',
+    feePercent: 8, requirement: 10, description: '10+ completed projects. Fee drops to 8%.',
+  },
+  {
+    id: 'elite', label: 'Elite', icon: '💎',
+    color: 'text-gold-400', borderColor: 'border-gold-500/50', bgColor: 'bg-gold-500/10',
+    feePercent: 6, requirement: 25, description: '25+ completed projects. Fee drops to 6%.',
+  },
+  {
+    id: 'signature', label: 'Signature', icon: '👑',
+    color: 'text-violet-400', borderColor: 'border-violet-500/50', bgColor: 'bg-violet-500/10',
+    feePercent: 5, requirement: 50, description: '50+ completed projects. Top tier, 5% fee.',
+  },
+];
+
+function getCreatorTier(completedProjects) {
+  const count = completedProjects || 0;
+  if (count >= 50) return CREATOR_TIERS[3];
+  if (count >= 25) return CREATOR_TIERS[2];
+  if (count >= 10) return CREATOR_TIERS[1];
+  return CREATOR_TIERS[0];
+}
+
 // ── Stat Card ───────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, sub, color = 'text-gold-400', dark }) {
   return (
@@ -354,6 +386,50 @@ export function CreatorDashboard({ dark }) {
                 </div>
               </div>
             )}
+
+            {/* Creator fee tier badge */}
+            {(() => {
+              const completedCount = creator.completedProjects || creator.completed_projects || 0;
+              const currentTier = getCreatorTier(completedCount);
+              const nextTier = CREATOR_TIERS[CREATOR_TIERS.indexOf(currentTier) + 1] || null;
+              const progressToNext = nextTier
+                ? Math.min((completedCount / nextTier.requirement) * 100, 100)
+                : 100;
+              return (
+                <div className={`rounded-xl border p-5 ${currentTier.bgColor} ${currentTier.borderColor}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{currentTier.icon}</span>
+                      <div>
+                        <p className={`text-sm font-bold ${currentTier.color}`}>{currentTier.label} Creator</p>
+                        <p className="text-xs text-charcoal-400">{currentTier.description}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-lg font-bold ${currentTier.color}`}>{currentTier.feePercent}%</p>
+                      <p className="text-xs text-charcoal-500">platform fee</p>
+                    </div>
+                  </div>
+                  {nextTier && (
+                    <div>
+                      <div className="flex justify-between text-xs text-charcoal-500 mb-1">
+                        <span>{completedCount} projects completed</span>
+                        <span>{nextTier.requirement - completedCount} more to reach {nextTier.label}</span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-charcoal-700">
+                        <div
+                          className={`h-1.5 rounded-full transition-all ${currentTier.color.replace('text-', 'bg-')}`}
+                          style={{ width: `${progressToNext}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {!nextTier && (
+                    <p className="text-xs text-charcoal-400">You have reached the highest creator tier.</p>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Stats grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
