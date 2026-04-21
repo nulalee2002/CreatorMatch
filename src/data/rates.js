@@ -204,6 +204,9 @@ export const RATES = {
       'ca-tier1': r(175, 650), 'ca-tier2': r(120, 400), 'ca-tier3': r(90, 310),
       'uk-tier1': r(150, 600), 'uk-tier2': r(100, 350), 'eu-west': r(120, 500),
     },
+    episodeEdit: { label: 'Per Episode Edit', unit: 'episode' },
+    showLaunchPackage: { label: 'Show Launch Package', unit: 'package' },
+    remoteRecordingPerEp: { label: 'Remote Recording Per Episode', unit: 'episode' },
   },
 
   // ─── DRONE / AERIAL ──────────────────────────────────────────
@@ -394,6 +397,15 @@ export const RATES = {
     },
   },
 
+  // ─── CORPORATE EVENTS ────────────────────────────────────────
+  corporate_events: {
+    halfDayRate: { label: 'Half-Day Rate (4 hrs)', unit: 'half-day' },
+    fullDayRate: { label: 'Full-Day Rate (8 hrs)', unit: 'day' },
+    conferenceDay: { label: 'Conference Day Rate', unit: 'day' },
+    executivePortraits: { label: 'Executive Portraits Session', unit: 'session' },
+    tradeShowDay: { label: 'Trade Show Day Rate', unit: 'day' },
+  },
+
   // ─── LIVE EVENTS ─────────────────────────────────────────────
   liveevents: {
     halfDayEvent: {
@@ -514,6 +526,28 @@ export const SERVICES = {
     description: 'Conferences, concerts, festivals, multi-day events, live streaming',
     primaryRates: ['halfDayEvent', 'fullDayEvent', 'photographyEvent'],
     packageRates: ['multiDayEvent', 'streamingSetup', 'highlightEdit'],
+  },
+  corporate_events: {
+    id: 'corporate_events',
+    name: 'Corporate Events',
+    icon: '🏢',
+    color: 'from-amber-600 to-amber-800',
+    accent: '#d97706',
+    subtypes: ['Conference Coverage', 'Product Launch', 'Award Ceremony', 'Trade Show', 'Company Retreat', 'Executive Portraits at Events', 'Investor Presentation', 'Town Hall / All-Hands', 'Other'],
+    description: 'Conference coverage, product launches, award ceremonies, trade shows, and executive events',
+    primaryRates: ['halfDayRate', 'fullDayRate', 'conferenceDay'],
+    packageRates: ['executivePortraits', 'tradeShowDay'],
+  },
+  podcast: {
+    id: 'podcast',
+    name: 'Podcast Production',
+    icon: '🎙️',
+    color: 'from-violet-600 to-violet-800',
+    accent: '#7c3aed',
+    subtypes: ['Audio Only', 'Video Podcast', 'Remote Recording', 'In-Studio Recording', 'Show Launch Package', 'Monthly Retainer', 'Other'],
+    description: 'Audio and video podcast production, remote and in-studio recording, show launches',
+    primaryRates: ['episodeEdit', 'fullProductionPerEp', 'remoteRecordingPerEp'],
+    packageRates: ['monthlyRetainer4Eps', 'showLaunchPackage'],
   },
 };
 

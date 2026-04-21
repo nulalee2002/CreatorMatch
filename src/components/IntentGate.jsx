@@ -11,6 +11,8 @@ const SERVICE_TYPES = [
   'Social Media Content',
   'Post-Production',
   'Live Event Coverage',
+  'Corporate Events',
+  'Podcast Production',
 ];
 
 const PROJECT_SUBTYPES = {
@@ -20,6 +22,8 @@ const PROJECT_SUBTYPES = {
   'Social Media Content':   ['Reels/TikTok', 'YouTube', 'Brand Campaign', 'UGC', 'Behind the Scenes', 'Other'],
   'Post-Production':        ['Video Editing', 'Color Grading', 'Audio Mixing', 'Motion Graphics', 'Podcast Editing', 'Other'],
   'Live Event Coverage':    ['Concert/Music', 'Sports', 'Corporate Event', 'Conference', 'Festival', 'Birthday/Celebration', 'Wedding Reception', 'Other'],
+  'Corporate Events':       ['Conference Coverage', 'Product Launch', 'Award Ceremony', 'Trade Show', 'Company Retreat', 'Executive Portraits at Events', 'Investor Presentation', 'Town Hall / All-Hands', 'Other'],
+  'Podcast Production':     ['Audio Only', 'Video Podcast', 'Remote Recording', 'In-Studio Recording', 'Show Launch Package', 'Monthly Retainer', 'Other'],
 };
 
 const TIME_OPTIONS = [
