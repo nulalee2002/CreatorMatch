@@ -283,6 +283,16 @@ export default function App() {
   // Capture referral code from URL on first load
   useEffect(() => { captureReferralCode(); }, []);
 
+  // Listen for open-auth custom event dispatched by guest gate / banners
+  useEffect(() => {
+    function handleOpenAuth(e) {
+      setAuthTab(e.detail?.tab || 'signup');
+      setShowAuth(true);
+    }
+    window.addEventListener('open-auth', handleOpenAuth);
+    return () => window.removeEventListener('open-auth', handleOpenAuth);
+  }, []);
+
   function openAuth(tab = 'login') { setAuthTab(tab); setShowAuth(true); }
 
   const quote = useMemo(() => buildQuote(state), [state]);

@@ -24,8 +24,42 @@ function saveListings(list) {
   localStorage.setItem('creator-directory', JSON.stringify(list));
 }
 
+function getRotatingPreviewCreators(allCreators) {
+  const today = new Date().toISOString().split('T')[0];
+  const seed = today.split('-').reduce((acc, val) => acc + parseInt(val), 0);
+
+  const verified = allCreators.filter(c =>
+    c.verified ||
+    c.verification_status === 'verified' ||
+    c.verification_status === 'pro_verified' ||
+    c.id?.startsWith('seed-')
+  );
+
+  const byNiche = {};
+  verified.forEach(c => {
+    const niche = c.services?.[0]?.serviceId || c.services?.[0]?.service_id || 'video';
+    if (!byNiche[niche]) byNiche[niche] = [];
+    byNiche[niche].push(c);
+  });
+
+  const niches = Object.keys(byNiche);
+  if (niches.length === 0) return verified.slice(0, 3);
+
+  const startIndex = seed % niches.length;
+  const todayNiches = [
+    niches[startIndex % niches.length],
+    niches[(startIndex + 1) % niches.length],
+    niches[(startIndex + 2) % niches.length],
+  ].filter(Boolean);
+
+  return todayNiches.map(niche => {
+    const group = byNiche[niche] || [];
+    return group[seed % Math.max(group.length, 1)];
+  }).filter(Boolean).slice(0, 3);
+}
+
 // ── Creator Profile Card ─────────────────────────────────────
-function CreatorCard({ creator, dark, onDelete }) {
+function CreatorCard({ creator, dark, onDelete, onViewProfile }) {
   const navigate = useNavigate();
 
   const [isFav, setIsFav] = useState(() => {
@@ -126,7 +160,7 @@ function CreatorCard({ creator, dark, onDelete }) {
           </div>
           <button
             type="button"
-            onClick={() => navigate(`/creator/${creator.id}`)}
+            onClick={onViewProfile ?? (() => navigate(`/creator/${creator.id}`))}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-600 text-charcoal-900 font-bold transition-all"
           >
             <ExternalLink size={11} /> View Profile
@@ -568,6 +602,9 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
   const [zip, setZip] = useState('');
   const [sortBy, setSortBy] = useState('rating');
   const [showFilters, setShowFilters] = useState(false);
+  const [showGuestGate, setShowGuestGate] = useState(false);
+
+  const isGuest = !user;
 
   const budgetNum = parseFloat(budget) || 0;
   const zipRegion = zip.length >= 3 ? zipToRegion(zip) : null;
@@ -679,6 +716,8 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
 
     return list;
   }, [listings, serviceFilter, searchQuery, budgetNum, zipRegion, sortBy]);
+
+  const displayListings = isGuest ? getRotatingPreviewCreators(listings) : filtered;
 
   // 5D. New creator spotlight — recently verified with no bookings, rotated weekly
   const spotlightCreators = useMemo(() => getNewCreatorSpotlight(listings, 3), [listings]);
@@ -882,71 +921,90 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
           <FastMatch dark={dark} />
         </div>
 
-        {/* 4. Search bar */}
-        <div
-          id="creator-search"
-          className={`flex overflow-hidden mb-3 shadow-sm ${dark ? 'bg-charcoal-800' : 'bg-white'}`}
-          style={{ border: dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.12)' }}
-        >
-          <div className="relative flex-1 flex items-center">
-            <Search size={16} className={`absolute left-4 pointer-events-none ${dark ? 'text-charcoal-400' : 'text-gray-400'}`} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by name, service, location, or specialty..."
-              className={`w-full pl-11 pr-4 py-3 text-sm bg-transparent outline-none ${dark ? 'text-white placeholder-charcoal-500' : 'text-gray-900 placeholder-gray-400'}`}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowFilters(f => !f)}
-            className={`px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-              showFilters
-                ? 'bg-gold-500 text-charcoal-900'
-                : dark ? 'text-charcoal-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
-            }`}
-            style={{ borderLeft: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}
-          >
-            <Filter size={12} /> Filters
-          </button>
-        </div>
-
-        {showFilters && (
-          <div className={`mb-3 p-4 ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`} style={{ border: '1px solid', borderColor: dark ? '#2a2a45' : '#e5e7eb' }}>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <p className={`text-xs font-medium mb-1 ${textSub}`}>Budget</p>
-                <div className="relative flex items-center">
-                  <span className={`absolute left-3 text-sm pointer-events-none ${dark ? 'text-charcoal-400' : 'text-gray-400'}`}>$</span>
-                  <input type="number" min={0} value={budget} onChange={e => setBudget(e.target.value)}
-                    placeholder="e.g. 500"
-                    className={`w-full pl-7 pr-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`} />
-                </div>
-              </div>
-              <div>
-                <p className={`text-xs font-medium mb-1 ${textSub}`}>Your ZIP Code</p>
-                <div className="relative flex items-center">
-                  <MapPin size={14} className={`absolute left-3 pointer-events-none ${dark ? 'text-charcoal-400' : 'text-gray-400'}`} />
-                  <input type="text" maxLength={5} value={zip} onChange={e => setZip(e.target.value.replace(/\D/g,''))}
-                    placeholder="e.g. 90210"
-                    className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`} />
-                </div>
-                {zipCity && <p className="text-[10px] text-teal-400 mt-1">{zipCity}</p>}
-              </div>
-              <div>
-                <p className={`text-xs font-medium mb-1 ${textSub}`}>Sort By</p>
-                <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-                  className={`w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`}>
-                  <option value="rating">Top Rated</option>
-                  <option value="reviews">Most Reviews</option>
-                  <option value="match">Best Budget Match</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                </select>
-              </div>
+        {/* 4. Search bar (logged-in only) / Guest banner */}
+        {isGuest ? (
+          <div className="rounded-xl border border-gold-500/40 bg-gold-500/8 p-4 mb-4 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-sm font-bold text-gold-400 mb-1">Browsing as a guest</p>
+              <p className="text-xs text-charcoal-400">
+                You are seeing 3 verified creators today. These rotate daily. Create a free account to browse all creators, view full profiles, packages, and rates.
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-auth', { detail: { tab: 'signup' } }))}
+              className="shrink-0 px-4 py-2 bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-xs font-bold rounded-xl transition-all">
+              Create Free Account
+            </button>
           </div>
+        ) : (
+          <>
+            <div
+              id="creator-search"
+              className={`flex overflow-hidden mb-3 shadow-sm ${dark ? 'bg-charcoal-800' : 'bg-white'}`}
+              style={{ border: dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.12)' }}
+            >
+              <div className="relative flex-1 flex items-center">
+                <Search size={16} className={`absolute left-4 pointer-events-none ${dark ? 'text-charcoal-400' : 'text-gray-400'}`} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search by name, service, location, or specialty..."
+                  className={`w-full pl-11 pr-4 py-3 text-sm bg-transparent outline-none ${dark ? 'text-white placeholder-charcoal-500' : 'text-gray-900 placeholder-gray-400'}`}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFilters(f => !f)}
+                className={`px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                  showFilters
+                    ? 'bg-gold-500 text-charcoal-900'
+                    : dark ? 'text-charcoal-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                }`}
+                style={{ borderLeft: dark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}
+              >
+                <Filter size={12} /> Filters
+              </button>
+            </div>
+
+            {showFilters && (
+              <div className={`mb-3 p-4 ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`} style={{ border: '1px solid', borderColor: dark ? '#2a2a45' : '#e5e7eb' }}>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <p className={`text-xs font-medium mb-1 ${textSub}`}>Budget</p>
+                    <div className="relative flex items-center">
+                      <span className={`absolute left-3 text-sm pointer-events-none ${dark ? 'text-charcoal-400' : 'text-gray-400'}`}>$</span>
+                      <input type="number" min={0} value={budget} onChange={e => setBudget(e.target.value)}
+                        placeholder="e.g. 500"
+                        className={`w-full pl-7 pr-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`} />
+                    </div>
+                  </div>
+                  <div>
+                    <p className={`text-xs font-medium mb-1 ${textSub}`}>Your ZIP Code</p>
+                    <div className="relative flex items-center">
+                      <MapPin size={14} className={`absolute left-3 pointer-events-none ${dark ? 'text-charcoal-400' : 'text-gray-400'}`} />
+                      <input type="text" maxLength={5} value={zip} onChange={e => setZip(e.target.value.replace(/\D/g,''))}
+                        placeholder="e.g. 90210"
+                        className={`w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`} />
+                    </div>
+                    {zipCity && <p className="text-[10px] text-teal-400 mt-1">{zipCity}</p>}
+                  </div>
+                  <div>
+                    <p className={`text-xs font-medium mb-1 ${textSub}`}>Sort By</p>
+                    <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+                      className={`w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`}>
+                      <option value="rating">Top Rated</option>
+                      <option value="reviews">Most Reviews</option>
+                      <option value="match">Best Budget Match</option>
+                      <option value="price_asc">Price: Low to High</option>
+                      <option value="price_desc">Price: High to Low</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* 5. Spotlight */}
@@ -967,24 +1025,27 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
           </div>
         )}
 
-        {/* Results count */}
-        <div className="flex items-center justify-between mt-2 mb-3">
-          <p className={`text-xs ${textSub}`}>
-            {filtered.length} creator{filtered.length !== 1 ? 's' : ''} found
-            {budgetNum > 0 && ` matching ~$${budgetNum.toLocaleString()} budget`}
-            {zipCity && ` near ${zipCity}`}
-          </p>
-        </div>
+        {/* Results count (logged-in only) */}
+        {!isGuest && (
+          <div className="flex items-center justify-between mt-2 mb-3">
+            <p className={`text-xs ${textSub}`}>
+              {filtered.length} creator{filtered.length !== 1 ? 's' : ''} found
+              {budgetNum > 0 && ` matching ~$${budgetNum.toLocaleString()} budget`}
+              {zipCity && ` near ${zipCity}`}
+            </p>
+          </div>
+        )}
 
         {/* 6. Creator cards grid */}
-        {filtered.length > 0 ? (
+        {displayListings.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            {filtered.map(creator => (
+            {displayListings.map(creator => (
               <CreatorCard
                 key={creator.id}
                 creator={creator}
                 dark={dark}
-                onDelete={!creator.id.startsWith('seed-') ? () => handleDelete(creator.id) : undefined}
+                onViewProfile={isGuest ? () => setShowGuestGate(true) : undefined}
+                onDelete={!isGuest && !creator.id?.startsWith('seed-') ? () => handleDelete(creator.id) : undefined}
               />
             ))}
           </div>
@@ -1022,6 +1083,40 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
         </div>
 
       </div>
+
+      {/* Guest gate modal */}
+      {showGuestGate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowGuestGate(false)} />
+          <div className="relative w-full max-w-md rounded-2xl border border-charcoal-700 bg-charcoal-900 p-8 text-center shadow-2xl">
+            <div className="w-14 h-14 rounded-full bg-gold-500/15 flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🎬</span>
+            </div>
+            <h2 className="font-display font-bold text-xl text-white mb-2">
+              Join CreatorMatch to continue
+            </h2>
+            <p className="text-sm text-charcoal-400 mb-6 leading-relaxed">
+              CreatorMatch is a verified professional marketplace. Create a free account to view full creator profiles, packages, rates, and submit project requests. It takes less than 2 minutes.
+            </p>
+            <button type="button"
+              onClick={() => {
+                setShowGuestGate(false);
+                window.dispatchEvent(new CustomEvent('open-auth', { detail: { tab: 'signup' } }));
+              }}
+              className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 font-bold text-sm mb-3 transition-all">
+              Create Free Account
+            </button>
+            <button type="button"
+              onClick={() => {
+                setShowGuestGate(false);
+                window.dispatchEvent(new CustomEvent('open-auth', { detail: { tab: 'login' } }));
+              }}
+              className="text-sm text-charcoal-400 hover:text-white transition-colors">
+              Already have an account? Sign in
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 8. Two-column bottom: fee table + value props */}
       <div
