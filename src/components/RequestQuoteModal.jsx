@@ -66,6 +66,19 @@ const VENUE_TYPES = ['Indoor', 'Outdoor', 'Studio', 'Remote/Virtual'];
 
 const today = new Date().toISOString().split('T')[0];
 
+// ── Client reputation ────────────────────────────────────────
+const CLIENT_REPUTATION_LEVELS = [
+  { min: 90, max: 100, label: 'Excellent Client', color: 'text-teal-400',  bg: 'bg-teal-500/15',  border: 'border-teal-500/40'  },
+  { min: 75, max: 89,  label: 'Good Client',      color: 'text-green-400', bg: 'bg-green-500/15', border: 'border-green-500/40' },
+  { min: 60, max: 74,  label: 'New Client',        color: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/40' },
+  { min: 0,  max: 59,  label: 'Review History',    color: 'text-red-400',   bg: 'bg-red-500/15',   border: 'border-red-500/40'   },
+];
+
+function getClientReputation(score) {
+  const s = typeof score === 'number' ? score : 100;
+  return CLIENT_REPUTATION_LEVELS.find(l => s >= l.min && s <= l.max) || CLIENT_REPUTATION_LEVELS[0];
+}
+
 // ── Main component ───────────────────────────────────────────
 
 export function RequestQuoteModal({ creator, dark, onClose, initialDate = '' }) {
@@ -95,6 +108,30 @@ export function RequestQuoteModal({ creator, dark, onClose, initialDate = '' }) 
   const [submitted, setSubmitted] = useState(false);
   const [quoteHp, setQuoteHp]   = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
+
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => localStorage.getItem('cm-client-onboarded') !== 'true'
+  );
+  const [onboardingAnswers, setOnboardingAnswers] = useState({
+    projectType: '', contentType: '', budget: '', source: '',
+  });
+
+  const onboardingComplete = !!(
+    onboardingAnswers.projectType && onboardingAnswers.contentType &&
+    onboardingAnswers.budget && onboardingAnswers.source
+  );
+
+  function handleOnboardingContinue() {
+    localStorage.setItem('cm-client-onboarding-answers', JSON.stringify(onboardingAnswers));
+    localStorage.setItem('cm-client-onboarded', 'true');
+    setShowOnboarding(false);
+  }
+
+  const repScore = (() => {
+    const v = parseInt(localStorage.getItem('cm-client-reputation-score') ?? '100', 10);
+    return isNaN(v) ? 100 : v;
+  })();
+  const rep = getClientReputation(repScore);
 
   const set = (k, v) => {
     setForm(f => {
@@ -270,6 +307,12 @@ export function RequestQuoteModal({ creator, dark, onClose, initialDate = '' }) 
             <h3 className={`font-display font-bold text-lg ${dark ? 'text-white' : 'text-gray-900'}`}>
               Request a Quote
             </h3>
+            {!showOnboarding && (
+              <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold mt-1 ${rep.bg} ${rep.border} ${rep.color}`}>
+                {rep.label === 'Review History' && <span>🚩</span>}
+                {rep.label}
+              </div>
+            )}
           </div>
           <button type="button" onClick={onClose}
             className={`p-1.5 rounded-lg transition-colors ${dark ? 'text-charcoal-400 hover:text-white hover:bg-charcoal-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}>
@@ -277,8 +320,76 @@ export function RequestQuoteModal({ creator, dark, onClose, initialDate = '' }) 
           </button>
         </div>
 
-        {/* Scrollable form */}
+        {/* Scrollable body */}
         <div id="quote-modal-scroll" className="flex-1 overflow-y-auto px-6 py-5">
+
+          {/* ── Onboarding screen ── */}
+          {showOnboarding && (
+            <div className="space-y-5">
+              <div className={`rounded-xl border px-4 py-3 text-xs leading-relaxed ${dark ? 'border-charcoal-700 bg-charcoal-800/60 text-charcoal-300' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+                Welcome to CreatorMatch. You are joining a professional marketplace where every creator is verified and vetted. To maintain quality for both sides, we ask a few quick questions before you start browsing. This takes about 2 minutes.
+              </div>
+
+              {/* Q1 */}
+              <div>
+                <label className={labelCls}>What type of project are you hiring for? *</label>
+                <select
+                  value={onboardingAnswers.projectType}
+                  onChange={e => setOnboardingAnswers(a => ({ ...a, projectType: e.target.value }))}
+                  className={selectCls('')}>
+                  <option value="">Select...</option>
+                  {['Video Production','Photography','Drone and Aerial','Social Media Content','Post-Production','Live Events','Corporate Events','Podcast Production','Not sure yet'].map(o => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Q2 */}
+              <div>
+                <label className={labelCls}>What best describes your content needs? *</label>
+                <select
+                  value={onboardingAnswers.contentType}
+                  onChange={e => setOnboardingAnswers(a => ({ ...a, contentType: e.target.value }))}
+                  className={selectCls('')}>
+                  <option value="">Select...</option>
+                  {['Commercial and Advertising','Wedding and Events','Real Estate','Social Media Content','Brand Films','Podcast','Live Events','Personal Projects','Other'].map(o => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Q3 */}
+              <div>
+                <label className={labelCls}>What is your typical project budget? *</label>
+                <select
+                  value={onboardingAnswers.budget}
+                  onChange={e => setOnboardingAnswers(a => ({ ...a, budget: e.target.value }))}
+                  className={selectCls('')}>
+                  <option value="">Select...</option>
+                  {['Under $500','$500 to $2,000','$2,000 to $5,000','$5,000 to $10,000','$10,000+'].map(o => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Q4 */}
+              <div>
+                <label className={labelCls}>How did you hear about CreatorMatch? *</label>
+                <select
+                  value={onboardingAnswers.source}
+                  onChange={e => setOnboardingAnswers(a => ({ ...a, source: e.target.value }))}
+                  className={selectCls('')}>
+                  <option value="">Select...</option>
+                  {['Google search','Instagram','TikTok','Referral from a creator','Referral from a friend','LinkedIn','Other'].map(o => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* ── Quote form ── */}
+          {!showOnboarding && (
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
 
             {/* 1. Project Title */}
@@ -504,28 +615,46 @@ export function RequestQuoteModal({ creator, dark, onClose, initialDate = '' }) 
             style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
           />
           </form>
+          )}
         </div>
 
         {/* Footer */}
         <div className={`px-6 py-4 border-t shrink-0 ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
-          <TurnstileWidget
-            dark={dark}
-            onVerify={token => setTurnstileToken(token)}
-            onExpire={() => setTurnstileToken('')}
-          />
-          {errors._turnstile && (
-            <p className="text-xs text-red-400 mt-1 mb-2">{errors._turnstile}</p>
+          {showOnboarding ? (
+            <>
+              <button
+                type="button"
+                onClick={handleOnboardingContinue}
+                disabled={!onboardingComplete}
+                className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 disabled:opacity-40 disabled:cursor-not-allowed text-charcoal-900 text-sm font-bold transition-all">
+                Continue
+              </button>
+              <p className={`text-center text-[10px] mt-2 ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
+                Answer all 4 questions to continue.
+              </p>
+            </>
+          ) : (
+            <>
+              <TurnstileWidget
+                dark={dark}
+                onVerify={token => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken('')}
+              />
+              {errors._turnstile && (
+                <p className="text-xs text-red-400 mt-1 mb-2">{errors._turnstile}</p>
+              )}
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 disabled:opacity-50 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2 mt-2">
+                <Send size={14} /> {loading ? 'Submitting...' : 'Submit Quote Request'}
+              </button>
+              <p className={`text-center text-[10px] mt-2 ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
+                No payment required to request a quote. The creator will review your brief and respond.
+              </p>
+            </>
           )}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-600 disabled:opacity-50 text-charcoal-900 text-sm font-bold transition-all flex items-center justify-center gap-2 mt-2">
-            <Send size={14} /> {loading ? 'Submitting...' : 'Submit Quote Request'}
-          </button>
-          <p className={`text-center text-[10px] mt-2 ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
-            No payment required to request a quote. The creator will review your brief and respond.
-          </p>
         </div>
       </div>
     </div>
