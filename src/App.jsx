@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useMemo, useState, useCallback } from 'react';
+import { useReducer, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { formatCurrency } from './utils/pricing.js';
 import { Moon, Sun, Zap, RotateCcw, Search, UserPlus, LogIn, LogOut, User, MessageSquare, Briefcase, LayoutDashboard, Users } from 'lucide-react';
@@ -245,11 +245,14 @@ export default function App() {
   const [dark, setDark] = useState(() => {
     try { return JSON.parse(localStorage.getItem('creator-calc-dark') ?? 'true'); } catch { return true; }
   });
-  const [showAuth, setShowAuth]   = useState(false);
-  const [authTab, setAuthTab]     = useState('login');
-  const [quickMode, setQuickMode] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showAuth, setShowAuth]             = useState(false);
+  const [authTab, setAuthTab]               = useState('login');
+  const [authRole, setAuthRole]             = useState('client');
+  const [quickMode, setQuickMode]           = useState(false);
+  const [showTerms, setShowTerms]           = useState(false);
+  const [showPrivacy, setShowPrivacy]       = useState(false);
+  const [showJoinDropdown, setShowJoinDropdown] = useState(false);
+  const joinDropdownRef = useRef(null);
   const [calcLocation, setCalcLocation] = useState(null); // { state, city, regionKey }
   const [profile, setProfile] = useState(() => {
     try { return JSON.parse(localStorage.getItem('creator-calc-profile') || '{}'); } catch { return {}; }
@@ -282,6 +285,19 @@ export default function App() {
 
   // Capture referral code from URL on first load
   useEffect(() => { captureReferralCode(); }, []);
+
+  // Close Join dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (joinDropdownRef.current && !joinDropdownRef.current.contains(e.target)) {
+        setShowJoinDropdown(false);
+      }
+    }
+    if (showJoinDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showJoinDropdown]);
 
   // Listen for open-auth custom event dispatched by guest gate / banners
   useEffect(() => {
@@ -341,7 +357,6 @@ export default function App() {
               { path: '/',           id: 'directory',  icon: Search,   label: 'Find Creators' },
               { path: '/projects',   id: 'projects',   icon: Briefcase, label: 'Projects' },
               { path: '/network',    id: 'network',    icon: Users,     label: 'Network' },
-              { path: '/register',   id: 'register',   icon: UserPlus, label: 'Join' },
               { path: '/calculator', id: 'calculator', icon: Zap,      label: 'Rate Calculator' },
             ].map(({ path, id, icon: Icon, label }) => (
               <button key={id} type="button" onClick={() => navigate(path)}
@@ -354,6 +369,53 @@ export default function App() {
                 <Icon size={12} /> <span className="hidden sm:inline">{label}</span>
               </button>
             ))}
+          </div>
+
+          {/* Join dropdown */}
+          <div className="relative" ref={joinDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setShowJoinDropdown(d => !d)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors rounded-xl border ${
+                activeTab === 'register' || showJoinDropdown
+                  ? 'bg-gold-500 text-charcoal-900 border-gold-500'
+                  : dark ? 'border-charcoal-600 text-charcoal-300 hover:text-white hover:border-charcoal-500' : 'border-gray-200 text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <UserPlus size={12} /> <span className="hidden sm:inline">Join</span>
+            </button>
+            {showJoinDropdown && (
+              <div className={`absolute right-0 top-full mt-2 w-56 rounded-xl border shadow-xl z-50 overflow-hidden ${
+                dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => { navigate('/register'); setShowJoinDropdown(false); }}
+                  className={`w-full flex flex-col items-start gap-0.5 px-4 py-3 transition-colors text-left ${
+                    dark ? 'hover:bg-charcoal-800' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <span className={`text-xs font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>I am a Creator</span>
+                  <span className={`text-[11px] ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>List your services and get hired</span>
+                </button>
+                <div className={`border-t ${dark ? 'border-charcoal-700' : 'border-gray-100'}`} />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthTab('signup');
+                    setAuthRole('client');
+                    setShowAuth(true);
+                    setShowJoinDropdown(false);
+                  }}
+                  className={`w-full flex flex-col items-start gap-0.5 px-4 py-3 transition-colors text-left ${
+                    dark ? 'hover:bg-charcoal-800' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <span className={`text-xs font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>I am a Client</span>
+                  <span className={`text-[11px] ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>Find and hire verified creators</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Calculator tools (only when on calculator tab) */}
@@ -729,7 +791,14 @@ export default function App() {
 
       {/* Auth modal */}
       {showAuth && (
-        <AuthModal dark={dark} defaultTab={authTab} onClose={() => setShowAuth(false)} onOpenTerms={() => { setShowAuth(false); setShowTerms(true); }} />
+        <AuthModal
+          dark={dark}
+          defaultTab={authTab}
+          defaultRole={authRole}
+          onClose={() => setShowAuth(false)}
+          onOpenTerms={() => { setShowAuth(false); setShowTerms(true); }}
+          onOpenCreatorRegistration={() => { setShowAuth(false); navigate('/register'); }}
+        />
       )}
 
       {/* Terms modal */}

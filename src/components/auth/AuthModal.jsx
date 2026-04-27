@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import { supabase, supabaseConfigured } from '../../lib/supabase.js';
 import { TurnstileWidget, turnstileConfigured } from '../TurnstileWidget.jsx';
 
-export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = 'client', onOpenTerms }) {
+export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = 'client', onOpenTerms, onOpenCreatorRegistration }) {
   const { signIn, signUp, signInWithGoogle } = useAuth();
   const [tab, setTab]           = useState(defaultTab); // 'login' | 'signup'
   const [role, setRole]         = useState(defaultRole); // 'creator' | 'client'
@@ -186,6 +186,26 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
             </div>
           )}
 
+          {/* Creator signup — redirect to full 5-step registration form */}
+          {tab === 'signup' && role === 'creator' ? (
+            <div className="space-y-4 py-2">
+              <div className={`rounded-xl border p-5 text-center ${dark ? 'border-gold-500/30 bg-gold-500/5' : 'border-gold-200 bg-gold-50'}`}>
+                <div className="text-2xl mb-3">🎬</div>
+                <p className={`text-sm font-bold mb-2 ${dark ? 'text-white' : 'text-gray-900'}`}>
+                  To join as a creator, please use our full application form.
+                </p>
+                <p className={`text-xs mb-4 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
+                  Creator registration requires a 5-step application to verify your experience and credentials.
+                </p>
+                <button type="button"
+                  onClick={() => { onOpenCreatorRegistration?.(); onClose?.(); }}
+                  className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold transition-all">
+                  Open Creator Application
+                </button>
+              </div>
+            </div>
+          ) : (
+          <>
           {/* SMS code entry screen */}
           {smsStep ? (
             <form onSubmit={handleVerifyCode} className="space-y-4">
@@ -333,6 +353,8 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
               {tab === 'login' ? 'Sign up free' : 'Sign in'}
             </button>
           </p>
+          </>
+          )}
           </>
           )}
         </div>

@@ -191,6 +191,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
   }, [user?.id]);
 
   const [serviceLimit, setServiceLimit] = useState('');
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [form, setForm] = useState({
     name: '', businessName: '', bio: '', experience: 'mid',
     avatar: '', tags: '',
@@ -206,6 +207,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
     insuranceAck: false,
     lockConfirm: false,
     reviewNoticeConfirm: false,
+    tosAccepted: false,
   });
   const [step, setStep] = useState(1);
 
@@ -283,7 +285,8 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
     form.yearsExperience && !expBlocked &&
     form.usBasedConfirm && form.ageConfirm &&
     videoIntroMet && bioLen >= 100 && portfolioMet &&
-    form.insuranceAck && form.lockConfirm && form.reviewNoticeConfirm);
+    form.insuranceAck && form.lockConfirm && form.reviewNoticeConfirm &&
+    form.tosAccepted);
 
   const handleSubmit = () => {
     if (!canPublish) return;
@@ -690,6 +693,18 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
                 I understand my profile will be reviewed by the CreatorMatch team before going live. I will receive an email with the decision within 3 to 5 business days.
               </span>
             </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.tosAccepted} onChange={e => set('tosAccepted', e.target.checked)} className="mt-0.5 accent-gold-500" />
+              <span className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
+                I have read and agree to the{' '}
+                <button type="button"
+                  onClick={e => { e.preventDefault(); setShowTermsModal(true); }}
+                  className="text-gold-400 hover:text-gold-300 underline font-medium">
+                  Terms of Service
+                </button>
+                {' '}and platform policies.
+              </span>
+            </label>
           </div>
         </div>
       )}
@@ -716,6 +731,70 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
           </button>
         )}
       </div>
+
+      {/* Inline Terms of Service modal */}
+      {showTermsModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowTermsModal(false)} />
+          <div className={`relative w-full max-w-lg max-h-[80vh] flex flex-col rounded-2xl border shadow-2xl ${
+            dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200'
+          }`}>
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${dark ? 'border-charcoal-700' : 'border-gray-200'} shrink-0`}>
+              <h2 className={`font-display font-bold text-lg ${dark ? 'text-white' : 'text-gray-900'}`}>
+                CreatorMatch Terms of Service
+              </h2>
+              <button type="button" onClick={() => setShowTermsModal(false)}
+                className={`p-2 rounded-xl transition-colors ${dark ? 'text-charcoal-400 hover:text-white hover:bg-charcoal-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+              {[
+                {
+                  title: 'Section 1 — Platform Use',
+                  body: 'CreatorMatch is a US-only professional marketplace connecting verified media creators with clients. By creating an account you agree to use the platform lawfully and professionally.',
+                },
+                {
+                  title: 'Section 2 — Creator Standards',
+                  body: 'Creators must have a minimum of 2 years paid professional experience, maintain accurate profile information, deliver work as agreed, and communicate professionally with clients at all times.',
+                },
+                {
+                  title: 'Section 3 — Payments',
+                  body: 'All payments are processed through Stripe. Clients pay a 50% retainer upfront. The remaining 50% releases upon delivery approval or automatically after 72 hours. CreatorMatch charges creators a platform fee starting at 10%, dropping as you complete more projects.',
+                },
+                {
+                  title: 'Section 4 — Cancellations',
+                  body: 'If a client cancels before work begins, the creator keeps 25% as a cancellation fee. If a client cancels after work starts, the creator keeps the full 50% retainer. No refunds after delivery.',
+                },
+                {
+                  title: 'Section 5 — Conduct',
+                  body: 'Users must not share contact information to work off-platform, post fake reviews, harass other users, or attempt to bypass platform fees. Violations result in account suspension.',
+                },
+                {
+                  title: 'Section 6 — Profile Lock',
+                  body: 'Creator profile information is locked for 90 days after submission to protect platform integrity.',
+                },
+                {
+                  title: 'Section 7 — Disputes',
+                  body: 'Clients have 72 hours after delivery to open a dispute. After 72 hours with no action, payment releases automatically.',
+                },
+              ].map(({ title, body }) => (
+                <div key={title}>
+                  <h3 className={`text-sm font-bold mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
+                  <p className={`text-xs leading-relaxed ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>{body}</p>
+                </div>
+              ))}
+            </div>
+            <div className={`flex items-center justify-end px-6 py-4 border-t ${dark ? 'border-charcoal-700' : 'border-gray-200'} shrink-0`}>
+              <button type="button"
+                onClick={() => setShowTermsModal(false)}
+                className="px-5 py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-900 text-sm font-bold transition-all">
+                I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
