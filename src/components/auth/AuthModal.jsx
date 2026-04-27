@@ -148,7 +148,7 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
           <div className="text-center mb-6">
             <span className="text-3xl">🎬</span>
             <h2 className={`font-display font-bold text-xl mt-1 ${dark ? 'text-white' : 'text-gray-900'}`}>
-              Creator<span className="text-gradient-gold">Match</span>
+              Creator<span className="text-gradient-gold">Bridge</span>
             </h2>
           </div>
 

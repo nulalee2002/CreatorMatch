@@ -345,7 +345,7 @@ export default function App() {
           <div className="flex items-center gap-2 shrink-0 cursor-pointer" onClick={() => navigate('/')}>
             <span className="text-xl">🎬</span>
             <span className={`font-display font-bold text-base hidden sm:block ${textMain}`}>
-              Creator<span className="text-gradient-gold">Match</span>
+              Creator<span className="text-gradient-gold">Bridge</span>
             </span>
           </div>
 

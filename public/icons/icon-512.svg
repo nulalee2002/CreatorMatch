@@ -5,7 +5,7 @@
   <rect x="0" y="0" width="512" height="512" rx="100" fill="url(#grid)" opacity="0.05"/>
   <!-- Gold accent bar at bottom -->
   <rect x="0" y="468" width="512" height="44" rx="0" fill="#d4a941" opacity="0.6"/>
-  <!-- "CM" monogram -->
+  <!-- "CB" monogram -->
   <text
     x="256"
     y="320"
@@ -16,8 +16,8 @@
     text-anchor="middle"
     dominant-baseline="auto"
     letter-spacing="-10"
-  >CM</text>
-  <!-- CreatorMatch wordmark below -->
+  >CB</text>
+  <!-- CreatorBridge wordmark below -->
   <text
     x="256"
     y="430"
@@ -29,5 +29,5 @@
     dominant-baseline="auto"
     letter-spacing="6"
     opacity="0.7"
-  >CREATORMATCH</text>
+  >CREATORBRIDGE</text>
 </svg>
