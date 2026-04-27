@@ -1,4 +1,4 @@
-const CACHE_NAME = 'creatormatch-v1';
+const CACHE_NAME = 'creatorbridge-v1';
 
 const APP_SHELL = [
   '/',

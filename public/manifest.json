@@ -1,6 +1,6 @@
 {
-  "name": "CreatorMatch",
-  "short_name": "CreatorMatch",
+  "name": "CreatorBridge",
+  "short_name": "CreatorBridge",
   "description": "Connecting content creators with brands and clients seeking media production and digital content services.",
   "start_url": "/",
   "scope": "/",

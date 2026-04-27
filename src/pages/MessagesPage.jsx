@@ -459,7 +459,7 @@ export function MessagesPage({ dark }) {
                       <div className="flex items-start gap-2 mb-2 px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30">
                         <AlertTriangle size={13} className="text-amber-400 mt-0.5 shrink-0" />
                         <p className="text-xs text-amber-300 leading-snug">
-                          For your protection, contact information cannot be shared in messages. All bookings and payments are handled securely through CreatorMatch.
+                          For your protection, contact information cannot be shared in messages. All bookings and payments are handled securely through CreatorBridge.
                         </p>
                       </div>
                     )}

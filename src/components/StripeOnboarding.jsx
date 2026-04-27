@@ -54,7 +54,7 @@ export function StripeOnboarding({ creator, dark, onStatusChange }) {
       const all = JSON.parse(localStorage.getItem('creator-directory') || '[]');
       const conflict = all.find(c => c.stripe_account_id === stripeAccountId && c.id !== creator.id);
       if (conflict) {
-        setError('This payment account is already connected to another CreatorMatch profile. Each creator can only have one active profile.');
+        setError('This payment account is already connected to another CreatorBridge profile. Each creator can only have one active profile.');
         return false;
       }
     } catch {}
@@ -67,7 +67,7 @@ export function StripeOnboarding({ creator, dark, onStatusChange }) {
         .neq('id', creator.id)
         .limit(1);
       if (data?.length > 0) {
-        setError('This payment account is already connected to another CreatorMatch profile. Each creator can only have one active profile.');
+        setError('This payment account is already connected to another CreatorBridge profile. Each creator can only have one active profile.');
         return false;
       }
     }
@@ -192,7 +192,7 @@ export function StripeOnboarding({ creator, dark, onStatusChange }) {
             Get paid for your work
           </h3>
           <p className={`text-sm mt-1 leading-relaxed ${textSub}`}>
-            Connect your payment account to start receiving bookings. Clients pay through CreatorMatch,
+            Connect your payment account to start receiving bookings. Clients pay through CreatorBridge,
             and funds are released to you when you deliver.
           </p>
         </div>

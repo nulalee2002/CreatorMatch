@@ -337,7 +337,7 @@ export function CreatorDashboard({ dark }) {
           <div className="space-y-5">
             {/* Profile identity message */}
             <div className={`rounded-xl border px-4 py-3 text-sm ${dark ? 'border-charcoal-700 bg-charcoal-800/60 text-charcoal-300' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
-              Your CreatorMatch profile is your professional identity on the platform. Keep it focused and up to date.
+              Your CreatorBridge profile is your professional identity on the platform. Keep it focused and up to date.
             </div>
 
             {/* 90-day profile lock notice */}
@@ -349,7 +349,7 @@ export function CreatorDashboard({ dark }) {
                   <div>
                     <p className="text-sm font-bold text-amber-400 mb-1">Profile Locked for 90 Days</p>
                     <p className="text-xs text-charcoal-400 leading-relaxed">
-                      Your profile information is locked for 90 days from your submission date. This protects the integrity of creator profiles on CreatorMatch. If you need to make a correction, email support at Nulalee2002@gmail.com with the subject line "Profile Correction Request".
+                      Your profile information is locked for 90 days from your submission date. This protects the integrity of creator profiles on CreatorBridge. If you need to make a correction, email support at drl33@creatorbridge.studio with the subject line "Profile Correction Request".
                     </p>
                   </div>
                 </div>

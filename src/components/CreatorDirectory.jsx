@@ -235,7 +235,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
   const addService = () => {
     setForm(f => {
       if (f.services.length >= 3) {
-        setServiceLimit('CreatorMatch encourages creators to focus on their strongest services. You can list a maximum of 3 service specialties. This helps clients find the right creator faster and helps you stand out in your strongest areas.');
+        setServiceLimit('CreatorBridge encourages creators to focus on their strongest services. You can list a maximum of 3 service specialties. This helps clients find the right creator faster and helps you stand out in your strongest areas.');
         return f;
       }
       return {
@@ -315,7 +315,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
       <div className={`rounded-2xl border p-6 text-center space-y-4 ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`}>
         <AlertCircle size={36} className="text-gold-400 mx-auto" />
         <h3 className={`font-display font-bold text-lg ${dark ? 'text-white' : 'text-gray-900'}`}>
-          You already have a CreatorMatch profile.
+          You already have a CreatorBridge profile.
         </h3>
         <p className={`text-sm ${dark ? 'text-charcoal-300' : 'text-gray-600'}`}>
           Each creator can only have one profile on the platform. Click below to edit your existing profile.
@@ -332,9 +332,9 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
     <div className="space-y-5">
       {/* Creator Standards notice box */}
       <div className="rounded-xl border border-gold-500/40 bg-gold-500/8 p-5 mb-6">
-        <h3 className="font-bold text-gold-400 text-sm mb-2">CreatorMatch Creator Standards</h3>
+        <h3 className="font-bold text-gold-400 text-sm mb-2">CreatorBridge Creator Standards</h3>
         <p className="text-xs text-charcoal-300 leading-relaxed mb-3">
-          CreatorMatch is a verified professional marketplace. Every creator is manually reviewed before their profile goes live. To be approved you must meet ALL of the following requirements:
+          CreatorBridge is a verified professional marketplace. Every creator is manually reviewed before their profile goes live. To be approved you must meet ALL of the following requirements:
         </p>
         <ul className="text-xs text-charcoal-400 space-y-1">
           <li>• Based in the US with 2 or more years of paid professional experience</li>
@@ -470,7 +470,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
             </select>
             {expBlocked && (
               <p className="text-xs text-red-400 mt-1">
-                CreatorMatch requires a minimum of 2 years of paid professional experience.
+                CreatorBridge requires a minimum of 2 years of paid professional experience.
               </p>
             )}
           </div>
@@ -673,12 +673,12 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
           <div className={`rounded-xl border p-3 space-y-3 ${dark ? 'border-amber-500/30 bg-amber-500/8' : 'border-amber-200 bg-amber-50'}`}>
             <p className={`text-xs font-semibold ${dark ? 'text-amber-300' : 'text-amber-700'}`}>Acknowledgments Required</p>
             <p className={`text-xs ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-              CreatorMatch does not require insurance, but many clients -- especially for on-site work -- will ask about your coverage.
+              CreatorBridge does not require insurance, but many clients -- especially for on-site work -- will ask about your coverage.
             </p>
             <label className="flex items-start gap-2 cursor-pointer">
               <input type="checkbox" checked={form.insuranceAck} onChange={e => set('insuranceAck', e.target.checked)} className="mt-0.5 accent-gold-500" />
               <span className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
-                I understand that CreatorMatch does not verify or require insurance. I am responsible for disclosing my coverage to clients who ask, and I acknowledge I may be required to show proof of insurance before some bookings.
+                I understand that CreatorBridge does not verify or require insurance. I am responsible for disclosing my coverage to clients who ask, and I acknowledge I may be required to show proof of insurance before some bookings.
               </span>
             </label>
             <label className="flex items-start gap-2 cursor-pointer">
@@ -690,7 +690,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
             <label className="flex items-start gap-2 cursor-pointer">
               <input type="checkbox" checked={form.reviewNoticeConfirm} onChange={e => set('reviewNoticeConfirm', e.target.checked)} className="mt-0.5 accent-gold-500" />
               <span className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
-                I understand my profile will be reviewed by the CreatorMatch team before going live. I will receive an email with the decision within 3 to 5 business days.
+                I understand my profile will be reviewed by the CreatorBridge team before going live. I will receive an email with the decision within 3 to 5 business days.
               </span>
             </label>
             <label className="flex items-start gap-2 cursor-pointer">
@@ -741,7 +741,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
           }`}>
             <div className={`flex items-center justify-between px-6 py-4 border-b ${dark ? 'border-charcoal-700' : 'border-gray-200'} shrink-0`}>
               <h2 className={`font-display font-bold text-lg ${dark ? 'text-white' : 'text-gray-900'}`}>
-                CreatorMatch Terms of Service
+                CreatorBridge Terms of Service
               </h2>
               <button type="button" onClick={() => setShowTermsModal(false)}
                 className={`p-2 rounded-xl transition-colors ${dark ? 'text-charcoal-400 hover:text-white hover:bg-charcoal-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}>
@@ -752,7 +752,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
               {[
                 {
                   title: 'Section 1 — Platform Use',
-                  body: 'CreatorMatch is a US-only professional marketplace connecting verified media creators with clients. By creating an account you agree to use the platform lawfully and professionally.',
+                  body: 'CreatorBridge is a US-only professional marketplace connecting verified media creators with clients. By creating an account you agree to use the platform lawfully and professionally.',
                 },
                 {
                   title: 'Section 2 — Creator Standards',
@@ -760,7 +760,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
                 },
                 {
                   title: 'Section 3 — Payments',
-                  body: 'All payments are processed through Stripe. Clients pay a 50% retainer upfront. The remaining 50% releases upon delivery approval or automatically after 72 hours. CreatorMatch charges creators a platform fee starting at 10%, dropping as you complete more projects.',
+                  body: 'All payments are processed through Stripe. Clients pay a 50% retainer upfront. The remaining 50% releases upon delivery approval or automatically after 72 hours. CreatorBridge charges creators a platform fee starting at 10%, dropping as you complete more projects.',
                 },
                 {
                   title: 'Section 4 — Cancellations',
@@ -956,7 +956,7 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
         {/* Hero */}
         <div className="text-center mb-8">
           <h1 className={`font-display text-3xl font-bold mb-2 ${dark ? 'text-white' : 'text-gray-900'}`}>
-            Join <span className="text-gradient-gold">CreatorMatch</span>
+            Join <span className="text-gradient-gold">CreatorBridge</span>
           </h1>
           <p className={`text-sm ${textSub} max-w-lg mx-auto`}>
             List your services, set your rates, and let clients find you. Creators from all over the world are signing up.
@@ -1064,7 +1064,7 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
               <em className="text-gold-400">brands and clients.</em>
             </h1>
             <p className={`mb-8 ${textSub}`} style={{ fontSize: '14px', maxWidth: '420px', lineHeight: '1.7' }}>
-              CreatorMatch connects videographers, photographers, podcast producers, drone operators, and digital content specialists with brands and clients who need their work.
+              CreatorBridge connects videographers, photographers, podcast producers, drone operators, and digital content specialists with brands and clients who need their work.
             </p>
             <div className="flex gap-3 flex-wrap">
               <button
@@ -1300,10 +1300,10 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
               <span className="text-2xl">🎬</span>
             </div>
             <h2 className="font-display font-bold text-xl text-white mb-2">
-              Join CreatorMatch to continue
+              Join CreatorBridge to continue
             </h2>
             <p className="text-sm text-charcoal-400 mb-6 leading-relaxed">
-              CreatorMatch is a verified professional marketplace. Create a free account to view full creator profiles, packages, rates, and submit project requests. It takes less than 2 minutes.
+              CreatorBridge is a verified professional marketplace. Create a free account to view full creator profiles, packages, rates, and submit project requests. It takes less than 2 minutes.
             </p>
             <button type="button"
               onClick={() => {
@@ -1348,7 +1348,7 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
                 <tr>
                   {[
                     { label: 'Feature',       gold: false },
-                    { label: 'CreatorMatch',  gold: true  },
+                    { label: 'CreatorBridge',  gold: true  },
                     { label: 'Fiverr',        gold: false },
                     { label: 'Upwork',        gold: false },
                     { label: 'Thumbtack',     gold: false },

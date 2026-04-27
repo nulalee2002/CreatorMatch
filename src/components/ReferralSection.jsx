@@ -10,7 +10,7 @@ function getReferralCode(userId) {
 }
 
 function getReferralLink(userId) {
-  return `https://creatormatch.studio/join?ref=${getReferralCode(userId)}`;
+  return `https://creatorbridge.studio/join?ref=${getReferralCode(userId)}`;
 }
 
 function loadReferralStats(userId) {

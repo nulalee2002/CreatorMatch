@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader, ChevronDown } from 'lucide-react';
 
 // ── Platform knowledge system prompt ─────────────────────────────
-const SYSTEM_PROMPT = `You are the CreatorMatch support assistant. You have complete knowledge of how CreatorMatch works and answer questions confidently without redirecting to email unless it is a specific account issue.
+const SYSTEM_PROMPT = `You are the CreatorBridge support assistant. You have complete knowledge of how CreatorBridge works and answer questions confidently without redirecting to email unless it is a specific account issue.
 
 FORMATTING RULES:
 - Never use markdown like **bold** or asterisk bullets
@@ -11,10 +11,10 @@ FORMATTING RULES:
 - Never start a response with the word I
 
 PLATFORM OVERVIEW:
-CreatorMatch is a US-only marketplace connecting videographers, photographers, drone operators, podcast producers, social media creators, and corporate event specialists with brands and clients. US-only at launch, expanding to Canada then Europe later.
+CreatorBridge is a US-only marketplace connecting videographers, photographers, drone operators, podcast producers, social media creators, and corporate event specialists with brands and clients. US-only at launch, expanding to Canada then Europe later.
 
 CREATOR STANDARDS:
-Every creator on CreatorMatch is manually reviewed and approved before going live. Requirements include 2 or more years of paid professional experience, minimum 3 portfolio samples, complete service packages with real pricing, a 60 to 90 second video intro, Stripe identity verification, and a US bank account. Profile information is locked for 90 days after submission.
+Every creator on CreatorBridge is manually reviewed and approved before going live. Requirements include 2 or more years of paid professional experience, minimum 3 portfolio samples, complete service packages with real pricing, a 60 to 90 second video intro, Stripe identity verification, and a US bank account. Profile information is locked for 90 days after submission.
 
 FEES:
 Creators pay 10 percent platform fee. Fee drops to 8 percent after 10 completed projects and 6 percent after 25 projects. Clients pay a 5 percent booking fee. No subscriptions, no monthly fees, no pay to apply.
@@ -29,13 +29,13 @@ DELIVERY AND REVISIONS:
 Creators deliver via link (Google Drive, Dropbox, Vimeo, WeTransfer, Frame.io) or direct upload. Files stored for 7 days then deleted. Creators keep their own copy for 6 months. 2 free revisions included on every project. Third revision requires a paid add-on.
 
 DISPUTES:
-Clients have 72 hours after delivery to open a dispute. After 72 hours with no action payment auto-releases and disputes cannot be opened. Valid dispute reasons: work does not match the agreed brief, significantly fewer deliverables than agreed, technical quality makes work unusable, creator abandoned the project. Not valid: client changed their mind after delivery, wanting more than the 2 included revisions, minor style preferences. For urgent disputes email Nulalee2002@gmail.com with URGENT in the subject line.
+Clients have 72 hours after delivery to open a dispute. After 72 hours with no action payment auto-releases and disputes cannot be opened. Valid dispute reasons: work does not match the agreed brief, significantly fewer deliverables than agreed, technical quality makes work unusable, creator abandoned the project. Not valid: client changed their mind after delivery, wanting more than the 2 included revisions, minor style preferences. For urgent disputes email drl33@creatorbridge.studio with URGENT in the subject line.
 
 CREATOR TIERS:
 Launch is for new creators with no requirements. Proven requires 10 or more completed projects with good ratings. Elite requires 25 or more completed projects and high ratings. Signature is the top tier for exceptional track records. Higher tiers rank higher in search results and build more client trust.
 
 VERIFICATION:
-Creators go through a 4-step verification process including phone SMS verification, Stripe identity verification with a government ID, portfolio review, and manual approval by the CreatorMatch team. All creators visible on the platform are verified.
+Creators go through a 4-step verification process including phone SMS verification, Stripe identity verification with a government ID, portfolio review, and manual approval by the CreatorBridge team. All creators visible on the platform are verified.
 
 REFERRAL PROGRAM:
 Every creator and client has a unique referral link in their dashboard. Creator refers Creator: fee drops from 10 percent to 7 percent on their next project. Client refers Client: 5 percent booking fee waived on their next project. Creator refers Client: counts as one bonus completed project toward tier progression. Anyone who joins through a referral link gets their first booking fee waived. Rewards trigger only after a real paid transaction is completed.
@@ -56,7 +56,7 @@ GEOGRAPHIC AVAILABILITY:
 US only currently. Expanding to Canada next then Europe.
 
 SUPPORT:
-For account-specific issues, billing problems, or disputes needing human review email Nulalee2002@gmail.com. For urgent payment disputes mark subject line URGENT. Response within 24 hours.`;
+For account-specific issues, billing problems, or disputes needing human review email drl33@creatorbridge.studio. For urgent payment disputes mark subject line URGENT. Response within 24 hours.`;
 
 const ANTHROPIC_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
@@ -95,8 +95,8 @@ async function sendToAnthropic(messages) {
 function getDemoResponse(question) {
   const q = question.toLowerCase();
 
-  if (q.includes('how does this platform work') || q.includes('how does creatormatch work') || (q.includes('how does') && q.includes('work'))) {
-    return 'CreatorMatch connects clients with verified media creators. Clients post a project brief and get matched with 3 to 5 curated creators based on their budget, location, and needs. You pay a 50% retainer to get started, and the remaining 50% is released when you approve the final delivery. Creators keep 90% of every project.';
+  if (q.includes('how does this platform work') || q.includes('how does creatorbridge work') || (q.includes('how does') && q.includes('work'))) {
+    return 'CreatorBridge connects clients with verified media creators. Clients post a project brief and get matched with 3 to 5 curated creators based on their budget, location, and needs. You pay a 50% retainer to get started, and the remaining 50% is released when you approve the final delivery. Creators keep 90% of every project.';
   }
   if (q.includes('fee') || q.includes('cost') || q.includes('price') || q.includes('how much')) {
     return 'Creators pay a 10% platform fee that drops to 8% after 10 completed projects and 6% after 25. Clients pay a 5% booking fee. No subscriptions, no lead fees, no pay to apply.';
@@ -108,7 +108,7 @@ function getDemoResponse(question) {
     return 'Clients pay a 50% retainer upfront to secure the booking. The remaining 50% is released when the client approves the final delivery. If the client does not respond within 72 hours of delivery, payment releases automatically.';
   }
   if (q.includes('not happy') || q.includes('unhappy') || q.includes('not satisfied') || q.includes('dispute')) {
-    return 'Clients have 72 hours after delivery to request a revision (2 free revisions included) or open a dispute. Disputes freeze the payment and are reviewed by the CreatorMatch team to reach a fair resolution.';
+    return 'Clients have 72 hours after delivery to request a revision (2 free revisions included) or open a dispute. Disputes freeze the payment and are reviewed by the CreatorBridge team to reach a fair resolution.';
   }
   if (q.includes('cancel') || q.includes('refund')) {
     return 'If a client cancels before work begins, the creator keeps 25% as a cancellation fee and the client gets 75% back. If work has already started, the creator keeps the full 50% retainer.';
@@ -120,16 +120,16 @@ function getDemoResponse(question) {
     return 'Creators complete a 4-step verification process including connecting a Stripe payment account for identity verification, adding portfolio links, and linking a social media profile. Verified creators rank higher in search results.';
   }
   if (q.includes('insurance')) {
-    return 'CreatorMatch does not verify creator insurance. For on-site projects, confirm coverage directly with your creator before booking.';
+    return 'CreatorBridge does not verify creator insurance. For on-site projects, confirm coverage directly with your creator before booking.';
   }
-  return 'Great question. I can help with questions about fees, payments, how matching works, verification, cancellations, and getting started on CreatorMatch. Try asking me about any of those topics, or email Nulalee2002@gmail.com for account-specific help.';
+  return 'Great question. I can help with questions about fees, payments, how matching works, verification, cancellations, and getting started on CreatorBridge. Try asking me about any of those topics, or email drl33@creatorbridge.studio for account-specific help.';
 }
 
 // ── Main component ───────────────────────────────────────────────
 export function SupportChatbot({ dark = true }) {
   const [open, setOpen]         = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hi! I am the CreatorMatch support assistant. Ask me anything about how the platform works.' },
+    { role: 'assistant', content: 'Hi! I am the CreatorBridge support assistant. Ask me anything about how the platform works.' },
   ]);
   const [input, setInput]   = useState('');
   const [loading, setLoading] = useState(false);
@@ -164,7 +164,7 @@ export function SupportChatbot({ dark = true }) {
       const reply = await sendToAnthropic(apiMessages);
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
     } catch (e) {
-      setError('Could not reach support. Try emailing Nulalee2002@gmail.com');
+      setError('Could not reach support. Try emailing drl33@creatorbridge.studio');
     } finally {
       setLoading(false);
     }
@@ -195,7 +195,7 @@ export function SupportChatbot({ dark = true }) {
                 <MessageCircle size={13} className="text-charcoal-900" />
               </div>
               <div>
-                <p className={`text-xs font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>CreatorMatch Support</p>
+                <p className={`text-xs font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>CreatorBridge Support</p>
                 <p className={`text-[10px] ${textSub}`}>Powered by AI - usually instant</p>
               </div>
             </div>

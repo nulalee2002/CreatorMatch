@@ -194,7 +194,7 @@ export async function generateQuotePDF(quote, state, profile) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(...colors.midGray);
-  doc.text('Generated with CreatorMatch Rate Calculator', margin, footerY);
+  doc.text('Generated with CreatorBridge Rate Calculator', margin, footerY);
   doc.text(`Page 1`, W - margin, footerY, { align: 'right' });
 
   // ── Save ───────────────────────────────────────────────────

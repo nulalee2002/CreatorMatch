@@ -125,7 +125,7 @@ export function CancellationModal({ project, dark, onClose, onConfirm }) {
           <div className={`flex items-start gap-2 p-3 rounded-xl mb-5 ${dark ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200'}`}>
             <AlertTriangle size={13} className="text-amber-400 mt-0.5 shrink-0" />
             <p className={`text-xs leading-snug ${dark ? 'text-amber-300' : 'text-amber-700'}`}>
-              Cancellations are final. Repeated cancellations may affect your account standing on CreatorMatch.
+              Cancellations are final. Repeated cancellations may affect your account standing on CreatorBridge.
             </p>
           </div>
 

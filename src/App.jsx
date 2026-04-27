@@ -767,7 +767,7 @@ export default function App() {
         <footer className={`mt-12 border-t ${dark ? 'border-charcoal-800' : 'border-gray-200'} py-6`}>
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className={`text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
-              CreatorMatch - connecting content creators with brands and clients seeking media production and digital content services
+              CreatorBridge - connecting content creators with brands and clients seeking media production and digital content services
             </p>
             <div className={`flex items-center gap-4 text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
               <button type="button" onClick={() => setShowTerms(true)}
@@ -780,8 +780,8 @@ export default function App() {
                 Privacy
               </button>
               <span className={dark ? 'text-charcoal-700' : 'text-gray-300'}>|</span>
-              <a href="mailto:Nulalee2002@gmail.com" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
-                {/* TODO: Update to support@creatormatch.studio once domain email is active */}
+              <a href="mailto:drl33@creatorbridge.studio" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                {/* TODO: Update to support@creatorbridge.studio once domain email is active */}
                 Support
               </a>
             </div>

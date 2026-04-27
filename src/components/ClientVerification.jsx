@@ -254,7 +254,7 @@ export function ClientVerification({ user, dark, onComplete, requireLevel = 'bas
             <span className={`text-xs ${textSub}`}>
               I agree to the{' '}
               <a href="/terms" target="_blank" className="text-gold-400 hover:text-gold-300 underline">
-                CreatorMatch Terms of Service
+                CreatorBridge Terms of Service
               </a>{' '}
               and Platform Policies.
             </span>
@@ -271,7 +271,7 @@ export function ClientVerification({ user, dark, onComplete, requireLevel = 'bas
       <div className={`mt-3 flex items-start gap-2 p-3 rounded-xl border ${dark ? 'border-amber-500/30 bg-amber-500/8' : 'border-amber-200 bg-amber-50'}`}>
         <AlertCircle size={13} className="text-amber-400 shrink-0 mt-0.5" />
         <p className={`text-[11px] leading-relaxed ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
-          CreatorMatch does not verify creator insurance. For on-site projects, confirm insurance coverage directly with your creator before booking.
+          CreatorBridge does not verify creator insurance. For on-site projects, confirm insurance coverage directly with your creator before booking.
         </p>
       </div>
     </div>

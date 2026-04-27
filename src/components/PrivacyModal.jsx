@@ -42,14 +42,14 @@ export function PrivacyModal({ dark, onClose }) {
                 1. What Data We Collect
               </h2>
               <p>
-                CreatorMatch collects only the information necessary to operate the marketplace. We collect:
+                CreatorBridge collects only the information necessary to operate the marketplace. We collect:
               </p>
               <ul className="list-disc list-inside space-y-1 ml-2 mt-2">
                 <li>Account registration information: your name, email address, and phone number</li>
                 <li>Profile content you provide: bio, photos, portfolio items, service descriptions, and rates</li>
                 <li>Identity verification data processed by Stripe (government ID for creators receiving payments)</li>
                 <li>Project and payment records: booking details, transaction amounts, and project status history</li>
-                <li>Messages sent through the CreatorMatch platform messaging system</li>
+                <li>Messages sent through the CreatorBridge platform messaging system</li>
                 <li>Usage data: pages visited, features used, and session timestamps for platform improvement</li>
                 <li>Device and browser information for security monitoring and abuse prevention</li>
               </ul>
@@ -64,12 +64,12 @@ export function PrivacyModal({ dark, onClose }) {
                 All data is encrypted at rest and in transit using industry-standard TLS encryption.
               </p>
               <p className="mt-2">
-                Payment information is never stored on CreatorMatch servers. All payment data is handled exclusively
+                Payment information is never stored on CreatorBridge servers. All payment data is handled exclusively
                 by Stripe, a PCI-DSS Level 1 certified payment processor.
               </p>
               <p className="mt-2">
                 Uploaded files (portfolio images, delivery files) are stored in encrypted cloud storage.
-                Delivery files uploaded to CreatorMatch are automatically deleted after 7 days.
+                Delivery files uploaded to CreatorBridge are automatically deleted after 7 days.
                 Portfolio images and profile photos are retained as long as your account is active.
               </p>
             </section>
@@ -80,7 +80,7 @@ export function PrivacyModal({ dark, onClose }) {
               </h2>
               <p>We use your information to:</p>
               <ul className="list-disc list-inside space-y-1 ml-2 mt-2">
-                <li>Operate the CreatorMatch marketplace and match clients with creators</li>
+                <li>Operate the CreatorBridge marketplace and match clients with creators</li>
                 <li>Process payments and manage project escrow through Stripe</li>
                 <li>Verify creator identities to maintain platform safety and trust</li>
                 <li>Send notifications about project updates, messages, and platform activity</li>
@@ -148,8 +148,8 @@ export function PrivacyModal({ dark, onClose }) {
               </ul>
               <p className="mt-3">
                 To exercise any of these rights, contact us at{' '}
-                <a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a>.
-                {/* TODO: Update to support@creatormatch.studio once domain email is active */}
+                <a href="mailto:drl33@creatorbridge.studio" className={linkCls}>drl33@creatorbridge.studio</a>.
+                {/* TODO: Update to support@creatorbridge.studio once domain email is active */}
                 We will respond to all requests within 30 days.
               </p>
             </section>
@@ -159,7 +159,7 @@ export function PrivacyModal({ dark, onClose }) {
                 6. Cookie Policy
               </h2>
               <p>
-                CreatorMatch uses cookies and similar local storage technologies to operate the platform.
+                CreatorBridge uses cookies and similar local storage technologies to operate the platform.
                 We do not use advertising cookies or third-party tracking cookies.
               </p>
               <p className="mt-2">We use the following types of storage:</p>
@@ -190,7 +190,7 @@ export function PrivacyModal({ dark, onClose }) {
               <ul className="list-disc list-inside space-y-1 ml-2 mt-2">
                 <li>Account and profile data: retained while your account is active, deleted within 30 days of account deletion request</li>
                 <li>Project and transaction records: retained for 7 years for legal and accounting compliance</li>
-                <li>Delivery files uploaded to CreatorMatch: automatically deleted after 7 days</li>
+                <li>Delivery files uploaded to CreatorBridge: automatically deleted after 7 days</li>
                 <li>Platform messages: retained for 2 years, then archived</li>
                 <li>Usage and analytics data: retained in anonymized form for up to 2 years</li>
               </ul>
@@ -204,9 +204,9 @@ export function PrivacyModal({ dark, onClose }) {
                 For any privacy-related questions, data requests, or concerns, please contact us at:
               </p>
               <div className={cardCls}>
-                <p className={`font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>CreatorMatch Privacy</p>
-                <p>Email: <a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a></p>
-                {/* TODO: Update to support@creatormatch.studio once domain email is active */}
+                <p className={`font-semibold ${dark ? 'text-white' : 'text-gray-900'}`}>CreatorBridge Privacy</p>
+                <p>Email: <a href="mailto:drl33@creatorbridge.studio" className={linkCls}>drl33@creatorbridge.studio</a></p>
+                {/* TODO: Update to support@creatorbridge.studio once domain email is active */}
               </div>
               <p className="mt-2">
                 We take privacy requests seriously and will respond within 30 days.
@@ -215,8 +215,8 @@ export function PrivacyModal({ dark, onClose }) {
             </section>
 
             <div className={`pt-4 border-t text-xs ${dark ? 'border-charcoal-700 text-charcoal-500' : 'border-gray-200 text-gray-400'}`}>
-              <p>CreatorMatch. Questions? Contact <a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a></p>
-              {/* TODO: Update to support@creatormatch.studio once domain email is active */}
+              <p>CreatorBridge. Questions? Contact <a href="mailto:drl33@creatorbridge.studio" className={linkCls}>drl33@creatorbridge.studio</a></p>
+              {/* TODO: Update to support@creatorbridge.studio once domain email is active */}
             </div>
           </div>
         </div>

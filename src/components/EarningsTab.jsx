@@ -95,7 +95,7 @@ export function EarningsTab({ creator, dark }) {
       <div className={`${cardCls} p-4 flex items-start gap-3`}>
         <CheckCircle size={16} className="text-teal-400 shrink-0 mt-0.5" />
         <p className={`text-xs leading-relaxed ${textSub}`}>
-          CreatorMatch takes a {PLATFORM_FEES.creatorFeePct}% platform fee from your earnings.
+          CreatorBridge takes a {PLATFORM_FEES.creatorFeePct}% platform fee from your earnings.
           Clients are also charged a {PLATFORM_FEES.clientFeePct}% booking fee on top of your rate.
           Payments are released after client approval or auto-approved after {PLATFORM_FEES.autoApproveDays} days.
         </p>

@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
 const SECTIONS = [
-  { id: 'welcome',      title: '1. Welcome to CreatorMatch' },
-  { id: 'how-it-works', title: '2. How CreatorMatch Works' },
+  { id: 'welcome',      title: '1. Welcome to CreatorBridge' },
+  { id: 'how-it-works', title: '2. How CreatorBridge Works' },
   { id: 'accounts',     title: '3. Account Requirements' },
   { id: 'booking',      title: '4. Platform Booking Requirement' },
   { id: 'fees',         title: '5. Fees and Payments' },
@@ -81,16 +81,16 @@ export function TermsModal({ dark, onClose }) {
             </div>
           </div>
 
-          <Section id="welcome" title="1. Welcome to CreatorMatch" dark={dark}>
+          <Section id="welcome" title="1. Welcome to CreatorBridge" dark={dark}>
             <p>
-              CreatorMatch is an online platform connecting content creators with brands and clients seeking
+              CreatorBridge is an online platform connecting content creators with brands and clients seeking
               media production and digital content services. Our community includes videographers, photographers,
               podcast producers, drone operators, and other creative professionals across every market and specialty.
               We provide the tools, infrastructure, and payment system to help creative work get done safely and professionally.
             </p>
             <p>
               By creating an account or using our platform in any capacity, you agree to these Terms of Service.
-              If you do not agree, please do not use CreatorMatch.
+              If you do not agree, please do not use CreatorBridge.
             </p>
             <p>
               These terms apply to all users of the platform: creators offering services, clients seeking services,
@@ -98,26 +98,26 @@ export function TermsModal({ dark, onClose }) {
             </p>
           </Section>
 
-          <Section id="how-it-works" title="2. How CreatorMatch Works" dark={dark}>
+          <Section id="how-it-works" title="2. How CreatorBridge Works" dark={dark}>
             <p>
-              CreatorMatch operates as a two-sided marketplace. Creators list their services, packages, and rates.
+              CreatorBridge operates as a two-sided marketplace. Creators list their services, packages, and rates.
               Clients browse the directory, request quotes, and book projects through the platform.
             </p>
             <p>
-              All financial transactions are processed through CreatorMatch using Stripe, a licensed payment processor.
-              CreatorMatch never holds funds indefinitely: payment is split into a 50% retainer at booking and 50% upon
+              All financial transactions are processed through CreatorBridge using Stripe, a licensed payment processor.
+              CreatorBridge never holds funds indefinitely: payment is split into a 50% retainer at booking and 50% upon
               project completion and approval. Funds are released to the creator after client approval or after 72 hours
               with no response.
             </p>
             <p>
-              CreatorMatch earns revenue through a platform fee charged to both parties. This fee structure is described
+              CreatorBridge earns revenue through a platform fee charged to both parties. This fee structure is described
               in Section 5. Fees and Payments.
             </p>
           </Section>
 
           <Section id="accounts" title="3. Account Requirements" dark={dark}>
             <p>
-              To use CreatorMatch, you must:
+              To use CreatorBridge, you must:
             </p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Be at least 18 years of age</li>
@@ -136,26 +136,26 @@ export function TermsModal({ dark, onClose }) {
               Identity verification for creators is handled automatically through Stripe's Know Your Customer (KYC) process.
             </p>
             <p>
-              Each creator may only maintain one active profile on CreatorMatch. Creating multiple profiles
+              Each creator may only maintain one active profile on CreatorBridge. Creating multiple profiles
               is a violation of these Terms and may result in suspension of all associated accounts.
             </p>
             <p>
-              You are responsible for maintaining the security of your account credentials. CreatorMatch is not
+              You are responsible for maintaining the security of your account credentials. CreatorBridge is not
               liable for losses resulting from unauthorized account access due to your failure to secure your credentials.
             </p>
           </Section>
 
           <Section id="booking" title="4. Platform Booking Requirement" dark={dark}>
             <p>
-              <strong className={dark ? 'text-white' : 'text-gray-900'}>Any client who discovers a creator through CreatorMatch must book all projects with that creator
-              through the CreatorMatch platform for a period of 24 months from the date of initial introduction.</strong>
+              <strong className={dark ? 'text-white' : 'text-gray-900'}>Any client who discovers a creator through CreatorBridge must book all projects with that creator
+              through the CreatorBridge platform for a period of 24 months from the date of initial introduction.</strong>
             </p>
             <p>
               This requirement applies equally to both parties:
             </p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Clients may not contact, hire, or pay creators discovered on CreatorMatch outside of the platform during this 24-month period.</li>
-              <li>Creators may not solicit, accept, or fulfill work from clients introduced through CreatorMatch outside of the platform during this 24-month period.</li>
+              <li>Clients may not contact, hire, or pay creators discovered on CreatorBridge outside of the platform during this 24-month period.</li>
+              <li>Creators may not solicit, accept, or fulfill work from clients introduced through CreatorBridge outside of the platform during this 24-month period.</li>
             </ul>
             <p>
               Circumventing this requirement is a serious violation and may result in account suspension and recovery
@@ -165,7 +165,7 @@ export function TermsModal({ dark, onClose }) {
 
           <Section id="fees" title="5. Fees and Payments" dark={dark}>
             <p>
-              CreatorMatch charges the following platform fees:
+              CreatorBridge charges the following platform fees:
             </p>
             <div className={`rounded-xl border p-4 my-3 ${dark ? 'border-charcoal-600 bg-charcoal-900/40' : 'border-gray-200 bg-gray-50'}`}>
               <div className="space-y-2 text-xs font-mono">
@@ -184,7 +184,7 @@ export function TermsModal({ dark, onClose }) {
 
           <Section id="cancellation" title="6. Cancellation and Refunds" dark={dark}>
             <p>
-              CreatorMatch uses a simple three-rule cancellation policy to protect both clients and creators.
+              CreatorBridge uses a simple three-rule cancellation policy to protect both clients and creators.
             </p>
             <ul className="list-disc list-inside space-y-2 ml-2">
               <li>
@@ -207,7 +207,7 @@ export function TermsModal({ dark, onClose }) {
 
           <Section id="communication" title="7. Communication Policy" dark={dark}>
             <p>
-              All initial communication between clients and creators must occur through the CreatorMatch messaging system.
+              All initial communication between clients and creators must occur through the CreatorBridge messaging system.
               This protects both parties and ensures a record of project discussions.
             </p>
             <p>
@@ -222,7 +222,7 @@ export function TermsModal({ dark, onClose }) {
 
           <Section id="violations" title="8. Violation Policy" dark={dark}>
             <p>
-              CreatorMatch operates a three-strike violation system to protect the community:
+              CreatorBridge operates a three-strike violation system to protect the community:
             </p>
             <ul className="list-disc list-inside space-y-2 ml-2">
               <li>
@@ -234,8 +234,8 @@ export function TermsModal({ dark, onClose }) {
               </li>
               <li>
                 <strong className={dark ? 'text-white' : 'text-gray-900'}>Strike 3:</strong> Your account is suspended.
-                {/* TODO: Update to support@creatormatch.studio once domain email is active */}
-                You must contact <a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a> to appeal.
+                {/* TODO: Update to support@creatorbridge.studio once domain email is active */}
+                You must contact <a href="mailto:drl33@creatorbridge.studio" className={linkCls}>drl33@creatorbridge.studio</a> to appeal.
               </li>
             </ul>
           </Section>
@@ -243,7 +243,7 @@ export function TermsModal({ dark, onClose }) {
           <Section id="disputes" title="9. Dispute Resolution" dark={dark}>
             <p>
               If a client and creator cannot agree on whether deliverables meet the project requirements,
-              either party may open a formal dispute through the platform. CreatorMatch reviews the dispute
+              either party may open a formal dispute through the platform. CreatorBridge reviews the dispute
               within 2 business days and issues a final determination.
             </p>
             <p>
@@ -254,11 +254,11 @@ export function TermsModal({ dark, onClose }) {
           <Section id="ip" title="10. Content and Intellectual Property" dark={dark}>
             <p>
               Creators retain full ownership of all work they produce unless otherwise agreed in a signed contract
-              with the client. CreatorMatch makes no claim to ownership of any creative work produced through projects
+              with the client. CreatorBridge makes no claim to ownership of any creative work produced through projects
               booked on the platform.
             </p>
             <p>
-              By listing on CreatorMatch, creators grant us a non-exclusive license to display portfolio items
+              By listing on CreatorBridge, creators grant us a non-exclusive license to display portfolio items
               and profile content for the purpose of operating the marketplace. This license ends when you remove
               the content or delete your account.
             </p>
@@ -266,7 +266,7 @@ export function TermsModal({ dark, onClose }) {
 
           <Section id="privacy" title="11. Privacy" dark={dark}>
             <p>
-              CreatorMatch collects only the information necessary to operate the marketplace. This includes:
+              CreatorBridge collects only the information necessary to operate the marketplace. This includes:
               account registration data, profile content you provide, project and payment records,
               and usage data for platform improvement.
             </p>
@@ -276,16 +276,16 @@ export function TermsModal({ dark, onClose }) {
               and fulfill legal obligations.
             </p>
             <p>
-              {/* TODO: Update to support@creatormatch.studio once domain email is active */}
+              {/* TODO: Update to support@creatorbridge.studio once domain email is active */}
               You may request deletion of your account and associated data at any time by contacting
-              {' '}<a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a>.
+              {' '}<a href="mailto:drl33@creatorbridge.studio" className={linkCls}>drl33@creatorbridge.studio</a>.
               Note that transaction records may be retained for legal and accounting purposes.
             </p>
           </Section>
 
           <Section id="changes" title="12. Changes to Terms" dark={dark}>
             <p>
-              CreatorMatch reserves the right to update these Terms of Service at any time.
+              CreatorBridge reserves the right to update these Terms of Service at any time.
               When changes are made, we will notify active users by email with at least 30 days notice
               before the new terms take effect.
             </p>
@@ -296,8 +296,8 @@ export function TermsModal({ dark, onClose }) {
           </Section>
 
           <div className={`pt-4 border-t text-xs ${dark ? 'border-charcoal-700 text-charcoal-500' : 'border-gray-200 text-gray-400'}`}>
-            {/* TODO: Update to support@creatormatch.studio once domain email is active */}
-            <p>CreatorMatch Inc. Questions? Contact <a href="mailto:Nulalee2002@gmail.com" className={linkCls}>Nulalee2002@gmail.com</a></p>
+            {/* TODO: Update to support@creatorbridge.studio once domain email is active */}
+            <p>CreatorBridge Inc. Questions? Contact <a href="mailto:drl33@creatorbridge.studio" className={linkCls}>drl33@creatorbridge.studio</a></p>
           </div>
         </div>
 

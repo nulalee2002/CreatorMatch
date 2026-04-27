@@ -100,7 +100,7 @@ function ReviewStep({ project, creator, fees, dark, onNext }) {
         <AlertCircle size={16} className="text-amber-400 shrink-0 mt-0.5" />
         <p className={`text-xs leading-relaxed ${textSub}`}>
           <span className={`font-semibold ${dark ? 'text-amber-300' : 'text-amber-700'}`}>Insurance notice: </span>
-          CreatorMatch does not verify creator insurance coverage. If your project requires on-site work, confirm insurance details directly with your creator before this booking is confirmed.
+          CreatorBridge does not verify creator insurance coverage. If your project requires on-site work, confirm insurance details directly with your creator before this booking is confirmed.
         </p>
       </div>
 

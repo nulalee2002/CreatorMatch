@@ -62,7 +62,7 @@ const BUDGET_RANGES = [
 ];
 
 // ── Delivery helpers ─────────────────────────────────────────────
-const STORAGE_NOTICE = 'Note: Files uploaded directly to CreatorMatch are stored for 7 days and then permanently deleted. Creators are required to retain their own copies for 6 months. Clients should download all files within 7 days of delivery.';
+const STORAGE_NOTICE = 'Note: Files uploaded directly to CreatorBridge are stored for 7 days and then permanently deleted. Creators are required to retain their own copies for 6 months. Clients should download all files within 7 days of delivery.';
 
 function getRemainingHours(deliveredAt) {
   if (!deliveredAt) return null;
@@ -252,7 +252,7 @@ function ArchivedProjectNotice({ project, dark, onStatusChange }) {
     <div className={`rounded-xl border p-4 ${dark ? 'border-charcoal-700 bg-charcoal-800' : 'border-gray-200 bg-gray-50'}`}>
       <p className={`text-sm font-semibold mb-1 ${dark ? 'text-white' : 'text-gray-900'}`}>Files Removed</p>
       <p className={`text-xs mb-3 ${textSub}`}>
-        The files for this project were removed from CreatorMatch storage after 7 days as per our storage policy. You can request re-delivery from the creator for a $30 retrieval fee.
+        The files for this project were removed from CreatorBridge storage after 7 days as per our storage policy. You can request re-delivery from the creator for a $30 retrieval fee.
       </p>
       {requested ? (
         <p className="text-xs text-teal-400 font-medium">Re-delivery requested. The creator has been notified.</p>

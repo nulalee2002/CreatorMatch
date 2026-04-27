@@ -121,7 +121,7 @@ export function TierUpBanner({ newTierId, dark, onDismiss }) {
       <span className="text-3xl">{tier.icon}</span>
       <div className="flex-1">
         <p className={`font-bold text-sm ${dark ? 'text-gold-400' : 'text-gold-700'}`}>
-          Congratulations! You have reached {tier.name} status on CreatorMatch.
+          Congratulations! You have reached {tier.name} status on CreatorBridge.
         </p>
         <p className={`text-xs mt-0.5 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>
           {tier.label} - {tier.name === 'Proven' ? 'Clients can now see your Trusted Creator badge.' : tier.name === 'Elite' ? 'Your profile is now boosted in search results.' : 'You have reached the highest creator tier.'}

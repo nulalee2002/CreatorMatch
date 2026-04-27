@@ -327,7 +327,7 @@ export function RequestQuoteModal({ creator, dark, onClose, initialDate = '' }) 
           {showOnboarding && (
             <div className="space-y-5">
               <div className={`rounded-xl border px-4 py-3 text-xs leading-relaxed ${dark ? 'border-charcoal-700 bg-charcoal-800/60 text-charcoal-300' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
-                Welcome to CreatorMatch. You are joining a professional marketplace where every creator is verified and vetted. To maintain quality for both sides, we ask a few quick questions before you start browsing. This takes about 2 minutes.
+                Welcome to CreatorBridge. You are joining a professional marketplace where every creator is verified and vetted. To maintain quality for both sides, we ask a few quick questions before you start browsing. This takes about 2 minutes.
               </div>
 
               {/* Q1 */}
@@ -374,7 +374,7 @@ export function RequestQuoteModal({ creator, dark, onClose, initialDate = '' }) 
 
               {/* Q4 */}
               <div>
-                <label className={labelCls}>How did you hear about CreatorMatch? *</label>
+                <label className={labelCls}>How did you hear about CreatorBridge? *</label>
                 <select
                   value={onboardingAnswers.source}
                   onChange={e => setOnboardingAnswers(a => ({ ...a, source: e.target.value }))}

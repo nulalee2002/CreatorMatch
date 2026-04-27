@@ -653,7 +653,7 @@ export function CreatorProfilePage({ dark }) {
                 </button>
               )}
               <p className={`text-center text-[10px] ${textSub}`}>Free to request. No payment until you hire.</p>
-              <p className={`text-center text-[10px] mt-1 ${textSub}`}>CreatorMatch does not verify insurance. Confirm coverage directly with your creator.</p>
+              <p className={`text-center text-[10px] mt-1 ${textSub}`}>CreatorBridge does not verify insurance. Confirm coverage directly with your creator.</p>
 
               {/* Contact links */}
               <div className={`mt-4 border-t pt-4 space-y-2 ${dark ? 'border-charcoal-700' : 'border-gray-200'}`}>
@@ -665,7 +665,7 @@ export function CreatorProfilePage({ dark }) {
                   </a>
                 ) : contact.email ? (
                   <div className={`flex items-center gap-2 text-xs italic ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
-                    <Mail size={13} /> Book through CreatorMatch to contact
+                    <Mail size={13} /> Book through CreatorBridge to contact
                   </div>
                 ) : null}
 

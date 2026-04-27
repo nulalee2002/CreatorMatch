@@ -54,7 +54,7 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
         if (!supabaseConfigured) {
           // Demo mode: check for duplicate phone locally
           if (phoneAlreadyUsed(form.phone)) {
-            setError('This phone number is already linked to a CreatorMatch account. Each creator can only have one account.');
+            setError('This phone number is already linked to a CreatorBridge account. Each creator can only have one account.');
             setLoading(false);
             return;
           }
@@ -69,7 +69,7 @@ export function AuthModal({ dark, onClose, defaultTab = 'login', defaultRole = '
           const { error: otpErr } = await supabase.auth.signInWithOtp({ phone: form.phone });
           if (otpErr) {
             if (otpErr.message?.toLowerCase().includes('already')) {
-              setError('This phone number is already linked to a CreatorMatch account. Each creator can only have one account.');
+              setError('This phone number is already linked to a CreatorBridge account. Each creator can only have one account.');
             } else {
               setError(otpErr.message || 'Failed to send verification code.');
             }
