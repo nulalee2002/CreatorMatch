@@ -796,7 +796,7 @@ export default function App() {
           defaultTab={authTab}
           defaultRole={authRole}
           onClose={() => setShowAuth(false)}
-          onOpenTerms={() => { setShowAuth(false); setShowTerms(true); }}
+          onOpenTerms={() => { setShowTerms(true); }}
           onOpenCreatorRegistration={() => { setShowAuth(false); navigate('/register'); }}
         />
       )}
