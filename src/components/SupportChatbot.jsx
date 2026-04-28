@@ -179,6 +179,65 @@ function isBookingIntent(text) {
   return BOOKING_INTENTS.some(p => lower.includes(p));
 }
 
+// ── Creator quote flow config ────────────────────────────────────
+const CREATOR_STEPS = [
+  {
+    step: 1, field: 'serviceType',
+    question: 'What type of service are you quoting for?',
+    type: 'options',
+    options: ['Video Production','Photography','Drone and Aerial','Social Media Content','Podcast Production','Corporate Events','Live Events','Post-Production'],
+  },
+  {
+    step: 2, field: 'deliverables',
+    question: 'What are the key deliverables for this project?',
+    type: 'text',
+    placeholder: 'e.g. 2-min brand video, 10 edited photos, 4 weekly reels...',
+  },
+  {
+    step: 3, field: 'rate',
+    question: 'What is your rate for this project?',
+    type: 'options',
+    options: ['Under $500','$500 to $1,000','$1,000 to $2,500','$2,500 to $5,000','$5,000 to $10,000','$10,000+','Custom rate'],
+  },
+  {
+    step: 4, field: 'turnaround',
+    question: 'What is your estimated turnaround time?',
+    type: 'options',
+    options: ['Same day','1 to 3 days','3 to 7 days','1 to 2 weeks','2 to 4 weeks','Custom timeline'],
+  },
+  {
+    step: 5, field: 'revisions',
+    question: 'How many revisions are included?',
+    type: 'options',
+    options: ['1 revision','2 revisions','3 revisions','Unlimited revisions','No revisions included'],
+  },
+  {
+    step: 6, field: 'notes',
+    question: 'Any additional notes or terms for this quote?',
+    type: 'text',
+    placeholder: 'e.g. Travel fees apply, 50% deposit required, rush fees for same-day...',
+  },
+];
+
+const CREATOR_INTENTS = [
+  'i want to send a quote','create a quote','build a quote','send a quote',
+  'make a package','set my rates','create a package','build a package',
+  'i want to quote','help me quote','quote a client','write a quote',
+  'draft a quote','prepare a quote','send my rates',
+];
+
+const QUOTE_DRAFT_KEY = 'cb-quote-draft';
+const EMPTY_QUOTE = { serviceType:'', deliverables:'', rate:'', turnaround:'', revisions:'', notes:'' };
+
+function isCreatorIntent(text) {
+  const lower = text.toLowerCase();
+  return CREATOR_INTENTS.some(p => lower.includes(p));
+}
+
+function saveQuoteDraft(data) { try { localStorage.setItem(QUOTE_DRAFT_KEY, JSON.stringify(data)); } catch {} }
+function loadQuoteDraft()     { try { const s = localStorage.getItem(QUOTE_DRAFT_KEY); return s ? JSON.parse(s) : null; } catch { return null; } }
+function removeQuoteDraft()   { try { localStorage.removeItem(QUOTE_DRAFT_KEY); } catch {} }
+
 const DRAFT_KEY = 'cb-booking-draft';
 const EMPTY_BOOKING = { serviceType:'', location:'', timeframe:'', budget:'', description:'', urgency:'' };
 
@@ -214,6 +273,12 @@ export function SupportChatbot({ dark = true }) {
   const [bookingStep, setBookingStep] = useState(1);
   const [bookingData, setBookingData] = useState(() => loadDraft() || EMPTY_BOOKING);
   const [guestCtaShown, setGuestCtaShown] = useState(false);
+
+  // quoteMode: false | 'active' | 'summary' | 'submitted'
+  const [quoteMode, setQuoteMode] = useState(false);
+  const [quoteStep, setQuoteStep] = useState(1);
+  const [quoteData, setQuoteData] = useState(() => loadQuoteDraft() || EMPTY_QUOTE);
+  const [hasQuoteDraft, setHasQuoteDraft] = useState(() => !!loadQuoteDraft());
 
   const [messages, setMessages] = useState(() => makeInitialMessages(loadDraft()));
   const [input, setInput]       = useState('');
@@ -334,6 +399,78 @@ export function SupportChatbot({ dark = true }) {
     }
   }
 
+  // ── Quote: advance to next step or show summary ───────────────
+  function advanceQuote(newData, currentStep) {
+    if (currentStep < 6) {
+      const nextStep = currentStep + 1;
+      setQuoteStep(nextStep);
+      const def = CREATOR_STEPS[nextStep - 1];
+      push({
+        role: 'assistant',
+        kind: 'creator-question',
+        quoteStep: nextStep,
+        content: def.question,
+        options: def.type === 'options' ? def.options : undefined,
+      });
+    } else {
+      saveQuoteDraft(newData);
+      setHasQuoteDraft(true);
+      setQuoteMode('summary');
+      push({
+        role: 'assistant',
+        kind: 'creator-summary',
+        content: 'Here is your quote summary. Review the details and confirm when ready.',
+        data: newData,
+      });
+    }
+  }
+
+  // ── Quote: start from a given step ────────────────────────────
+  function startQuote(initialData = EMPTY_QUOTE, startStep = 1) {
+    setQuoteMode('active');
+    setQuoteStep(startStep);
+    setQuoteData(initialData);
+    const def = CREATOR_STEPS[startStep - 1];
+    const intro = startStep === 1
+      ? "Let's build your quote. I'll ask 6 quick questions.\n\n" + def.question
+      : def.question;
+    push({
+      role: 'assistant',
+      kind: 'creator-question',
+      quoteStep: startStep,
+      content: intro,
+      options: def.type === 'options' ? def.options : undefined,
+    });
+  }
+
+  // ── Handle creator option button click ────────────────────────
+  function handleQuoteOption(option, step) {
+    if (quoteMode !== 'active' || step !== quoteStep) return;
+    const def = CREATOR_STEPS[step - 1];
+    const newData = { ...quoteData, [def.field]: option };
+    setQuoteData(newData);
+    push({ role: 'user', content: option });
+    advanceQuote(newData, step);
+  }
+
+  // ── Handle quote summary buttons ──────────────────────────────
+  async function handleQuoteSummaryAction(action) {
+    if (action === 'edit') {
+      push({ role: 'user', content: 'Edit my quote' });
+      startQuote(quoteData, 1);
+    } else if (action === 'confirm') {
+      setQuoteMode('submitted');
+      setHasQuoteDraft(false);
+      removeQuoteDraft();
+      push({ role: 'user', content: 'Confirm quote' });
+      push({
+        role: 'assistant',
+        kind: 'quote-confirmation',
+        content: 'Your quote has been saved. You can copy the details and send them to your client, or use the Projects section of your dashboard to manage this quote.',
+      });
+    }
+  }
+
   // ── Submit booking to Supabase with localStorage fallback ─────
   async function submitRequest() {
     setLoading(true);
@@ -391,10 +528,29 @@ export function SupportChatbot({ dark = true }) {
       return;
     }
 
+    // Quote active: handle text step answers
+    if (quoteMode === 'active') {
+      const def = CREATOR_STEPS[quoteStep - 1];
+      if (def.type === 'text') {
+        const newData = { ...quoteData, [def.field]: text };
+        setQuoteData(newData);
+        push({ role: 'user', content: text });
+        advanceQuote(newData, quoteStep);
+      }
+      return;
+    }
+
     // Detect booking intent in support chat mode
     if (!bookingMode && isBookingIntent(text)) {
       push({ role: 'user', content: text });
       startBooking();
+      return;
+    }
+
+    // Detect creator quote intent
+    if (!bookingMode && !quoteMode && isCreatorIntent(text)) {
+      push({ role: 'user', content: text });
+      startQuote();
       return;
     }
 
@@ -427,9 +583,13 @@ export function SupportChatbot({ dark = true }) {
   }
 
   // ── Derived input state ───────────────────────────────────────
-  const isOptionsStep = bookingMode === 'active' && BOOKING_STEPS[bookingStep - 1]?.type === 'options';
+  const isOptionsStep =
+    (bookingMode === 'active' && BOOKING_STEPS[bookingStep - 1]?.type === 'options') ||
+    (quoteMode === 'active' && CREATOR_STEPS[quoteStep - 1]?.type === 'options');
   const inputPlaceholder = bookingMode === 'active'
     ? (isOptionsStep ? 'Select an option above...' : (BOOKING_STEPS[bookingStep - 1]?.placeholder || 'Type your answer...'))
+    : quoteMode === 'active'
+    ? (isOptionsStep ? 'Select an option above...' : (CREATOR_STEPS[quoteStep - 1]?.placeholder || 'Type your answer...'))
     : 'Ask a question...';
 
   // Only show interactive elements on the last message of each kind
@@ -440,6 +600,10 @@ export function SupportChatbot({ dark = true }) {
   const lastQuestionIdx = messages
     .map((m, i) => (m.kind === 'booking-question' && m.bookingStep === bookingStep) ? i : -1)
     .filter(i => i >= 0).at(-1) ?? -1;
+  const lastCreatorQuestionIdx = messages
+    .map((m, i) => (m.kind === 'creator-question' && m.quoteStep === quoteStep) ? i : -1)
+    .filter(i => i >= 0).at(-1) ?? -1;
+  const lastCreatorSummaryIdx = lastOf('creator-summary');
 
   // ── Styles ────────────────────────────────────────────────────
   const bgPanel  = dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200';
@@ -473,7 +637,7 @@ export function SupportChatbot({ dark = true }) {
               <div>
                 <p className={`text-xs font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>CreatorBridge Support</p>
                 <p className={`text-[10px] ${textSub}`}>
-                  {bookingMode ? 'Booking assistant' : 'Powered by AI - usually instant'}
+                  {bookingMode ? 'Booking assistant' : quoteMode ? 'Quote assistant' : 'Powered by AI - usually instant'}
                 </p>
               </div>
             </div>
@@ -554,6 +718,50 @@ export function SupportChatbot({ dark = true }) {
                   <div className="flex gap-2 pl-1">
                     <button type="button" onClick={() => openAuth('signup')} className={btnGold}>Create Account</button>
                     <button type="button" onClick={() => openAuth('login')} className={btnGhost}>Sign In</button>
+                  </div>
+                )}
+
+                {/* Creator option buttons — current quote question only */}
+                {msg.kind === 'creator-question' && msg.options && i === lastCreatorQuestionIdx && quoteMode === 'active' && (
+                  <div className="flex flex-wrap gap-1.5 pl-1">
+                    {msg.options.map(opt => (
+                      <button key={opt} type="button"
+                        onClick={() => handleQuoteOption(opt, msg.quoteStep)}
+                        className={btnOpt}>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Creator summary card */}
+                {msg.kind === 'creator-summary' && i === lastCreatorSummaryIdx && (
+                  <div className={`ml-1 rounded-xl border p-3 text-xs space-y-1.5 ${dark ? 'border-charcoal-600 bg-charcoal-800/80' : 'border-gray-200 bg-gray-50'}`}>
+                    {[
+                      ['Service',      msg.data?.serviceType],
+                      ['Deliverables', msg.data?.deliverables],
+                      ['Rate',         msg.data?.rate],
+                      ['Turnaround',   msg.data?.turnaround],
+                      ['Revisions',    msg.data?.revisions],
+                      ['Notes',        msg.data?.notes],
+                    ].map(([label, value]) => value ? (
+                      <div key={label} className="flex gap-2">
+                        <span className={`font-semibold shrink-0 w-24 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>{label}:</span>
+                        <span className={`break-words ${dark ? 'text-charcoal-200' : 'text-gray-700'}`}>{value}</span>
+                      </div>
+                    ) : null)}
+                    {quoteMode === 'summary' && (
+                      <div className="flex gap-2 pt-2 border-t border-charcoal-700/50">
+                        <button type="button" onClick={() => handleQuoteSummaryAction('confirm')}
+                          className={`${btnGold} flex-1`}>
+                          Confirm Quote
+                        </button>
+                        <button type="button" onClick={() => handleQuoteSummaryAction('edit')}
+                          className={btnGhost}>
+                          Edit
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
