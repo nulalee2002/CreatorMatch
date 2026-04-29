@@ -1074,7 +1074,7 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
           <button
             type="button"
             onClick={() => setServiceFilter('all')}
-            className={serviceFilter === 'all' ? 'text-gold-400' : 'text-charcoal-500 hover:text-charcoal-300'}
+            className={serviceFilter === 'all' ? 'text-gold-400' : 'text-charcoal-200 hover:text-white'}
             style={{ ...TAB_STYLE_BASE, borderBottom: serviceFilter === 'all' ? '2px solid #d4a941' : '2px solid transparent' }}
           >
             All Services
@@ -1084,7 +1084,7 @@ export function CreatorDirectory({ dark = true, mode = 'search', onSwitchToRegis
               key={s.id}
               type="button"
               onClick={() => setServiceFilter(s.id)}
-              className={serviceFilter === s.id ? 'text-gold-400' : 'text-charcoal-500 hover:text-charcoal-300'}
+              className={serviceFilter === s.id ? 'text-gold-400' : 'text-charcoal-200 hover:text-white'}
               style={{ ...TAB_STYLE_BASE, borderBottom: serviceFilter === s.id ? '2px solid #d4a941' : '2px solid transparent', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <span>{s.icon}</span>{s.name}

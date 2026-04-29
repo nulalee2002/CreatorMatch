@@ -364,7 +364,7 @@ export default function App() {
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors ${
                   activeTab === id
                     ? 'bg-gold-500 text-charcoal-900'
-                    : dark ? 'text-charcoal-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                    : dark ? 'text-charcoal-200 hover:text-white' : 'text-gray-500 hover:text-gray-900'
                 }`}
               >
                 <Icon size={12} /> <span className="hidden sm:inline">{label}</span>
@@ -767,21 +767,21 @@ export default function App() {
       {activeTab !== 'calculator' && location.pathname.startsWith('/creator') ? null : (
         <footer className={`mt-12 border-t ${dark ? 'border-charcoal-800' : 'border-gray-200'} py-6`}>
           <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className={`text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
+            <p className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-400'}`}>
               CreatorBridge - connecting content creators with brands and clients seeking media production and digital content services
             </p>
-            <div className={`flex items-center gap-4 text-xs ${dark ? 'text-charcoal-600' : 'text-gray-400'}`}>
+            <div className={`flex items-center gap-4 text-xs ${dark ? 'text-charcoal-300' : 'text-gray-400'}`}>
               <button type="button" onClick={() => setShowTerms(true)}
-                className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-300' : 'text-gray-400'}`}>
                 Terms of Service
               </button>
-              <span className={dark ? 'text-charcoal-700' : 'text-gray-300'}>|</span>
+              <span className={dark ? 'text-charcoal-500' : 'text-gray-300'}>|</span>
               <button type="button" onClick={() => setShowPrivacy(true)}
-                className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+                className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-300' : 'text-gray-400'}`}>
                 Privacy
               </button>
-              <span className={dark ? 'text-charcoal-700' : 'text-gray-300'}>|</span>
-              <a href="mailto:drl33@creatorbridge.studio" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+              <span className={dark ? 'text-charcoal-500' : 'text-gray-300'}>|</span>
+              <a href="mailto:drl33@creatorbridge.studio" className={`hover:text-gold-400 transition-colors ${dark ? 'text-charcoal-300' : 'text-gray-400'}`}>
                 {/* TODO: Update to support@creatorbridge.studio once domain email is active */}
                 Support
               </a>

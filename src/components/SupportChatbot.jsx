@@ -1,7 +1,70 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader, ChevronDown } from 'lucide-react';
+import { X, Send, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { supabase, supabaseConfigured } from '../lib/supabase.js';
+
+// ── Animated avatar components ───────────────────────────────────
+function ChatAvatar({ size = 28, animate = true }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <style>{`
+        @keyframes blink {
+          0%, 90%, 100% { transform: scaleY(1); }
+          95% { transform: scaleY(0.1); }
+        }
+        @keyframes pulse-ring {
+          0% { opacity: 0.6; transform: scale(1); }
+          100% { opacity: 0; transform: scale(1.4); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-2px); }
+        }
+        .eye-left { animation: blink 4s ease-in-out infinite; transform-origin: 14px 18px; }
+        .eye-right { animation: blink 4s ease-in-out infinite 0.1s; transform-origin: 26px 18px; }
+        .face-float { animation: float 3s ease-in-out infinite; }
+      `}</style>
+      <g className={animate ? 'face-float' : ''}>
+        <circle cx="20" cy="20" r="16" fill="#d4a941" />
+        <circle cx="20" cy="10" r="3" fill="#0d0d18" opacity="0.4" />
+        <circle cx="20" cy="10" r="1.5" fill="#d4a941" opacity="0.6" />
+        <ellipse className="eye-left" cx="14" cy="18" rx="2.5" ry="3" fill="#0d0d18" />
+        <ellipse className="eye-right" cx="26" cy="18" rx="2.5" ry="3" fill="#0d0d18" />
+        <circle cx="15" cy="17" r="0.8" fill="white" opacity="0.8" />
+        <circle cx="27" cy="17" r="0.8" fill="white" opacity="0.8" />
+        <path d="M14 25 Q20 30 26 25" stroke="#0d0d18" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+        <path d="M6 18 Q6 8 20 8 Q34 8 34 18" stroke="#0d0d18" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <rect x="4" y="17" width="4" height="7" rx="2" fill="#0d0d18" />
+        <rect x="32" y="17" width="4" height="7" rx="2" fill="#0d0d18" />
+      </g>
+    </svg>
+  );
+}
+
+function ThinkingAvatar({ size = 28 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <style>{`
+        @keyframes look-up {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-2px); }
+        }
+        .think-eye { animation: look-up 1s ease-in-out infinite; }
+      `}</style>
+      <circle cx="20" cy="20" r="16" fill="#d4a941" />
+      <circle cx="20" cy="10" r="3" fill="#0d0d18" opacity="0.4" />
+      <circle cx="20" cy="10" r="1.5" fill="#d4a941" opacity="0.6" />
+      <ellipse className="think-eye" cx="14" cy="16" rx="2.5" ry="2" fill="#0d0d18" />
+      <ellipse className="think-eye" cx="26" cy="16" rx="2.5" ry="2" fill="#0d0d18" />
+      <circle cx="15" cy="15.5" r="0.8" fill="white" opacity="0.8" />
+      <circle cx="27" cy="15.5" r="0.8" fill="white" opacity="0.8" />
+      <path d="M15 26 Q20 24 25 26" stroke="#0d0d18" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      <path d="M6 18 Q6 8 20 8 Q34 8 34 18" stroke="#0d0d18" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <rect x="4" y="17" width="4" height="7" rx="2" fill="#0d0d18" />
+      <rect x="32" y="17" width="4" height="7" rx="2" fill="#0d0d18" />
+    </svg>
+  );
+}
 
 // ── Platform knowledge system prompt ─────────────────────────────
 const SYSTEM_PROMPT = `You are the CreatorBridge support assistant. You have complete knowledge of how CreatorBridge works and answer questions confidently without redirecting to email unless it is a specific account issue.
@@ -171,7 +234,15 @@ const BOOKING_INTENTS = [
   'find a videographer','find a photographer','i have a project','book a creator',
   'i need help with','i want to hire','looking for a creator','need a videographer',
   'need a photographer','find a creator','book a photographer','book a videographer',
-  'need someone for','hire someone','looking to hire',
+  'need someone for','hire someone','looking to hire','i need someone to film',
+  'need someone to film','looking for someone to film','i need a videographer',
+  'need a filmmaker','looking for a filmmaker','i need a drone operator',
+  'need a podcast producer','looking for a podcast','need social media content',
+  'i need content','need content creator','looking for content','draft a request',
+  'can you draft','help me find','i need help finding','find me a creator',
+  'find me a photographer','find me a videographer','need coverage','event coverage',
+  'need a shooter','need photos','need video','need footage','need a crew',
+  'i have an event','filming in','shooting in','photographer in','videographer in',
 ];
 
 function isBookingIntent(text) {
@@ -248,11 +319,17 @@ function removeDraft()   { try { localStorage.removeItem(DRAFT_KEY); } catch {} 
 function makeInitialMessages(draft) {
   const welcome = {
     role: 'assistant',
-    content: 'Hi! I am the CreatorBridge support assistant. Ask me anything about how the platform works, or say "I need a creator" to start a booking request.',
+    content: "Hi! I am Bridge, your CreatorBridge assistant. I can help you find and book verified media creators, build quotes, or answer any questions about the platform.",
   };
-  if (!draft) return [welcome];
+  const prompts = {
+    role: 'assistant',
+    kind: 'welcome-prompts',
+    content: 'Here is what I can do for you:',
+  };
+  if (!draft) return [welcome, prompts];
   return [
     welcome,
+    prompts,
     {
       role: 'assistant',
       kind: 'draft-prompt',
@@ -266,6 +343,7 @@ export function SupportChatbot({ dark = true }) {
   const { user } = useAuth();
 
   const [open, setOpen]         = useState(false);
+  const [autoOpened, setAutoOpened] = useState(false);
   const [hasDraft, setHasDraft] = useState(() => !!loadDraft());
 
   // bookingMode: false | 'active' | 'summary' | 'submitted'
@@ -295,6 +373,18 @@ export function SupportChatbot({ dark = true }) {
       }, 50);
     }
   }, [open, messages]);
+
+  useEffect(() => {
+    const alreadyShown = sessionStorage.getItem('cb-chat-shown');
+    if (!alreadyShown && !autoOpened) {
+      const timer = setTimeout(() => {
+        setOpen(true);
+        setAutoOpened(true);
+        sessionStorage.setItem('cb-chat-shown', 'true');
+      }, 9000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const push = (msg) => setMessages(prev => [...prev, msg]);
 
@@ -604,6 +694,7 @@ export function SupportChatbot({ dark = true }) {
     .map((m, i) => (m.kind === 'creator-question' && m.quoteStep === quoteStep) ? i : -1)
     .filter(i => i >= 0).at(-1) ?? -1;
   const lastCreatorSummaryIdx = lastOf('creator-summary');
+  const lastWelcomeIdx = lastOf('welcome-prompts');
 
   // ── Styles ────────────────────────────────────────────────────
   const bgPanel  = dark ? 'bg-charcoal-900 border-charcoal-700' : 'bg-white border-gray-200';
@@ -631,8 +722,8 @@ export function SupportChatbot({ dark = true }) {
           {/* Header */}
           <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${dark ? 'border-charcoal-700 bg-charcoal-800' : 'border-gray-200 bg-gray-50'}`}>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-gold-500 flex items-center justify-center">
-                <MessageCircle size={13} className="text-charcoal-900" />
+              <div className="w-9 h-9 rounded-full flex items-center justify-center">
+                <ChatAvatar size={24} animate={false} />
               </div>
               <div>
                 <p className={`text-xs font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>CreatorBridge Support</p>
@@ -721,6 +812,41 @@ export function SupportChatbot({ dark = true }) {
                   </div>
                 )}
 
+                {/* Welcome prompt buttons */}
+                {msg.kind === 'welcome-prompts' && i === lastWelcomeIdx && !bookingMode && !quoteMode && (
+                  <div className="flex flex-col gap-1.5 pl-1">
+                    <p className={`text-[10px] font-semibold mb-1 ${dark ? 'text-charcoal-400' : 'text-gray-500'}`}>Try saying:</p>
+                    {[
+                      { label: '📸 Find a Photographer', text: 'I need a photographer' },
+                      { label: '🎥 Book a Videographer', text: 'I need a videographer' },
+                      { label: '🎙️ Find a Podcast Producer', text: 'I need a podcast producer' },
+                      { label: '🚁 Hire a Drone Operator', text: 'I need a drone operator' },
+                      { label: '💬 Ask a Question', text: 'How does CreatorBridge work?' },
+                      { label: '📋 Build a Quote', text: 'I want to send a quote' },
+                    ].map(({ label, text }) => (
+                      <button key={text} type="button"
+                        onClick={() => {
+                          setInput(text);
+                          setTimeout(() => {
+                            const syntheticInput = text;
+                            setInput('');
+                            const userMsg = { role: 'user', content: syntheticInput };
+                            setMessages(prev => [...prev, userMsg]);
+                            if (isBookingIntent(syntheticInput)) { startBooking(); return; }
+                            if (isCreatorIntent(syntheticInput)) { startQuote(); return; }
+                          }, 100);
+                        }}
+                        className={`text-left px-3 py-2 rounded-xl text-[11px] font-medium border transition-all ${
+                          dark
+                            ? 'border-charcoal-600 text-charcoal-300 hover:border-gold-500 hover:text-gold-400 hover:bg-gold-500/10'
+                            : 'border-gray-200 text-gray-600 hover:border-gold-500 hover:text-gold-600 hover:bg-gold-50'
+                        }`}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* Creator option buttons — current quote question only */}
                 {msg.kind === 'creator-question' && msg.options && i === lastCreatorQuestionIdx && quoteMode === 'active' && (
                   <div className="flex flex-wrap gap-1.5 pl-1">
@@ -771,7 +897,7 @@ export function SupportChatbot({ dark = true }) {
             {loading && (
               <div className="flex justify-start">
                 <div className={`rounded-2xl rounded-bl-sm px-3 py-2 flex items-center gap-1.5 ${bgAssist}`}>
-                  <Loader size={11} className="animate-spin text-gold-400" />
+                  <ThinkingAvatar size={20} />
                   <span className="text-xs">Thinking...</span>
                 </div>
               </div>
@@ -822,7 +948,7 @@ export function SupportChatbot({ dark = true }) {
         )}
         {open
           ? <X size={20} className="text-charcoal-900" />
-          : <MessageCircle size={20} className="text-charcoal-900" />
+          : <ChatAvatar size={32} animate={true} />
         }
       </button>
     </>
