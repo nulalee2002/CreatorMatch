@@ -625,8 +625,8 @@ export function SupportChatbot({ dark = true }) {
       {/* ── Chat panel ─────────────────────────────────────────── */}
       {open && (
         <div
-          className={`fixed bottom-20 right-4 sm:right-6 z-50 w-80 sm:w-96 rounded-2xl border shadow-2xl flex flex-col overflow-hidden ${bgPanel}`}
-          style={{ maxHeight: '540px', right: '1rem', bottom: '5rem' }}
+          className={`z-50 w-80 sm:w-96 rounded-2xl border shadow-2xl flex flex-col overflow-hidden ${bgPanel}`}
+          style={{ position: 'fixed', bottom: '5rem', right: '1.5rem', maxHeight: '540px', zIndex: 9999 }}
         >
           {/* Header */}
           <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${dark ? 'border-charcoal-700 bg-charcoal-800' : 'border-gray-200 bg-gray-50'}`}>
@@ -813,8 +813,8 @@ export function SupportChatbot({ dark = true }) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="fixed bottom-4 right-4 sm:right-6 z-50 w-12 h-12 rounded-full bg-gold-500 hover:bg-gold-600 shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 relative"
-        style={{ right: '1rem', bottom: '1rem' }}
+        className="z-50 w-12 h-12 rounded-full bg-gold-500 hover:bg-gold-600 shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 relative"
+        style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 9999 }}
         aria-label="Open support chat"
       >
         {hasDraft && !open && (
