@@ -334,6 +334,7 @@ export default function App() {
   const cardCls = `rounded-2xl border ${dark ? 'bg-charcoal-800 border-charcoal-700' : 'bg-white border-gray-200'}`;
 
   return (
+    <>
     <div className={`min-h-screen ${bgMain} font-body transition-colors duration-200`} style={{ position: 'relative', zIndex: 1 }}>
       <CircuitBackground />
 
@@ -811,8 +812,8 @@ export default function App() {
         <PrivacyModal dark={dark} onClose={() => setShowPrivacy(false)} />
       )}
 
-      {/* Global support chatbot */}
-      <SupportChatbot dark={dark} />
     </div>
+    <SupportChatbot dark={dark} />
+    </>
   );
 }
