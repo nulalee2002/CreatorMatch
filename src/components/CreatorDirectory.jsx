@@ -208,6 +208,8 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
     lockConfirm: false,
     reviewNoticeConfirm: false,
     tosAccepted: false,
+    aiOriginalWorkConfirm: false,
+    aiToolsDisclosure: [],
   });
   const [step, setStep] = useState(1);
 
@@ -286,7 +288,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
     form.usBasedConfirm && form.ageConfirm &&
     videoIntroMet && bioLen >= 100 && portfolioMet &&
     form.insuranceAck && form.lockConfirm && form.reviewNoticeConfirm &&
-    form.tosAccepted);
+    form.tosAccepted && form.aiOriginalWorkConfirm);
 
   const handleSubmit = () => {
     if (!canPublish) return;
@@ -301,6 +303,7 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
         ...s,
         subtypes: typeof s.subtypes === 'string' ? s.subtypes.split(',').map(t => t.trim()).filter(Boolean) : s.subtypes,
       })),
+      aiToolsDisclosure: form.aiToolsDisclosure,
       rating: parseFloat(form.rating) || null,
       reviewCount: parseInt(form.reviewCount) || null,
       availability: 'available',
@@ -449,6 +452,48 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
             <input type="text" value={form.tags} onChange={e => set('tags', e.target.value)}
               placeholder="Corporate, Wedding, Drone, UGC, Real Estate"
               className={`w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all ${inputCls}`} />
+          </div>
+          <div>
+            <p className={labelCls}>AI Tools Disclosure (Optional)</p>
+            <p className={`text-xs mb-2 ${dark ? 'text-charcoal-500' : 'text-gray-400'}`}>
+              Select any AI tools you use in your workflow. This is shown on your profile for transparency.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                'I do not use AI tools',
+                'AI assisted editing (color, audio cleanup)',
+                'AI generated music or sound',
+                'AI upscaling or enhancement',
+                'AI generated graphics or overlays',
+                'AI scripting or captioning',
+                'Other AI tools',
+              ].map(option => {
+                const selected = form.aiToolsDisclosure.includes(option);
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => {
+                      if (option === 'I do not use AI tools') {
+                        set('aiToolsDisclosure', selected ? [] : ['I do not use AI tools']);
+                      } else {
+                        const without = form.aiToolsDisclosure.filter(o => o !== 'I do not use AI tools' && o !== option);
+                        set('aiToolsDisclosure', selected ? without : [...without, option]);
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
+                      selected
+                        ? 'border-gold-500 bg-gold-500/15 text-gold-400'
+                        : dark
+                          ? 'border-charcoal-600 text-charcoal-400 hover:border-gold-500/50 hover:text-gold-400'
+                          : 'border-gray-300 text-gray-500 hover:border-gold-500/50 hover:text-gold-500'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -703,6 +748,12 @@ function RegisterForm({ onSave, dark, onCancel, user }) {
                   Terms of Service
                 </button>
                 {' '}and platform policies.
+              </span>
+            </label>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.aiOriginalWorkConfirm} onChange={e => set('aiOriginalWorkConfirm', e.target.checked)} className="mt-0.5 accent-gold-500" />
+              <span className={`text-xs ${dark ? 'text-charcoal-300' : 'text-gray-700'}`}>
+                I confirm that all portfolio samples and work shown on my profile are original work created by me and do not contain AI generated content. I understand that submitting AI generated content as my own work is grounds for immediate account removal.
               </span>
             </label>
           </div>
